@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Nammooru — A warm, welcoming companion for newcomers to Bangalore learning Kannada.">
+  <meta name="theme-color" content="#F4EBDD">
+  <title>Nammooru — Welcome to Bengaluru</title>
+
+  <!-- Typography: Fraunces (Editorial Display Serif), Plus Jakarta Sans (Clean Body), Noto Sans Kannada -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Noto+Sans+Kannada:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Main Application Viewport (Mobile-first vertical experience) -->
+  <div class="app-viewport">
+    
+    <!-- Header: Editorial & warm brand bar -->
+    <header class="app-header" role="banner">
+      <div class="header-inner">
+        <div class="brand">
+          <span class="brand-kn" lang="kn" aria-hidden="true">ನಮ್ಮೂರು</span>
+          <span class="brand-divider" aria-hidden="true">/</span>
+          <span class="brand-en">Nammooru</span>
+        </div>
+        <div class="header-badge" aria-label="City: Bengaluru">
+          <span class="badge-accent-dot" aria-hidden="true"></span>
+          <span>Bengaluru</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area: 4 Foundation Sections -->
+    <main class="app-content" id="main-content" role="region" aria-live="polite">
+
+      <!-- =========================================================
+           1. PHOTO SECTION — Dedicated Everyday Camera Utility
+           ========================================================= -->
+      <section 
+        id="section-photo" 
+        class="view-section active" 
+        role="tabpanel" 
+        aria-labelledby="tab-photo"
+        tabindex="0">
+
+        <!-- Minimal Brand & Purpose Header -->
+        <div class="photo-header">
+          <div class="photo-header-top">
+            <div class="editorial-kicker">
+              <span class="kicker-kn" lang="kn">ನೋಡಿ • ಕಲಿಯಿರಿ</span>
+              <span class="kicker-bullet" aria-hidden="true">•</span>
+              <span class="kicker-en">Visual Lens</span>
+            </div>
+            <!-- Compact History Log Book Trigger -->
+            <button type="button" class="btn-history-compact" id="btn-history-open" aria-label="Open History Log Book">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+              </svg>
+              <span>History</span>
+              <span class="history-count-badge" id="history-count-badge" hidden>0</span>
+            </button>
+          </div>
+
+          <h1 class="photo-headline">See it. Learn it. Say it.</h1>
+          <p class="photo-subtext">Discover the Kannada words hiding in everyday Bengaluru.</p>
+        </div>
+
+        <!-- Camera & Photo Capture Module -->
+        <div class="photo-capture-card" id="photo-capture-card">
+          <!-- Short Instruction -->
+          <div class="capture-instruction-box">
+            <p class="capture-instruction">
+              Photograph one clear everyday object around you to learn what it’s called in Kannada.
+            </p>
+          </div>
+
+          <!-- Hidden Native File Inputs -->
+          <!-- 1. Direct camera capture hint on mobile devices -->
+          <input 
+            type="file" 
+            id="camera-input" 
+            accept="image/jpeg,image/png,image/webp,image/*" 
+            capture="environment" 
+            class="visually-hidden" 
+            aria-label="Take a photo with camera">
+
+          <!-- 2. Gallery picker without capture hint -->
+          <input 
+            type="file" 
+            id="gallery-input" 
+            accept="image/jpeg,image/png,image/webp,image/*" 
+            class="visually-hidden" 
+            aria-label="Upload an image from gallery">
+
+          <!-- Initial Action Buttons (Shown when no photo selected) -->
+          <div class="capture-actions" id="capture-actions">
+            <button type="button" class="btn btn-primary btn-shutter" id="btn-take-photo">
+              <svg class="btn-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span>Take a Photo</span>
+            </button>
+
+            <button type="button" class="btn btn-secondary" id="btn-upload-gallery">
+              <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>Upload from Gallery</span>
+            </button>
+          </div>
+
+          <!-- Feedback & Validation Message Display -->
+          <div class="feedback-banner" id="photo-feedback" role="alert" aria-live="polite" hidden>
+            <span class="feedback-icon" id="feedback-icon" aria-hidden="true">ℹ️</span>
+            <span class="feedback-text" id="feedback-text"></span>
+          </div>
+
+          <!-- Active Photo Preview Area (Displayed when photo is selected) -->
+          <div class="photo-preview-container" id="photo-preview-container" hidden>
+            <div class="preview-frame">
+              <img id="preview-image" alt="Selected object preview" class="preview-img">
+            </div>
+
+            <!-- Preview Meta Information -->
+            <div class="preview-meta-bar">
+              <span class="meta-status">
+                <span class="status-green-dot" aria-hidden="true"></span>
+                <span>Photo ready</span>
+              </span>
+              <span class="meta-filename" id="preview-filename"></span>
+            </div>
+
+            <!-- Preview Controls: Retake & Remove Photo -->
+            <div class="preview-actions">
+              <button type="button" class="btn btn-secondary" id="btn-retake-photo">
+                <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                </svg>
+                <span>Retake</span>
+              </button>
+
+              <button type="button" class="btn btn-outline" id="btn-remove-photo">
+                <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+                <span>Remove</span>
+              </button>
+            </div>
+
+            <!-- Identify Object CTA (prominent button after photo is selected) -->
+            <button type="button" class="btn btn-identify" id="btn-identify" hidden>
+              <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35M11 8v6M8 11h6"/>
+              </svg>
+              <span>Identify Object</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ===============================================================
+             RECOGNITION RESULT PANEL
+             =============================================================== -->
+        <div class="result-panel" id="result-panel" hidden aria-live="polite">
+
+          <!-- Loading state with spinner -->
+          <div class="result-loading" id="result-loading" hidden>
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <p class="loading-text">Identifying your object&hellip;</p>
+            <p class="loading-subtext">Translating to everyday Kannada</p>
+          </div>
+
+          <!-- Success state: Single coherent card with clear hierarchy -->
+          <div class="result-success" id="result-success" hidden>
+            <!-- 1. English Name & Confidence badge -->
+            <div class="result-header">
+              <span class="result-eyebrow" id="result-confidence-badge">Identified</span>
+              <h2 class="result-english" id="result-english"></h2>
+            </div>
+
+            <!-- 2. Large Kannada Script (Visual highlight) & 3. Listen Button -->
+            <div class="result-kannada-card">
+              <div class="kannada-main-row">
+                <p class="result-kannada" id="result-kannada" lang="kn"></p>
+                <button type="button" class="btn-listen btn-listen-result" id="btn-listen-result" aria-label="Listen to Kannada pronunciation">
+                  <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  </svg>
+                  <span>Listen</span>
+                </button>
+              </div>
+
+              <!-- 4. Easy-to-read Latin Transliteration -->
+              <p class="result-pronunciation" id="result-pronunciation"></p>
+            </div>
+
+            <!-- 5. Short English Description -->
+            <p class="result-description" id="result-description"></p>
+
+            <!-- 6. Primary Action: Scan Another Object -->
+            <button type="button" class="btn btn-primary btn-scan-another" id="btn-scan-another">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span>Scan Another Object</span>
+            </button>
+
+            <!-- 7. Subordinate Secondary Actions (Save to Garden, Learn, History) -->
+            <div class="result-secondary-actions">
+              <button type="button" class="btn-result-sub" id="btn-result-save-garden" aria-label="Save to Word Garden">
+                <span aria-hidden="true">🌿</span>
+                <span id="btn-result-save-garden-text">Add to Word Garden</span>
+              </button>
+
+              <button type="button" class="btn-result-sub" id="btn-learn-word" aria-label="Study this word in Learn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+                <span>Learn Details</span>
+              </button>
+
+              <button type="button" class="btn-result-sub" id="btn-save-history" aria-label="Save to History Log Book">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                <span>In History</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Error / Guidance state -->
+          <div class="result-error" id="result-error" hidden>
+            <div class="result-error-icon" aria-hidden="true">📷</div>
+            <p class="result-error-message" id="result-error-message"></p>
+          </div>
+        </div>
+
+        <!-- API SETUP CARD (Honest guidance shown only when API key is missing) -->
+        <div class="setup-card" id="api-setup-card" hidden>
+          <div class="setup-card-icon" aria-hidden="true">🔑</div>
+          <h2 class="setup-card-title">Set up object recognition</h2>
+          <p class="setup-card-body">
+            To identify objects, Nammooru uses Google Gemini Vision — a free AI service. You need a free API key.
+          </p>
+          <ol class="setup-steps">
+            <li>Go to <strong>aistudio.google.com/app/apikey</strong></li>
+            <li>Sign in with your Google account</li>
+            <li>Click &ldquo;Create API key&rdquo; and copy it</li>
+            <li>Open <code>api-config.json</code> in the Nammooru folder</li>
+            <li>Paste your key as the value of <code>"geminiApiKey"</code></li>
+            <li>Save the file and restart the server (<code>run this.bat</code>)</li>
+          </ol>
+          <p class="setup-card-note">Photo upload and preview still work without an API key.</p>
+        </div>
+
+      </section>
+
+        <!-- =========================================================
+           2. LEARN SECTION — Interactive SCRIPT, WORDS, & PHRASES (Step 4)
+           ========================================================= -->
+      <section 
+        id="section-learn" 
+        class="view-section" 
+        role="tabpanel" 
+        aria-labelledby="tab-learn" 
+        hidden
+        tabindex="0">
+
+        <!-- Learn Hero Header -->
+        <div class="hero-header">
+          <div class="editorial-kicker">
+            <span class="kicker-kn" lang="kn">ಕಲಿ</span>
+            <span class="kicker-bullet" aria-hidden="true">•</span>
+            <span class="kicker-en">Everyday Curriculum</span>
+          </div>
+
+          <h1 class="hero-headline">
+            Everyday Kannada<br>
+            <em>for Bengaluru life.</em>
+          </h1>
+
+          <p class="hero-subtext">
+            Explore authentic script, practical daily vocabulary, and real-life phrases with native audio pronunciation.
+          </p>
+
+          <!-- Audio Engine Status Indicator -->
+          <div class="audio-engine-badge" id="audio-engine-badge" aria-live="polite">
+            <span class="audio-status-dot" aria-hidden="true"></span>
+            <span id="audio-status-text">Kannada Audio Ready</span>
+          </div>
+        </div>
+
+        <!-- Word Garden Invitation Card in LEARN -->
+        <div class="garden-hero-card" id="garden-learn-card">
+          <div class="garden-hero-content">
+            <div class="garden-hero-header-row">
+              <span class="garden-leaf-icon" aria-hidden="true">🌿</span>
+              <span class="garden-kicker">Personal Collection</span>
+            </div>
+            <h2 class="garden-hero-title">My Word Garden</h2>
+            <p class="garden-hero-desc">Your collection of words, growing one conversation at a time.</p>
+          </div>
+          <button type="button" class="btn btn-garden-open" id="btn-open-garden-from-learn" aria-label="Open your Word Garden">
+            <span>View Garden</span>
+            <span class="garden-count-pill" id="learn-garden-count" hidden>0</span>
+          </button>
+        </div>
+
+        <!-- Mode Selector (Segmented Control: Script, Words, Phrases, My Word Garden) -->
+        <nav class="learn-mode-nav" aria-label="Learning modes">
+          <button type="button" class="learn-mode-btn active" data-mode="script" id="btn-mode-script">
+            <span class="mode-icon" aria-hidden="true">ಅ</span>
+            <span>Script</span>
+          </button>
+          <button type="button" class="learn-mode-btn" data-mode="words" id="btn-mode-words">
+            <span class="mode-icon" aria-hidden="true">💬</span>
+            <span>Words</span>
+          </button>
+          <button type="button" class="learn-mode-btn" data-mode="phrases" id="btn-mode-phrases">
+            <span class="mode-icon" aria-hidden="true">✨</span>
+            <span>Phrases</span>
+          </button>
+          <button type="button" class="learn-mode-btn btn-mode-garden" data-mode="garden" id="btn-mode-garden" aria-label="My Word Garden">
+            <span class="mode-icon" aria-hidden="true">🌿</span>
+            <span>My Word Garden</span>
+            <span class="garden-badge-count" id="learn-garden-tab-badge" hidden>0</span>
+          </button>
+        </nav>
+
+        <!-- Search Bar (Across Words, Phrases, and Script) -->
+        <div class="learn-search-bar" id="learn-search-container">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input 
+              type="search" 
+              id="learn-search-input" 
+              class="learn-search-input" 
+              placeholder="Search words, meanings, or Kannada..." 
+              aria-label="Search learning items"
+              autocomplete="off">
+            <button type="button" class="search-clear-btn" id="btn-search-clear" aria-label="Clear search" hidden>&times;</button>
+          </div>
+        </div>
+
+        <!-- Global Floating Audio Controller (Active when speaking) -->
+        <div class="audio-player-pill" id="audio-player-pill" hidden aria-live="polite">
+          <div class="audio-waves" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="audio-pill-label" id="audio-pill-label">Speaking...</span>
+          <button type="button" class="btn-stop-audio" id="btn-stop-audio" aria-label="Stop audio">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="5" y="5" width="14" height="14" rx="2"/>
+            </svg>
+            <span>Stop</span>
+          </button>
+        </div>
+
+        <!-- =======================================================
+             MODE 1: SCRIPT (ವರ್ಣಮಾಲೆ)
+             ======================================================= -->
+        <div class="learn-mode-panel active" id="panel-learn-script">
+          <!-- Script Sub-tabs (Vowels vs Consonants) -->
+          <div class="script-group-switch">
+            <button type="button" class="script-group-btn active" data-script-group="vowels" id="btn-group-vowels">
+              Vowels • ಸ್ವರಗಳು (15)
+            </button>
+            <button type="button" class="script-group-btn" data-script-group="consonants" id="btn-group-consonants">
+              Consonants • ವ್ಯಂಜನಗಳು (34)
+            </button>
+          </div>
+
+          <div class="script-section-header">
+            <h2 class="script-section-title" id="script-section-title">Kannada Vowels (ಸ್ವರಗಳು)</h2>
+            <p class="script-section-desc" id="script-section-desc">
+              Tap any Listen button to hear authentic pronunciation. Vowels are the foundation of spoken Kannada.
+            </p>
+          </div>
+
+          <!-- Letters Grid (Populated dynamically from learn-data.js) -->
+          <div class="script-grid" id="script-grid" role="region" aria-label="Kannada letters"></div>
+        </div>
+
+        <!-- =======================================================
+             MODE 2: WORDS (ಪದಗಳು)
+             ======================================================= -->
+        <div class="learn-mode-panel" id="panel-learn-words" hidden>
+          <!-- Category Filter Pills -->
+          <div class="category-filter-bar" id="words-category-bar" role="tablist" aria-label="Word categories">
+            <button type="button" class="cat-pill active" data-cat="all" role="tab" aria-selected="true">All Words</button>
+            <button type="button" class="cat-pill" data-cat="greetings" role="tab" aria-selected="false">Greetings</button>
+            <button type="button" class="cat-pill" data-cat="numbers" role="tab" aria-selected="false">Numbers &amp; Money</button>
+            <button type="button" class="cat-pill" data-cat="food" role="tab" aria-selected="false">Food &amp; Dining</button>
+            <button type="button" class="cat-pill" data-cat="transport" role="tab" aria-selected="false">Transport</button>
+            <button type="button" class="cat-pill" data-cat="directions" role="tab" aria-selected="false">Directions</button>
+            <button type="button" class="cat-pill" data-cat="shopping" role="tab" aria-selected="false">Shopping</button>
+            <button type="button" class="cat-pill" data-cat="everyday" role="tab" aria-selected="false">Everyday</button>
+          </div>
+
+          <!-- Words Grid (Populated dynamically from learn-data.js) -->
+          <div class="learn-items-grid" id="words-grid" role="region" aria-label="Kannada vocabulary words"></div>
+        </div>
+
+        <!-- =======================================================
+             MODE 3: PHRASES (ವಾಕ್ಯಗಳು)
+             ======================================================= -->
+        <div class="learn-mode-panel" id="panel-learn-phrases" hidden>
+          <!-- Category Filter Pills -->
+          <div class="category-filter-bar" id="phrases-category-bar" role="tablist" aria-label="Phrase categories">
+            <button type="button" class="cat-pill active" data-cat="all" role="tab" aria-selected="true">All Phrases</button>
+            <button type="button" class="cat-pill" data-cat="auto" role="tab" aria-selected="false">Auto &amp; Commute</button>
+            <button type="button" class="cat-pill" data-cat="food" role="tab" aria-selected="false">Food &amp; Ordering</button>
+            <button type="button" class="cat-pill" data-cat="shopping" role="tab" aria-selected="false">Shopping &amp; Prices</button>
+            <button type="button" class="cat-pill" data-cat="polite" role="tab" aria-selected="false">Politeness &amp; Settling In</button>
+            <button type="button" class="cat-pill" data-cat="daily" role="tab" aria-selected="false">Daily Life</button>
+          </div>
+
+          <!-- Phrases List (Populated dynamically from learn-data.js) -->
+          <div class="phrases-list" id="phrases-grid" role="region" aria-label="Everyday Kannada phrases"></div>
+        </div>
+
+        <!-- Empty search results placeholder -->
+        <div class="learn-empty-search" id="learn-empty-search" hidden>
+          <div class="empty-icon" aria-hidden="true">🔍</div>
+          <h3 class="empty-title">No matching learning items found</h3>
+          <p class="empty-body">Try a different search word, switch categories, or clear search.</p>
+          <button type="button" class="btn btn-secondary" id="btn-empty-clear">Clear Search</button>
+        </div>
+
+      </section>
+
+      <!-- =========================================================
+           3. INNOVATE SECTION — Real-World Practice & Visual Badges
+           ========================================================= -->
+      <section 
+        id="section-innovate" 
+        class="view-section" 
+        role="tabpanel" 
+        aria-labelledby="tab-innovate" 
+        hidden
+        tabindex="0">
+
+        <!-- Warm Brand Header -->
+        <div class="innovate-header">
+          <div class="editorial-kicker">
+            <span class="kicker-kn" lang="kn">ಪ್ರಯೋಗ</span>
+            <span class="kicker-bullet" aria-hidden="true">•</span>
+            <span class="kicker-en">Real-World Practice</span>
+          </div>
+
+          <h1 class="hero-headline">
+            Try it in real life.<br>
+            <em>Without fear.</em>
+          </h1>
+
+          <p class="hero-subtext">
+            Speaking in real situations can feel daunting. Here, every effort is celebrated — with zero pressure and zero judgment.
+          </p>
+
+          <!-- Safe Practice Reassurance Banner -->
+          <div class="reassurance-banner">
+            <span class="reassurance-green-dot" aria-hidden="true"></span>
+            <span>No ranks, no streaks, no scores. Every attempt brings you closer to home.</span>
+          </div>
+        </div>
+
+        <!-- Innovate Sub-Navigation (Segmented Control) -->
+        <div class="innovate-nav-bar" role="tablist" aria-label="Innovate practice modes">
+          <button type="button" class="innovate-nav-btn active" id="btn-inno-record" data-panel="record" role="tab" aria-selected="true">
+            <span>📝 Record Practice</span>
+          </button>
+          <button type="button" class="innovate-nav-btn" id="btn-inno-badges" data-panel="badges" role="tab" aria-selected="false">
+            <span>🏅 Badges</span>
+            <span class="nav-count-badge" id="badge-earned-counter" hidden>0/9</span>
+          </button>
+          <button type="button" class="innovate-nav-btn" id="btn-inno-log" data-panel="log" role="tab" aria-selected="false">
+            <span>📜 Practice Log</span>
+            <span class="nav-count-badge" id="attempt-log-counter" hidden>0</span>
+          </button>
+        </div>
+
+        <!-- =======================================================
+             PANEL 1: RECORD ATTEMPT FORM
+             ======================================================= -->
+        <div class="innovate-panel active" id="panel-inno-record" role="tabpanel" aria-labelledby="btn-inno-record">
+          <div class="innovate-card">
+            <div class="innovate-card-header">
+              <div class="card-eyebrow">New Practice Record</div>
+              <h2 class="card-headline">What did you try today?</h2>
+              <p class="card-description">
+                Whether you greeted your security guard, ordered coffee, or asked for the meter — record your courage here.
+              </p>
+            </div>
+
+            <!-- Form -->
+            <form id="form-record-attempt" class="attempt-form" novalidate>
+              
+              <!-- Field 1: Situation / Phrase -->
+              <div class="form-group">
+                <div class="form-label-row">
+                  <label for="input-attempt-situation" class="form-label">
+                    Situation, word, or phrase <span class="required-star">*</span>
+                  </label>
+                  <button type="button" class="btn-text-link" id="btn-connect-word-garden">
+                    🌿 Pick from Word Garden
+                  </button>
+                </div>
+
+                <input 
+                  type="text" 
+                  id="input-attempt-situation" 
+                  class="form-input" 
+                  placeholder="e.g. Ordered filter coffee at Darshini, asked 'Meter haaki'..."
+                  autocomplete="off"
+                  required>
+
+                <!-- Connected Word Garden Reference Chip (Hidden by default) -->
+                <div class="connected-garden-chip" id="connected-garden-chip" hidden>
+                  <span class="chip-label">Connected from Garden:</span>
+                  <span class="chip-text" id="connected-garden-text"></span>
+                  <button type="button" class="btn-chip-remove" id="btn-remove-garden-link" aria-label="Remove connected word">×</button>
+                </div>
+
+                <!-- Quick Inspiration Chips -->
+                <div class="quick-chip-tray" aria-label="Quick situation templates">
+                  <span class="chip-tray-label">Quick ideas:</span>
+                  <button type="button" class="quick-template-chip" data-situation="Ordered coffee at Darshini" data-cat="food">☕ Darshini Coffee</button>
+                  <button type="button" class="quick-template-chip" data-situation="Asked auto driver 'Meter haaki'" data-cat="transport">🛺 Auto Meter</button>
+                  <button type="button" class="quick-template-chip" data-situation="Asked price at Kirana store" data-cat="price">🪙 Asking Price</button>
+                  <button type="button" class="quick-template-chip" data-situation="Said 'Namaskara' to neighbour" data-cat="everyday">🙏 Namaskara</button>
+                  <button type="button" class="quick-template-chip" data-situation="Asked directions to Metro" data-cat="transport">📍 Metro Directions</button>
+                </div>
+              </div>
+
+              <!-- Field 2: Category Selector -->
+              <div class="form-group">
+                <label for="select-attempt-category" class="form-label">Category</label>
+                <div class="custom-select-wrapper">
+                  <select id="select-attempt-category" class="form-select">
+                    <option value="everyday">Everyday conversation (ದೈನಂದಿನ ಮಾತು)</option>
+                    <option value="food">Food and ordering (ಆಹಾರ ಮತ್ತು ದರ್ಶಿನಿ)</option>
+                    <option value="transport">Getting around / Commute (ಸಂಚಾರ ಮತ್ತು ಆಟೋ)</option>
+                    <option value="shopping">Shopping / Kirana (ಅಂಗಡಿ ಮತ್ತು ಖರೀದಿ)</option>
+                    <option value="price">Price and money (ಬೆಲೆ ಮತ್ತು ಹಣ)</option>
+                    <option value="negotiation">Negotiation / Politeness (ಸೌಜನ್ಯ ಮತ್ತು ಚರ್ಚೆ)</option>
+                    <option value="courage">Courage and trying again (ಧೈರ್ಯದ ಹೆಜ್ಜೆ)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Field 3: Three Outcomes (Core Requirement) -->
+              <div class="form-group">
+                <label class="form-label">
+                  How did it feel? <span class="required-star">*</span>
+                </label>
+                <p class="form-sublabel">All 3 outcomes count as genuine practice. There is no failure here.</p>
+
+                <div class="outcome-selector-grid" role="radiogroup" aria-label="Interaction outcome">
+                  
+                  <!-- Outcome 1: Went Well -->
+                  <label class="outcome-option-card selected" for="outcome-radio-went-well">
+                    <input 
+                      type="radio" 
+                      name="attempt-outcome" 
+                      id="outcome-radio-went-well" 
+                      value="went_well" 
+                      class="outcome-radio"
+                      checked>
+                    <div class="outcome-card-content">
+                      <div class="outcome-header-row">
+                        <span class="outcome-dot outcome-dot-well" aria-hidden="true"></span>
+                        <span class="outcome-title">Went well</span>
+                        <span class="outcome-kn" lang="kn">ಚೆನ್ನಾಗಿ ಹೋಯಿತು</span>
+                      </div>
+                      <p class="outcome-desc">Understood, felt natural and encouraging.</p>
+                    </div>
+                  </label>
+
+                  <!-- Outcome 2: Needed Help -->
+                  <label class="outcome-option-card" for="outcome-radio-needed-help">
+                    <input 
+                      type="radio" 
+                      name="attempt-outcome" 
+                      id="outcome-radio-needed-help" 
+                      value="needed_help" 
+                      class="outcome-radio">
+                    <div class="outcome-card-content">
+                      <div class="outcome-header-row">
+                        <span class="outcome-dot outcome-dot-help" aria-hidden="true"></span>
+                        <span class="outcome-title">Needed help</span>
+                        <span class="outcome-kn" lang="kn">ಸಹಾಯ ಬೇಕಾಯಿತು</span>
+                      </div>
+                      <p class="outcome-desc">Switched to English or gestures, but gave it a real try!</p>
+                    </div>
+                  </label>
+
+                  <!-- Outcome 3: Froze / Stumbled -->
+                  <label class="outcome-option-card" for="outcome-radio-froze">
+                    <input 
+                      type="radio" 
+                      name="attempt-outcome" 
+                      id="outcome-radio-froze" 
+                      value="froze" 
+                      class="outcome-radio">
+                    <div class="outcome-card-content">
+                      <div class="outcome-header-row">
+                        <span class="outcome-dot outcome-dot-froze" aria-hidden="true"></span>
+                        <span class="outcome-title">Froze in the moment</span>
+                        <span class="outcome-kn" lang="kn">ಧೈರ್ಯದ ಹೆಜ್ಜೆ</span>
+                      </div>
+                      <p class="outcome-desc">Forgot the words or hesitated. Trying takes real courage!</p>
+                    </div>
+                  </label>
+
+                </div>
+              </div>
+
+              <!-- Field 4: Optional Personal Note -->
+              <div class="form-group">
+                <label for="input-attempt-note" class="form-label">
+                  What happened? (Optional note)
+                </label>
+                <textarea 
+                  id="input-attempt-note" 
+                  class="form-textarea" 
+                  rows="2" 
+                  placeholder="e.g. The uncle smiled and replied in Kannada, next time I'll remember the numbers..."></textarea>
+              </div>
+
+              <!-- Submit Button -->
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-save-attempt" id="btn-submit-attempt">
+                  <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                  <span>Record This Attempt</span>
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <!-- =======================================================
+             PANEL 2: BADGES SHOWCASE
+             ======================================================= -->
+        <div class="innovate-panel" id="panel-inno-badges" role="tabpanel" aria-labelledby="btn-inno-badges" hidden>
+          
+          <!-- Badges Overview Strip -->
+          <div class="badges-summary-card">
+            <div class="badges-summary-left">
+              <span class="summary-kicker">Practice Milestones</span>
+              <h3 class="summary-title" id="badges-summary-title">Your Real-World Badges</h3>
+              <p class="summary-sub" id="badges-summary-sub">Earned through genuine Bengaluru conversations.</p>
+            </div>
+            <div class="badges-summary-stat">
+              <span class="stat-number" id="badges-unlocked-count">0</span>
+              <span class="stat-label">of 9 Earned</span>
+            </div>
+          </div>
+
+          <!-- Category Filter Bar for Badges -->
+          <div class="category-filter-bar" id="badges-category-bar" role="tablist" aria-label="Badge categories">
+            <button type="button" class="cat-pill active" data-badge-cat="all" role="tab" aria-selected="true">All Badges</button>
+            <button type="button" class="cat-pill" data-badge-cat="courage" role="tab" aria-selected="false">Courage</button>
+            <button type="button" class="cat-pill" data-badge-cat="food" role="tab" aria-selected="false">Food &amp; Darshini</button>
+            <button type="button" class="cat-pill" data-badge-cat="transport" role="tab" aria-selected="false">Getting Around</button>
+            <button type="button" class="cat-pill" data-badge-cat="shopping" role="tab" aria-selected="false">Shopping</button>
+            <button type="button" class="cat-pill" data-badge-cat="price" role="tab" aria-selected="false">Price &amp; Money</button>
+            <button type="button" class="cat-pill" data-badge-cat="negotiation" role="tab" aria-selected="false">Negotiation</button>
+            <button type="button" class="cat-pill" data-badge-cat="everyday" role="tab" aria-selected="false">Everyday</button>
+          </div>
+
+          <!-- Badges Grid Container -->
+          <div class="badges-grid" id="innovate-badges-grid" role="region" aria-label="Visual badges collection">
+            <!-- Rendered dynamically by script.js -->
+          </div>
+
+        </div>
+
+        <!-- =======================================================
+             PANEL 3: PRACTICE LOG (ATTEMPT HISTORY)
+             ======================================================= -->
+        <div class="innovate-panel" id="panel-inno-log" role="tabpanel" aria-labelledby="btn-inno-log" hidden>
+          
+          <!-- History Header Strip -->
+          <div class="log-header-strip">
+            <div class="log-summary-text">
+              <span id="log-total-attempts">0</span> practice attempts recorded
+            </div>
+            <!-- Filter by Outcome -->
+            <div class="log-filter-chips">
+              <button type="button" class="log-filter-btn active" data-outcome-filter="all">All</button>
+              <button type="button" class="log-filter-btn" data-outcome-filter="went_well">Went Well</button>
+              <button type="button" class="log-filter-btn" data-outcome-filter="needed_help">Needed Help</button>
+              <button type="button" class="log-filter-btn" data-outcome-filter="froze">Froze / Tried</button>
+            </div>
+          </div>
+
+          <!-- Empty State (Shown when 0 attempts) -->
+          <div class="log-empty-state" id="log-empty-state">
+            <div class="empty-icon-wrap" aria-hidden="true">🌱</div>
+            <h3 class="empty-title">Your practice log is waiting for your first attempt.</h3>
+            <p class="empty-quote">“Every conversation you try brings you a little closer to feeling at home.”</p>
+            <p class="empty-body">
+              Whenever you try speaking Kannada in Bengaluru, record it here. Even if you only managed a single word, that word took courage.
+            </p>
+            <button type="button" class="btn btn-primary" id="btn-empty-start-attempt">
+              <span>Record Your First Attempt</span>
+            </button>
+          </div>
+
+          <!-- Attempt Timeline List -->
+          <div class="attempts-list" id="innovate-attempts-list" role="region" aria-label="Past speaking attempts" hidden>
+            <!-- Rendered dynamically by script.js -->
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- =========================================================
+           4. TRANSFORM SECTION (Placeholder)
+           ========================================================= -->
+      <section 
+        id="section-transform" 
+        class="view-section" 
+        role="tabpanel" 
+        aria-labelledby="tab-transform" 
+        hidden
+        tabindex="0">
+
+        <div class="hero-header">
+          <div class="editorial-kicker">
+            <span class="kicker-kn" lang="kn">ಒಡನಾಟ</span>
+            <span class="kicker-bullet" aria-hidden="true">•</span>
+            <span class="kicker-en">Community & Belonging</span>
+          </div>
+
+          <h1 class="hero-headline">
+            You are not the only<br>
+            <em>newcomer here.</em>
+          </h1>
+
+          <p class="hero-subtext">
+            Thousands of students and working professionals arrive in Bengaluru every month wondering if they will ever fit in.
+          </p>
+        </div>
+
+        <div class="editorial-card">
+          <div class="card-eyebrow">Shared Journeys</div>
+          <h2 class="card-headline">Finding your community</h2>
+          <p class="card-description">
+            In later steps, this space will gently connect you with fellow newcomers, shared experiences, and stories that make this city feel like home.
+          </p>
+          <div class="editorial-quote-box">
+            <p class="quote-text">“Moving to a new city is easier when you know you’re not alone.”</p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation: Editorial Mobile-First Tab Bar -->
+    <nav class="app-tabbar" role="tablist" aria-label="Main application sections">
+      <button 
+        type="button" 
+        role="tab" 
+        id="tab-photo" 
+        aria-selected="true" 
+        aria-controls="section-photo" 
+        class="tab-item active" 
+        data-target="photo">
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4"/>
+          <circle cx="12" cy="12" r="3.2"/>
+        </svg>
+        <span class="tab-label">Photo</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        id="tab-learn" 
+        aria-selected="false" 
+        aria-controls="section-learn" 
+        class="tab-item" 
+        data-target="learn">
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+        <span class="tab-label">Learn</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        id="tab-innovate" 
+        aria-selected="false" 
+        aria-controls="section-innovate" 
+        class="tab-item" 
+        data-target="innovate">
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 8v8M8 12h8"/>
+        </svg>
+        <span class="tab-label">Innovate</span>
+      </button>
+
+      <button 
+        type="button" 
+        role="tab" 
+        id="tab-transform" 
+        aria-selected="false" 
+        aria-controls="section-transform" 
+        class="tab-item" 
+        data-target="transform">
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span class="tab-label">Transform</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- =========================================================
+       HISTORY LOG BOOK MODAL OVERLAY
+       Rendered outside .app-viewport so it can be full-screen
+       ========================================================= -->
+  <div class="history-overlay" id="history-overlay" role="dialog" aria-modal="true" aria-label="History Log Book" hidden>
+    <div class="history-modal">
+
+      <!-- Modal Header -->
+      <div class="history-modal-header">
+        <div class="history-modal-title-group">
+          <h2 class="history-modal-title">History Log Book</h2>
+          <span class="history-modal-subtitle">Your identified objects</span>
+        </div>
+        <div class="history-modal-header-actions">
+          <button type="button" class="btn btn-clear-all" id="btn-clear-all-history">
+            Clear All
+          </button>
+          <button type="button" class="btn btn-modal-close" id="btn-history-close" aria-label="Close history">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="history-modal-body" id="history-modal-body">
+
+        <!-- Empty State -->
+        <div class="history-empty" id="history-empty">
+          <div class="history-empty-icon" aria-hidden="true">📖</div>
+          <p class="history-empty-title">No identifications yet</p>
+          <p class="history-empty-body">Take a photo of something around you and tap &ldquo;Identify Object&rdquo; to start your log book.</p>
+        </div>
+
+        <!-- Entries List (populated by JS) -->
+        <ul class="history-list" id="history-list" aria-label="Recognition history entries"></ul>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- History Entry Detail Overlay -->
+  <div class="history-detail-overlay" id="history-detail-overlay" role="dialog" aria-modal="true" aria-label="History entry detail" hidden>
+    <div class="history-detail-modal">
+      <div class="history-detail-header">
+        <button type="button" class="btn btn-modal-close" id="btn-detail-close" aria-label="Close detail">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="history-detail-body" id="history-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       WORD GARDEN MODAL OVERLAY (Step 5)
+       ========================================================= -->
+  <div class="garden-overlay" id="garden-overlay" role="dialog" aria-modal="true" aria-label="Your Word Garden" hidden>
+    <div class="garden-modal">
+
+      <!-- Modal Header -->
+      <div class="garden-modal-header">
+        <div class="garden-modal-title-group">
+          <div class="garden-modal-kicker">
+            <span class="garden-kicker-leaf" aria-hidden="true">🌿</span>
+            <span>Personal Collection</span>
+          </div>
+          <h2 class="garden-modal-title">Your Word Garden</h2>
+          <p class="garden-modal-subtitle">Your collection of words, growing one conversation at a time.</p>
+          <div class="garden-modal-quote-box">
+            <p class="garden-modal-quote">“Every word you learn brings you a little closer to feeling at home.”</p>
+          </div>
+        </div>
+        <div class="garden-modal-header-actions">
+          <button type="button" class="btn btn-modal-close" id="btn-garden-close" aria-label="Close Word Garden">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls Strip: Stats, Search, Filters -->
+      <div class="garden-controls-strip">
+        <!-- Stats Pill -->
+        <div class="garden-stats-strip">
+          <div class="garden-stat-badge">
+            <span class="stat-num" id="garden-total-count">0</span>
+            <span class="stat-lbl" id="garden-total-label">Words &amp; Phrases</span>
+          </div>
+          <div class="garden-stat-sub" id="garden-stat-sub">
+            <span id="garden-words-subcount">0 words</span> • <span id="garden-phrases-subcount">0 phrases</span>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="garden-search-wrapper">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input 
+            type="search" 
+            id="garden-search-input" 
+            class="garden-search-input" 
+            placeholder="Search saved words, Kannada, meaning..." 
+            aria-label="Search saved words"
+            autocomplete="off">
+          <button type="button" class="search-clear-btn" id="btn-garden-search-clear" aria-label="Clear search" hidden>&times;</button>
+        </div>
+
+        <!-- Filter Row -->
+        <div class="garden-filter-row">
+          <!-- Type Filter -->
+          <div class="garden-type-filter" role="tablist" aria-label="Filter by item type">
+            <button type="button" class="garden-pill-btn active" data-type="all">All</button>
+            <button type="button" class="garden-pill-btn" data-type="word">Words</button>
+            <button type="button" class="garden-pill-btn" data-type="phrase">Phrases</button>
+          </div>
+
+          <!-- Category Filter Select -->
+          <div class="garden-cat-wrapper">
+            <select id="garden-category-select" class="garden-select" aria-label="Filter by category">
+              <option value="all">All Categories</option>
+              <option value="greetings">Greetings</option>
+              <option value="numbers">Numbers &amp; Money</option>
+              <option value="food">Food &amp; Dining</option>
+              <option value="transport">Transport</option>
+              <option value="directions">Directions</option>
+              <option value="shopping">Shopping &amp; Prices</option>
+              <option value="auto">Auto &amp; Commute</option>
+              <option value="polite">Politeness</option>
+              <option value="daily">Daily Life</option>
+              <option value="everyday">Everyday</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="garden-modal-body" id="garden-modal-body">
+
+        <!-- Empty State -->
+        <div class="garden-empty-state" id="garden-empty-state">
+          <div class="garden-empty-visual" aria-hidden="true">🌱</div>
+          <h3 class="garden-empty-title">Your garden is waiting for its first word.</h3>
+          <p class="garden-empty-quote">“Every word you learn brings you a little closer to feeling at home.”</p>
+          <p class="garden-empty-body">
+            Tap the <strong>Save</strong> bookmark button on any word or phrase in LEARN to nurture your personal Kannada collection.
+          </p>
+          <button type="button" class="btn btn-primary btn-explore-learn" id="btn-empty-goto-learn">
+            <span>Discover Words in Learn</span>
+            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- No Filter Results State -->
+        <div class="garden-no-results" id="garden-no-results" hidden>
+          <div class="no-results-icon" aria-hidden="true">🔍</div>
+          <p class="no-results-title">No saved items match your filter</p>
+          <button type="button" class="btn btn-secondary" id="btn-garden-reset-filters">Reset Filters</button>
+        </div>
+
+        <!-- Saved Items Grid -->
+        <div class="garden-items-grid" id="garden-items-grid" aria-label="Saved words and phrases"></div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="garden-toast" id="garden-toast" role="status" aria-live="polite">
+    <span class="garden-toast-icon" id="garden-toast-icon" aria-hidden="true">🌿</span>
+    <span class="garden-toast-text" id="garden-toast-text"></span>
+  </div>
+
+  <!-- =========================================================
+       BADGE DETAIL MODAL OVERLAY
+       Shows transparent criteria and actual supporting attempts
+       ========================================================= -->
+  <div class="modal-overlay" id="badge-detail-modal" hidden role="dialog" aria-modal="true" aria-labelledby="badge-modal-title">
+    <div class="modal-window badge-modal-window">
+      
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <div class="modal-header-meta">
+          <span class="modal-kicker" id="badge-modal-category">Badge Details</span>
+          <h2 class="modal-title" id="badge-modal-title">Badge Title</h2>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-badge-modal-close" aria-label="Close badge details">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body badge-modal-body">
+        
+        <!-- Badge Emblem Hero -->
+        <div class="badge-modal-hero" id="badge-modal-hero">
+          <div class="badge-modal-emblem" id="badge-modal-icon">🏅</div>
+          <div class="badge-modal-status-pill" id="badge-modal-status">Earned</div>
+          <div class="badge-modal-kn-title" id="badge-modal-title-kn" lang="kn">ಕನ್ನಡ ಹೆಸರು</div>
+        </div>
+
+        <p class="badge-modal-desc" id="badge-modal-desc"></p>
+
+        <!-- Transparent Criteria Box -->
+        <div class="badge-criteria-box">
+          <div class="criteria-header">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>How This Badge Is Earned</span>
+          </div>
+          <p class="criteria-text" id="badge-modal-criteria"></p>
+          <div class="criteria-progress-bar-wrap" id="badge-modal-progress-wrap">
+            <div class="criteria-progress-bar" id="badge-modal-progress-bar" style="width: 0%"></div>
+          </div>
+          <span class="criteria-progress-label" id="badge-modal-progress-label"></span>
+        </div>
+
+        <!-- Real Supporting Attempts Section (Core Requirement) -->
+        <div class="badge-supporting-section">
+          <h4 class="supporting-title">
+            <span>Supporting Attempts</span>
+            <span class="supporting-count" id="badge-supporting-count">0</span>
+          </h4>
+          <p class="supporting-sub">Actual real-world moments that contributed to this badge:</p>
+          
+          <div class="supporting-attempts-list" id="badge-supporting-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       WORD GARDEN PICKER MODAL (Connect Word Garden to Practice)
+       ========================================================= -->
+  <div class="modal-overlay" id="garden-picker-modal" hidden role="dialog" aria-modal="true" aria-labelledby="garden-picker-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-header-meta">
+          <span class="modal-kicker">Word Garden</span>
+          <h2 class="modal-title" id="garden-picker-title">Pick a Word to Practice</h2>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-garden-picker-close" aria-label="Close word picker">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body garden-picker-body" id="garden-picker-body">
+        <!-- List of saved words -->
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       ATTEMPT DETAIL MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="attempt-detail-modal" hidden role="dialog" aria-modal="true" aria-labelledby="attempt-detail-title">
+    <div class="modal-window">
+      <div class="modal-header">
+        <div class="modal-header-meta">
+          <span class="modal-kicker" id="attempt-detail-date">Practice Record</span>
+          <h2 class="modal-title" id="attempt-detail-title">Attempt Details</h2>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-attempt-detail-close" aria-label="Close attempt details">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body attempt-detail-body" id="attempt-detail-body">
+        <!-- Details populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script src="learn-data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

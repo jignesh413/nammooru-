@@ -1,0 +1,16 @@
+# Nammooru — .gitignore
+# ========================
+# API keys and secrets — NEVER commit these
+api-config.json
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
