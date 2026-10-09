@@ -2080,25 +2080,29 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateGardenBadges() {
     const { total, words, phrases } = GardenStore.count();
 
-    // 1. Header badge
+    // 1. Header quick pill
+    const headerCountEl = document.getElementById('header-garden-count');
+    if (headerCountEl) {
+      headerCountEl.textContent = total;
+    }
     if (headerGardenBadge) {
       headerGardenBadge.textContent = total;
       headerGardenBadge.hidden = (total === 0);
     }
 
-    // 2. Learn page hero card badge
+    // 2. Profile stats
+    const profileGardenEl = document.getElementById('profile-garden-count');
+    if (profileGardenEl) {
+      profileGardenEl.textContent = total;
+    }
+
+    // 3. Learn page hero card badge
     if (learnGardenCount) {
       learnGardenCount.textContent = total;
       learnGardenCount.hidden = (total === 0);
     }
 
-    // 2b. Learn mode tab badge
-    if (learnGardenTabBadge) {
-      learnGardenTabBadge.textContent = total;
-      learnGardenTabBadge.hidden = (total === 0);
-    }
-
-    // 3. Modal stats strip
+    // 4. Modal stats strip
     if (gardenTotalCount) {
       gardenTotalCount.textContent = total;
     }
@@ -2108,6 +2112,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gardenPhrasesSubcount) {
       gardenPhrasesSubcount.textContent = `${phrases} ${phrases === 1 ? 'phrase' : 'phrases'}`;
     }
+  }
+
+  // Header garden pill click handler
+  const btnHeaderGarden = document.getElementById('btn-header-garden');
+  if (btnHeaderGarden) {
+    btnHeaderGarden.addEventListener('click', openGardenModal);
   }
 
   function openGardenModal() {
@@ -3399,24 +3409,438 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Escape Key Closes Modals ---
+  // =========================================================================
+  // STEP 8: TRANSFORM COMMUNITY & USER PROFILE DATA LAYER
+  // =========================================================================
+
+  const ProfileStore = (() => {
+    const STORAGE_KEY = 'nammooru_profile_v1';
+    const DEFAULT_PROFILE = {
+      name: 'Bengaluru Newcomer',
+      bio: 'Learning Kannada one conversation at a time.',
+      status: 'Explorer',
+      avatar: '👤',
+      joinedAt: new Date().toISOString()
+    };
+
+    function read() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { ...DEFAULT_PROFILE };
+        const parsed = JSON.parse(raw);
+        return { ...DEFAULT_PROFILE, ...parsed };
+      } catch {
+        return { ...DEFAULT_PROFILE };
+      }
+    }
+
+    function write(data) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    return {
+      get() { return read(); },
+      update(updates) {
+        const current = read();
+        const updated = { ...current, ...updates };
+        write(updated);
+        return updated;
+      }
+    };
+  })();
+
+  const CommunityStore = (() => {
+    const STORAGE_KEY = 'nammooru_community_v1';
+    const listeners = new Set();
+
+    const STARTER_POSTS = [
+      {
+        id: 'post_starter_1',
+        author: 'Rohan M. (Indiranagar)',
+        category: 'success',
+        title: 'Ordered filter coffee without switching to English today!',
+        content: 'Walked into a local Darshini near 100ft Road and said "Ondu filter coffee kodi". The uncle smiled, asked "Bisiya?" (Hot?), and handed me the tumbler. Small moment, but made my whole morning!',
+        helpfulCount: 8,
+        timestamp: new Date(Date.now() - 3600000 * 3).toISOString(),
+        isUserPost: false
+      },
+      {
+        id: 'post_starter_2',
+        author: 'Priya K. (HSR Layout)',
+        category: 'phrase',
+        title: 'A phrase that saves me every morning with autos',
+        content: '"Meter haaki sir" (ಮೀಟರ್ ಹಾಕಿ ಸರ್ — Please put the meter, sir) said politely with a smile works 80% of the time around BDA complex. If they hesitate, adding "Dayavittu" (ದಯವಿಟ್ಟು) softens the mood completely.',
+        helpfulCount: 14,
+        timestamp: new Date(Date.now() - 3600000 * 12).toISOString(),
+        isUserPost: false
+      },
+      {
+        id: 'post_starter_3',
+        author: 'Amit S. (Whitefield)',
+        category: 'help',
+        title: 'How do I politely say "Keep the change" to a vendor?',
+        content: 'When buying tender coconut for ₹50 and handing ₹60, how do you say "Keep the change" naturally without sounding rude? Any native speakers who can share the common phrase?',
+        helpfulCount: 5,
+        timestamp: new Date(Date.now() - 3600000 * 24).toISOString(),
+        isUserPost: false
+      }
+    ];
+
+    function read() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) {
+          write(STARTER_POSTS);
+          return [...STARTER_POSTS];
+        }
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [...STARTER_POSTS];
+      } catch {
+        return [...STARTER_POSTS];
+      }
+    }
+
+    function write(items) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        listeners.forEach(fn => { try { fn(items); } catch (e) { console.error(e); } });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    return {
+      getAll() { return read(); },
+      add(post) {
+        const all = read();
+        const newPost = {
+          id: 'post_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          author: post.author || ProfileStore.get().name || 'Bengaluru Newcomer',
+          category: post.category || 'success',
+          title: String(post.title || '').trim(),
+          content: String(post.content || '').trim(),
+          helpfulCount: 0,
+          timestamp: new Date().toISOString(),
+          isUserPost: true
+        };
+        all.unshift(newPost);
+        write(all);
+        return newPost;
+      },
+      upvote(id) {
+        const all = read();
+        const target = all.find(p => p.id === id);
+        if (target) {
+          target.helpfulCount = (target.helpfulCount || 0) + 1;
+          write(all);
+          return target.helpfulCount;
+        }
+        return 0;
+      },
+      remove(id) {
+        const all = read();
+        const filtered = all.filter(p => p.id !== id);
+        if (filtered.length !== all.length) {
+          write(filtered);
+          return true;
+        }
+        return false;
+      },
+      subscribe(fn) {
+        if (typeof fn === 'function') listeners.add(fn);
+        return () => listeners.delete(fn);
+      }
+    };
+  })();
+
+  // =========================================================================
+  // TRANSFORM UI CONTROLLER
+  // =========================================================================
+
+  const profileDisplayName  = document.getElementById('profile-display-name');
+  const profileBioText      = document.getElementById('profile-bio-text');
+  const profileGardenCount  = document.getElementById('profile-garden-count');
+  const profileAttemptsCount= document.getElementById('profile-attempts-count');
+  const profileBadgesCount  = document.getElementById('profile-badges-count');
+  const btnEditProfile      = document.getElementById('btn-edit-profile');
+
+  const modalEditProfile    = document.getElementById('modal-edit-profile');
+  const btnCloseEditProfile = document.getElementById('btn-close-edit-profile');
+  const formEditProfile     = document.getElementById('form-edit-profile');
+  const profileNameInput    = document.getElementById('profile-name-input');
+  const profileBioInput     = document.getElementById('profile-bio-input');
+
+  const btnOpenCreatePost   = document.getElementById('btn-open-create-post');
+  const modalCreatePost     = document.getElementById('modal-create-post');
+  const btnCloseCreatePost  = document.getElementById('btn-close-create-post');
+  const formCreatePost      = document.getElementById('form-create-post');
+  const postCategorySelect  = document.getElementById('post-category-select');
+  const postTitleInput      = document.getElementById('post-title-input');
+  const postContentInput    = document.getElementById('post-content-input');
+
+  const communityCategoryBar= document.getElementById('community-category-bar');
+  const communityFeedList   = document.getElementById('community-feed-list');
+
+  let currentFeedFilter = 'all';
+
+  function syncProfileCard() {
+    const profile = ProfileStore.get();
+    if (profileDisplayName) profileDisplayName.textContent = profile.name;
+    if (profileBioText)     profileBioText.textContent = profile.bio;
+
+    const gardenData = GardenStore.count();
+    if (profileGardenCount) profileGardenCount.textContent = gardenData.total;
+
+    const attempts = AttemptStore.getAll();
+    if (profileAttemptsCount) profileAttemptsCount.textContent = attempts.length;
+
+    const earnedBadges = BADGE_DEFINITIONS.filter(b => b.evaluate(attempts).earned).length;
+    if (profileBadgesCount) profileBadgesCount.textContent = `${earnedBadges}/${BADGE_DEFINITIONS.length}`;
+  }
+
+  function renderCommunityFeed() {
+    if (!communityFeedList) return;
+    const posts = CommunityStore.getAll();
+    communityFeedList.innerHTML = '';
+
+    const filtered = posts.filter(post => {
+      if (currentFeedFilter === 'all') return true;
+      return post.category === currentFeedFilter;
+    });
+
+    if (filtered.length === 0) {
+      const emptyBox = document.createElement('div');
+      emptyBox.className = 'learn-empty-search';
+      emptyBox.innerHTML = `
+        <div class="empty-search-icon">💬</div>
+        <h3 class="empty-search-title">No posts in this category yet</h3>
+        <p class="empty-search-desc">Be the first to share an experience, phrase, or question with the community!</p>
+      `;
+      communityFeedList.appendChild(emptyBox);
+      return;
+    }
+
+    filtered.forEach(post => {
+      const card = document.createElement('div');
+      card.className = 'community-post-card';
+      card.id = post.id;
+
+      const catLabels = {
+        success: '🌟 Success Story',
+        phrase: '💡 Learned Phrase',
+        help: '🤝 Question & Help',
+        tip: '📍 Bengaluru Tip'
+      };
+
+      const dateStr = formatDate(post.timestamp);
+
+      card.innerHTML = `
+        <div class="post-header-row">
+          <div class="post-author-group">
+            <div class="post-author-avatar" aria-hidden="true">👤</div>
+            <div>
+              <span class="post-author-name">${escapeHtml(post.author)}</span>
+              <span class="post-time">• ${dateStr}</span>
+            </div>
+          </div>
+          <span class="post-cat-pill ${post.category}">${catLabels[post.category] || 'Community'}</span>
+        </div>
+
+        <h3 class="post-title">${escapeHtml(post.title)}</h3>
+        <p class="post-body-text">${escapeHtml(post.content)}</p>
+
+        <div class="post-footer-actions">
+          <button type="button" class="btn-post-helpful" data-post-id="${post.id}" aria-label="Mark post as helpful">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+            </svg>
+            <span class="helpful-count-label">Helpful (${post.helpfulCount || 0})</span>
+          </button>
+
+          ${post.isUserPost ? `<button type="button" class="btn-attempt-delete btn-delete-post" data-post-id="${post.id}" title="Delete post">Delete</button>` : ''}
+        </div>
+      `;
+
+      // Upvote listener
+      const helpfulBtn = card.querySelector('.btn-post-helpful');
+      if (helpfulBtn) {
+        helpfulBtn.addEventListener('click', () => {
+          CommunityStore.upvote(post.id);
+          helpfulBtn.classList.add('voted');
+          showGardenToast('Thank you for your feedback! 🤝', 'success', 2000);
+        });
+      }
+
+      // Delete listener for user posts
+      const deleteBtn = card.querySelector('.btn-delete-post');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+          if (confirm('Delete this community post?')) {
+            CommunityStore.remove(post.id);
+            showGardenToast('Post deleted.', 'info');
+          }
+        });
+      }
+
+      communityFeedList.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // --- Filter Category Pill Listener ---
+  if (communityCategoryBar) {
+    communityCategoryBar.addEventListener('click', (e) => {
+      const btn = e.target.closest('.cat-pill');
+      if (!btn) return;
+      currentFeedFilter = btn.dataset.feedCat || 'all';
+      communityCategoryBar.querySelectorAll('.cat-pill').forEach(b => {
+        b.classList.toggle('active', b === btn);
+        b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+      });
+      renderCommunityFeed();
+    });
+  }
+
+  // --- Create Post Modal Handlers ---
+  function openCreatePostModal() {
+    if (!modalCreatePost) return;
+    modalCreatePost.hidden = false;
+    document.body.style.overflow = 'hidden';
+    if (postTitleInput) postTitleInput.focus();
+  }
+
+  function closeCreatePostModal() {
+    if (!modalCreatePost) return;
+    modalCreatePost.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  if (btnOpenCreatePost)  btnOpenCreatePost.addEventListener('click', openCreatePostModal);
+  if (btnCloseCreatePost) btnCloseCreatePost.addEventListener('click', closeCreatePostModal);
+  if (modalCreatePost) {
+    modalCreatePost.addEventListener('click', (e) => {
+      if (e.target === modalCreatePost) closeCreatePostModal();
+    });
+  }
+
+  if (formCreatePost) {
+    formCreatePost.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = (postTitleInput ? postTitleInput.value : '').trim();
+      const content = (postContentInput ? postContentInput.value : '').trim();
+      const cat = (postCategorySelect ? postCategorySelect.value : 'success');
+
+      if (!title || !content) {
+        showGardenToast('Please fill in both a title and story details.', 'info');
+        return;
+      }
+
+      const profile = ProfileStore.get();
+      CommunityStore.add({
+        author: profile.name,
+        category: cat,
+        title: title,
+        content: content
+      });
+
+      // Reset & close
+      postTitleInput.value = '';
+      postContentInput.value = '';
+      closeCreatePostModal();
+      showGardenToast('Post published to community! 🌟', 'success', 3000);
+      renderCommunityFeed();
+    });
+  }
+
+  // --- Edit Profile Modal Handlers ---
+  function openEditProfileModal() {
+    if (!modalEditProfile) return;
+    const profile = ProfileStore.get();
+    if (profileNameInput) profileNameInput.value = profile.name || '';
+    if (profileBioInput)  profileBioInput.value  = profile.bio  || '';
+    modalEditProfile.hidden = false;
+    document.body.style.overflow = 'hidden';
+    if (profileNameInput) profileNameInput.focus();
+  }
+
+  function closeEditProfileModal() {
+    if (!modalEditProfile) return;
+    modalEditProfile.hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  if (btnEditProfile)      btnEditProfile.addEventListener('click', openEditProfileModal);
+  if (btnCloseEditProfile) btnCloseEditProfile.addEventListener('click', closeEditProfileModal);
+  if (modalEditProfile) {
+    modalEditProfile.addEventListener('click', (e) => {
+      if (e.target === modalEditProfile) closeEditProfileModal();
+    });
+  }
+
+  if (formEditProfile) {
+    formEditProfile.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = (profileNameInput ? profileNameInput.value : '').trim();
+      const bio  = (profileBioInput ? profileBioInput.value : '').trim();
+
+      if (!name) {
+        showGardenToast('Please enter a display name.', 'info');
+        return;
+      }
+
+      ProfileStore.update({ name, bio });
+      closeEditProfileModal();
+      syncProfileCard();
+      showGardenToast('Profile updated! ✨', 'success', 2500);
+    });
+  }
+
+  // --- Subscribe Community & Profile Changes ---
+  CommunityStore.subscribe(() => {
+    renderCommunityFeed();
+  });
+
+  GardenStore.subscribe(() => {
+    syncProfileCard();
+  });
+
+  AttemptStore.subscribe(() => {
+    syncProfileCard();
+  });
+
+  // Global Escape key handler for all modals
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (badgeDetailModal && !badgeDetailModal.hidden) closeBadgeDetailModal();
       if (attemptDetailModal && !attemptDetailModal.hidden) closeAttemptDetailModal();
       if (gardenPickerModal && !gardenPickerModal.hidden) closeGardenPicker();
+      if (modalCreatePost && !modalCreatePost.hidden) closeCreatePostModal();
+      if (modalEditProfile && !modalEditProfile.hidden) closeEditProfileModal();
     }
   });
 
-  // --- Subscribe AttemptStore changes to keep Badges & Log reactive ---
-  AttemptStore.subscribe(() => {
-    renderBadgesShowcase();
-    renderPracticeLog();
-  });
+  // Expose stores for modularity and verification
+  window.ProfileStore = ProfileStore;
+  window.CommunityStore = CommunityStore;
 
-  // Initial Sync of Innovate Badges & Log Counters
-  renderBadgesShowcase();
-  renderPracticeLog();
+  // Initial Sync
+  syncProfileCard();
+  renderCommunityFeed();
 
 });
 
