@@ -2,79 +2,82 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="Nammooru — A modern, welcoming companion for newcomers to Bengaluru learning Kannada.">
-  <meta name="theme-color" content="#EDEBF5">
-  <title>Nammooru — Find Your Words in Bengaluru</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Nammooru — A cinematic digital companion for newcomers to Bengaluru learning Kannada.">
+  <meta name="theme-color" content="#174F4D">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Nammooru">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Nammooru</title>
 
-  <!-- Typography: Plus Jakarta Sans (Modern Geometric Sans) & Noto Sans Kannada -->
+  <!-- PWA Web App Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png">
+
+  <!-- Typography: Helvetica primary fallback + Playfair Display (Editorial Italic) & Noto Sans Kannada & Retro Pixel Press Start 2P -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600;1,700&family=Press+Start+2P&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Main Application Viewport (Mobile-first vertical experience) -->
+  <!-- Main Application Viewport -->
   <div class="app-viewport">
     
-    <!-- Top Header Bar: Airportr-Inspired Clean Floating Brand Bar -->
+    <!-- Top Header Bar: Clean Editorial Wordmark & City Indicator -->
     <header class="app-header" role="banner">
       <div class="header-inner">
-        <div class="brand" aria-label="Nammooru - Welcome to Bengaluru">
-          <div class="brand-logo-mark" aria-hidden="true">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <div class="brand-text-group">
-            <span class="brand-kn" lang="kn">ನಮ್ಮೂರು</span>
-            <span class="brand-divider" aria-hidden="true">/</span>
-            <span class="brand-en">Nammooru</span>
-          </div>
+        <!-- Pure Brand Wordmark: Exactly 'Nammooru', No logo/icon, No translations -->
+        <div class="brand" aria-label="Nammooru">
+          <span class="brand-name">Nammooru</span>
         </div>
         
         <div class="header-right-group">
-          <!-- Active City Badge -->
-          <div class="header-badge" aria-label="City: Bengaluru, Karnataka">
+          <!-- 2FA Auth Pill Button -->
+          <button type="button" class="btn-auth-pill" id="btn-auth-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Two-Factor Authentication modal">
+            <svg class="auth-pill-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span class="auth-pill-text" id="auth-pill-label">2FA Login</span>
+            <span class="auth-pill-dot" id="auth-pill-dot" hidden aria-hidden="true"></span>
+          </button>
+
+          <!-- City Indicator -->
+          <div class="header-badge" aria-label="Location: Bengaluru">
             <span class="badge-accent-dot" aria-hidden="true"></span>
             <span>Bengaluru</span>
           </div>
-
-          <!-- Quick Garden Counter Trigger in Header -->
-          <button type="button" class="header-garden-pill" id="btn-header-garden" aria-label="Open Word Garden">
-            <span class="garden-icon" aria-hidden="true">🌿</span>
-            <span class="garden-pill-count" id="header-garden-count">0</span>
-          </button>
         </div>
       </div>
     </header>
 
-    <!-- Main Content Area: 4 Primary Experiences -->
+    <!-- Main Content Area: 3 Primary Destinations (Photo, Learn, Transform) -->
     <main class="app-content" id="main-content" role="region" aria-live="polite">
 
       <!-- =========================================================
-           1. PHOTO SECTION — Focused Everyday Camera & Translation Lens
+           1. PHOTO SECTION — Heroic Cinematic Optical Viewfinder
            ========================================================= -->
       <section 
         id="section-photo" 
-        class="view-section active" 
+        class="view-section active photo-section-canvas" 
         role="tabpanel" 
         aria-labelledby="tab-photo"
         tabindex="0">
 
-        <!-- Airportr-Inspired Hero Header -->
-        <div class="photo-header">
-          <div class="photo-header-top">
-            <div class="editorial-kicker">
-              <span class="kicker-kn" lang="kn">ದೃಶ್ಯ ಶೋಧನೆ</span>
-              <span class="kicker-bullet" aria-hidden="true">•</span>
-              <span class="kicker-en">Visual Lens</span>
+        <!-- Photo Canvas Header -->
+        <div class="photo-editorial-header">
+          <div class="photo-header-row">
+            <div>
+              <h1 class="photo-main-headline">Point. Identify. Discover.</h1>
+              <p class="editorial-tagline"><em>A quiet lens for discovering the sounds of Bengaluru.</em></p>
             </div>
-
-            <!-- Compact History Log Book Trigger -->
-            <button type="button" class="btn-history-compact" id="btn-history-open" aria-label="Open History Log Book">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            
+            <!-- History Log Trigger -->
+            <button type="button" class="btn-history-trigger" id="btn-history-open" aria-label="Open History Log Book">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
               </svg>
               <span>History</span>
@@ -82,34 +85,38 @@
             </button>
           </div>
 
-          <h1 class="photo-headline">Find your words in Bengaluru.</h1>
-          <p class="photo-subtext">Photograph any everyday object around you to learn what it's called in Kannada.</p>
+          <p class="photo-main-subtext">Photograph any everyday object around Bengaluru to discover its name and pronunciation in Kannada.</p>
         </div>
 
-        <!-- Camera & Photo Capture Module -->
-        <div class="photo-capture-card" id="photo-capture-card">
+        <!-- Distinct Optical Viewfinder Studio Card -->
+        <div class="photo-optical-studio" id="photo-capture-card">
           
-          <!-- Viewfinder Graphics & Ambient Scanning Illustration -->
-          <div class="scanner-frame-ambient" id="scanner-frame-ambient">
-            <div class="viewfinder-corner tl"></div>
-            <div class="viewfinder-corner tr"></div>
-            <div class="viewfinder-corner bl"></div>
-            <div class="viewfinder-corner br"></div>
-            
-            <div class="scanner-center-graphic" aria-hidden="true">
-              <div class="scanner-pulse-circle"></div>
-              <svg class="scanner-camera-icon" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
+          <!-- Optical Viewfinder Aperture (Fuller, taller camera experience) -->
+          <div class="optical-aperture" id="scanner-frame-ambient">
+            <div class="optical-grid-reticle" aria-hidden="true">
+              <div class="reticle-line h"></div>
+              <div class="reticle-line v"></div>
+              <div class="reticle-corner tl"></div>
+              <div class="reticle-corner tr"></div>
+              <div class="reticle-corner bl"></div>
+              <div class="reticle-corner br"></div>
+            </div>
+
+            <!-- Optical Sensor Center (Animated ring rendered via CSS pseudo-element) -->
+            <div class="optical-sensor-center" aria-hidden="true">
+              <svg class="sensor-icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="4"/>
+                <line x1="12" y1="2" x2="12" y2="4"/>
+                <line x1="12" y1="20" x2="12" y2="22"/>
+                <line x1="2" y1="12" x2="4" y2="12"/>
+                <line x1="20" y1="12" x2="22" y2="12"/>
               </svg>
             </div>
-          </div>
 
-          <!-- Instruction Text -->
-          <div class="capture-instruction-box">
-            <p class="capture-instruction">
-              Point your camera at a street sign, fruit, vehicle, coffee cup, or vegetable to start.
-            </p>
+            <div class="optical-guidance-text">
+              <span>Align object in center frame</span>
+            </div>
           </div>
 
           <!-- Hidden Native File Inputs -->
@@ -128,23 +135,23 @@
             class="visually-hidden" 
             aria-label="Upload an image from gallery">
 
-          <!-- Action Buttons (Initial State) -->
-          <div class="capture-actions" id="capture-actions">
-            <button type="button" class="btn btn-primary btn-shutter" id="btn-take-photo">
+          <!-- Action Shutter Bar (High-Contrast White Tactile Capsule + Frosted Secondary) -->
+          <div class="photo-action-bar" id="capture-actions">
+            <button type="button" class="btn btn-shutter-action" id="btn-take-photo">
               <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                 <circle cx="12" cy="13" r="4"/>
               </svg>
-              <span>Take a Photo</span>
+              <span>Take Photo</span>
             </button>
 
-            <button type="button" class="btn btn-secondary" id="btn-upload-gallery">
-              <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <button type="button" class="btn btn-upload-action" id="btn-upload-gallery">
+              <svg class="btn-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 <circle cx="8.5" cy="8.5" r="1.5"/>
                 <polyline points="21 15 16 10 5 21"/>
               </svg>
-              <span>Upload Image</span>
+              <span>Upload from Gallery</span>
             </button>
           </div>
 
@@ -157,7 +164,7 @@
           <!-- Active Photo Preview Container -->
           <div class="photo-preview-container" id="photo-preview-container" hidden>
             <div class="preview-image-wrapper">
-              <img id="preview-image" src="" alt="Captured preview for Kannada recognition" class="preview-img">
+              <img id="preview-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Captured preview for Kannada recognition" class="preview-img">
               <div class="preview-badge" id="preview-filename">photo.jpg</div>
               
               <!-- Scanning Animation Overlay while identifying -->
@@ -166,7 +173,7 @@
 
             <div class="preview-controls">
               <!-- Identify Action Button -->
-              <button type="button" class="btn btn-primary btn-identify" id="btn-identify-object">
+              <button type="button" class="btn btn-primary btn-identify" id="btn-identify">
                 <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -176,7 +183,7 @@
 
               <div class="preview-secondary-actions">
                 <button type="button" class="btn btn-secondary btn-sm" id="btn-retake-photo">
-                  <svg class="btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M23 4v6h-6M1 20v-6h6"/>
                     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
                   </svg>
@@ -184,7 +191,7 @@
                 </button>
 
                 <button type="button" class="btn btn-ghost btn-sm" id="btn-remove-photo">
-                  <svg class="btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <line x1="18" y1="6" x2="6" y2="18"/>
                     <line x1="6" y1="6" x2="18" y2="18"/>
                   </svg>
@@ -194,17 +201,17 @@
             </div>
           </div>
 
-          <!-- Live Recognition Discovery Card -->
-          <div class="recognition-result-card" id="recognition-result-card" hidden>
+          <!-- Specimen Discovery Card (Result) -->
+          <div class="recognition-result-card" id="result-panel" hidden>
             <div class="result-header-strip">
-              <span class="result-tag-pill">✨ Identified Object</span>
+              <span class="result-tag-pill">Identified Object</span>
               <span class="result-timestamp" id="result-timestamp">Just now</span>
             </div>
 
             <div class="result-content-body">
               <div class="result-main-words">
                 <div class="result-kannada" id="result-kannada" lang="kn">ಕಾಫಿ</div>
-                <div class="result-translit" id="result-translit">Kaafi</div>
+                <div class="result-translit" id="result-pronunciation">Kaafi</div>
                 <div class="result-english" id="result-english">Coffee / Filter Coffee</div>
               </div>
 
@@ -214,32 +221,40 @@
                 </p>
               </div>
 
-              <!-- Audio & Garden Action Row -->
+              <!-- Result Actions Bar -->
               <div class="result-actions-row">
-                <button type="button" class="btn btn-listen btn-result-listen" id="btn-listen-result">
+                <button type="button" class="btn btn-secondary btn-listen-result" id="btn-listen-result" aria-label="Listen to Kannada pronunciation">
                   <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
                     <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                   </svg>
-                  <span>Listen</span>
+                  <span>Pronounce</span>
                 </button>
 
-                <button type="button" class="btn btn-save-garden" id="btn-save-result-garden">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <button type="button" class="btn btn-secondary btn-save-garden" id="btn-result-save-garden" aria-label="Add to Word Garden">
+                  <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
                   </svg>
-                  <span>Save to Garden</span>
+                  <span id="btn-result-save-garden-text">Add to Garden</span>
+                </button>
+
+                <button type="button" class="btn btn-secondary btn-save-history" id="btn-save-history" aria-label="Save to History Log Book">
+                  <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                  <span>Save to History</span>
                 </button>
               </div>
 
-              <!-- Secondary Scan Action -->
               <div class="result-footer-row">
-                <button type="button" class="btn btn-secondary btn-full" id="btn-scan-another">
-                  <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                    <circle cx="12" cy="13" r="4"/>
-                  </svg>
-                  <span>Scan Another Object</span>
+                <button type="button" class="btn btn-primary btn-full" id="btn-learn-word">
+                  <span>Learn Related Phrases</span>
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-scan-another" aria-label="Scan another item">
+                  <span>Scan Another</span>
                 </button>
               </div>
             </div>
@@ -250,7 +265,8 @@
       </section>
 
       <!-- =========================================================
-           2. LEARN SECTION — Structured Kannada Discovery
+           2. LEARN SECTION — Everyday Curriculum (Restored Classic Layout)
+           Retains improved Helvetica and Playfair typography
            ========================================================= -->
       <section 
         id="section-learn" 
@@ -260,139 +276,177 @@
         hidden
         tabindex="0">
 
-        <!-- Learn Header -->
+        <!-- Learn Editorial Hero Header -->
         <div class="learn-header">
           <div class="editorial-kicker">
-            <span class="kicker-kn" lang="kn">ಕನ್ನಡ ಕಲಿ</span>
+            <span class="kicker-kn" lang="kn">ಕಲಿ</span>
             <span class="kicker-bullet" aria-hidden="true">•</span>
-            <span class="kicker-en">Language Discovery</span>
+            <span class="kicker-en">Everyday Curriculum</span>
           </div>
 
-          <h1 class="learn-headline">Every word opens a door.</h1>
-          <p class="learn-subtext">Master the script, essential daily vocabulary, and everyday Bengaluru phrases.</p>
+          <h1 class="learn-headline">
+            Everyday Kannada<br>
+            <em>for Bengaluru life.</em>
+          </h1>
 
-          <!-- Mode Switcher Pill Dock -->
-          <div class="learn-mode-dock" role="tablist" aria-label="Learning Modes">
-            <button type="button" class="learn-mode-btn active" data-mode="script" role="tab" aria-selected="true" id="mode-tab-script">
-              <span>Script</span>
-            </button>
-            <button type="button" class="learn-mode-btn" data-mode="words" role="tab" aria-selected="false" id="mode-tab-words">
-              <span>Words</span>
-            </button>
-            <button type="button" class="learn-mode-btn" data-mode="phrases" role="tab" aria-selected="false" id="mode-tab-phrases">
-              <span>Phrases</span>
-            </button>
-            <button type="button" class="learn-mode-btn mode-garden-btn" data-mode="garden" role="tab" aria-selected="false" id="btn-mode-garden">
-              <span aria-hidden="true">🌿</span>
-              <span>Garden</span>
-            </button>
+          <p class="learn-subtext">
+            Explore authentic script, practical daily vocabulary, and real-life phrases with native audio pronunciation.
+          </p>
+
+          <!-- Audio Engine Status Indicator -->
+          <div class="audio-engine-badge" id="audio-engine-badge" aria-live="polite">
+            <span class="audio-status-dot" aria-hidden="true"></span>
+            <span id="audio-status-text">Kannada Audio Ready</span>
           </div>
         </div>
 
-        <!-- Global Audio Player Pill (Visual Active State) -->
-        <div class="audio-player-pill" id="audio-player-pill" hidden>
-          <div class="audio-pill-left">
-            <span class="audio-wave-anim" aria-hidden="true">
-              <span></span><span></span><span></span>
-            </span>
-            <span class="audio-pill-label" id="audio-pill-label">Speaking authentic Kannada...</span>
+        <!-- Word Garden Invitation Card in LEARN -->
+        <div class="garden-hero-card" id="garden-learn-card">
+          <div class="garden-hero-content">
+            <div class="garden-hero-header-row">
+              <span class="garden-leaf-icon" aria-hidden="true">🌿</span>
+              <span class="garden-kicker">Personal Collection</span>
+            </div>
+            <h2 class="garden-hero-title">My Word Garden</h2>
+            <p class="garden-hero-desc">Your collection of words, growing one conversation at a time.</p>
           </div>
-          <button type="button" class="btn-stop-audio" id="btn-stop-audio" aria-label="Stop audio playback">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="6" y="6" width="12" height="12" rx="2"/>
-            </svg>
+          <button type="button" class="btn btn-garden-open" id="btn-open-garden-from-learn" aria-label="Open your Word Garden">
+            <span>View Garden</span>
+            <span class="garden-count-pill" id="learn-garden-count" hidden>0</span>
           </button>
         </div>
 
-        <!-- Search Bar (Active in Words & Phrases) -->
-        <div class="learn-search-wrapper" id="learn-search-wrapper">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input 
-            type="search" 
-            id="learn-search-input" 
-            class="learn-search-input" 
-            placeholder="Search Kannada script, words, phrases, or English..." 
-            aria-label="Search learning content"
-            autocomplete="off">
-          <button type="button" class="search-clear-btn" id="btn-search-clear" aria-label="Clear search" hidden>&times;</button>
+        <!-- Mode Selector (Segmented Control: Script, Words, Phrases, My Word Garden) -->
+        <nav class="learn-mode-nav" aria-label="Learning modes" role="tablist">
+          <button type="button" class="learn-mode-btn active" data-mode="script" id="btn-mode-script" role="tab" aria-selected="true">
+            <span class="mode-icon" aria-hidden="true">ಅ</span>
+            <span>Script</span>
+          </button>
+          <button type="button" class="learn-mode-btn" data-mode="words" id="btn-mode-words" role="tab" aria-selected="false">
+            <span class="mode-icon" aria-hidden="true">💬</span>
+            <span>Words</span>
+          </button>
+          <button type="button" class="learn-mode-btn" data-mode="phrases" id="btn-mode-phrases" role="tab" aria-selected="false">
+            <span class="mode-icon" aria-hidden="true">✨</span>
+            <span>Phrases</span>
+          </button>
+          <button type="button" class="learn-mode-btn btn-mode-garden" data-mode="garden" id="btn-mode-garden" role="tab" aria-selected="false" aria-label="My Word Garden">
+            <span class="mode-icon" aria-hidden="true">🌿</span>
+            <span>My Word Garden</span>
+            <span class="garden-badge-count" id="learn-garden-tab-badge" hidden>0</span>
+          </button>
+        </nav>
+
+        <!-- Search Bar (Across Words, Phrases, and Script) -->
+        <div class="learn-search-bar" id="learn-search-container">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="8"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input 
+              type="search" 
+              id="learn-search-input" 
+              class="learn-search-input" 
+              placeholder="Search words, meanings, or Kannada..." 
+              aria-label="Search learning items"
+              autocomplete="off">
+            <button type="button" class="search-clear-btn" id="btn-search-clear" aria-label="Clear search" hidden>&times;</button>
+          </div>
         </div>
 
-        <!-- Sub-panel 1: SCRIPT -->
-        <div class="learn-subpanel active" id="panel-learn-script" role="tabpanel" aria-labelledby="mode-tab-script">
-          
-          <!-- Script Group Switcher -->
-          <div class="script-group-bar">
-            <button type="button" class="script-group-btn active" data-script-group="vowels">
-              <span>Vowels (ಸ್ವರಗಳು • 15)</span>
+        <!-- Global Floating Audio Controller (Active when speaking) -->
+        <div class="audio-player-pill" id="audio-player-pill" hidden aria-live="polite">
+          <div class="audio-waves" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </div>
+          <span class="audio-pill-label" id="audio-pill-label">Speaking...</span>
+          <button type="button" class="btn-stop-audio" id="btn-stop-audio" aria-label="Stop audio">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="5" y="5" width="14" height="14" rx="2"/>
+            </svg>
+            <span>Stop</span>
+          </button>
+        </div>
+
+        <!-- =======================================================
+             MODE 1: SCRIPT (ವರ್ಣಮಾಲೆ)
+             ======================================================= -->
+        <div class="learn-mode-panel active" id="panel-learn-script" role="tabpanel" aria-labelledby="btn-mode-script">
+          <!-- Script Sub-tabs (Vowels vs Consonants) -->
+          <div class="script-group-switch">
+            <button type="button" class="script-group-btn active" data-script-group="vowels" id="btn-group-vowels">
+              Vowels • ಸ್ವರಗಳು (15)
             </button>
-            <button type="button" class="script-group-btn" data-script-group="consonants">
-              <span>Consonants (ವ್ಯಂಜನಗಳು • 34)</span>
+            <button type="button" class="script-group-btn" data-script-group="consonants" id="btn-group-consonants">
+              Consonants • ವ್ಯಂಜನಗಳು (34)
             </button>
           </div>
 
-          <div class="script-intro-box">
-            <h3 class="script-section-title" id="script-section-title">Kannada Vowels • ಸ್ವರಗಳು</h3>
-            <p class="script-section-desc" id="script-section-desc">Tap any Listen button to hear native pronunciation.</p>
+          <div class="script-section-header">
+            <h2 class="script-section-title" id="script-section-title">Kannada Vowels (ಸ್ವರಗಳು)</h2>
+            <p class="script-section-desc" id="script-section-desc">
+              Tap any Listen button to hear authentic pronunciation. Vowels are the foundation of spoken Kannada.
+            </p>
           </div>
 
-          <div class="script-grid" id="script-grid" role="region" aria-label="Kannada Script Characters">
-            <!-- Rendered dynamically by script.js -->
-          </div>
+          <!-- Letters Grid (Populated dynamically from learn-data.js) -->
+          <div class="script-grid" id="script-grid" role="region" aria-label="Kannada letters"></div>
         </div>
 
-        <!-- Sub-panel 2: WORDS -->
-        <div class="learn-subpanel" id="panel-learn-words" role="tabpanel" aria-labelledby="mode-tab-words" hidden>
-          <!-- Category Filter Bar -->
-          <div class="category-filter-bar" id="words-category-bar" role="tablist" aria-label="Word Categories">
-            <button type="button" class="cat-pill active" data-cat="all">All Words</button>
-            <button type="button" class="cat-pill" data-cat="greetings">Greetings</button>
-            <button type="button" class="cat-pill" data-cat="numbers">Numbers &amp; Money</button>
-            <button type="button" class="cat-pill" data-cat="food">Food &amp; Dining</button>
-            <button type="button" class="cat-pill" data-cat="transport">Getting Around</button>
-            <button type="button" class="cat-pill" data-cat="shopping">Shopping</button>
-            <button type="button" class="cat-pill" data-cat="directions">Directions</button>
-            <button type="button" class="cat-pill" data-cat="polite">Politeness</button>
-            <button type="button" class="cat-pill" data-cat="daily">Daily Life</button>
+        <!-- =======================================================
+             MODE 2: WORDS (ಪದಗಳು)
+             ======================================================= -->
+        <div class="learn-mode-panel" id="panel-learn-words" role="tabpanel" aria-labelledby="btn-mode-words" hidden>
+          <!-- Category Filter Pills -->
+          <div class="category-filter-bar" id="words-category-bar" role="tablist" aria-label="Word categories">
+            <button type="button" class="cat-pill active" data-cat="all" role="tab" aria-selected="true">All Words</button>
+            <button type="button" class="cat-pill" data-cat="greetings" role="tab" aria-selected="false">Greetings</button>
+            <button type="button" class="cat-pill" data-cat="numbers" role="tab" aria-selected="false">Numbers &amp; Money</button>
+            <button type="button" class="cat-pill" data-cat="food" role="tab" aria-selected="false">Food &amp; Dining</button>
+            <button type="button" class="cat-pill" data-cat="transport" role="tab" aria-selected="false">Transport</button>
+            <button type="button" class="cat-pill" data-cat="directions" role="tab" aria-selected="false">Directions</button>
+            <button type="button" class="cat-pill" data-cat="shopping" role="tab" aria-selected="false">Shopping</button>
+            <button type="button" class="cat-pill" data-cat="everyday" role="tab" aria-selected="false">Everyday</button>
           </div>
 
-          <div class="words-grid" id="words-grid" role="region" aria-label="Vocabulary Cards">
-            <!-- Rendered dynamically by script.js -->
-          </div>
+          <!-- Words Grid (Populated dynamically from learn-data.js) -->
+          <div class="learn-items-grid" id="words-grid" role="region" aria-label="Kannada vocabulary words"></div>
         </div>
 
-        <!-- Sub-panel 3: PHRASES -->
-        <div class="learn-subpanel" id="panel-learn-phrases" role="tabpanel" aria-labelledby="mode-tab-phrases" hidden>
-          <!-- Category Filter Bar -->
-          <div class="category-filter-bar" id="phrases-category-bar" role="tablist" aria-label="Phrase Categories">
-            <button type="button" class="cat-pill active" data-cat="all">All Phrases</button>
-            <button type="button" class="cat-pill" data-cat="auto">Auto &amp; Commute</button>
-            <button type="button" class="cat-pill" data-cat="darshini">Darshini &amp; Chai</button>
-            <button type="button" class="cat-pill" data-cat="grocery">Grocery &amp; Market</button>
-            <button type="button" class="cat-pill" data-cat="directions">Asking Directions</button>
-            <button type="button" class="cat-pill" data-cat="polite">Polite Phrases</button>
-            <button type="button" class="cat-pill" data-cat="emergency">Help &amp; Clarity</button>
+        <!-- =======================================================
+             MODE 3: PHRASES (ವಾಕ್ಯಗಳು)
+             ======================================================= -->
+        <div class="learn-mode-panel" id="panel-learn-phrases" role="tabpanel" aria-labelledby="btn-mode-phrases" hidden>
+          <!-- Category Filter Pills -->
+          <div class="category-filter-bar" id="phrases-category-bar" role="tablist" aria-label="Phrase categories">
+            <button type="button" class="cat-pill active" data-cat="all" role="tab" aria-selected="true">All Phrases</button>
+            <button type="button" class="cat-pill" data-cat="auto" role="tab" aria-selected="false">Auto &amp; Commute</button>
+            <button type="button" class="cat-pill" data-cat="food" role="tab" aria-selected="false">Food &amp; Ordering</button>
+            <button type="button" class="cat-pill" data-cat="shopping" role="tab" aria-selected="false">Shopping &amp; Prices</button>
+            <button type="button" class="cat-pill" data-cat="polite" role="tab" aria-selected="false">Politeness &amp; Settling In</button>
+            <button type="button" class="cat-pill" data-cat="daily" role="tab" aria-selected="false">Daily Life</button>
           </div>
 
-          <div class="phrases-grid" id="phrases-grid" role="region" aria-label="Everyday Spoken Phrases">
-            <!-- Rendered dynamically by script.js -->
-          </div>
+          <!-- Phrases List (Populated dynamically from learn-data.js) -->
+          <div class="phrases-list" id="phrases-grid" role="region" aria-label="Everyday Kannada phrases"></div>
         </div>
 
-        <!-- Empty Search Feedback -->
+        <!-- Empty search results placeholder -->
         <div class="learn-empty-search" id="learn-empty-search" hidden>
-          <div class="empty-search-icon" aria-hidden="true">🔍</div>
-          <h3 class="empty-search-title">No matching words or phrases</h3>
-          <p class="empty-search-desc">Try a different search keyword, or clear your query to view all items.</p>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-empty-clear">Clear Search</button>
+          <div class="empty-icon" aria-hidden="true">🔍</div>
+          <h3 class="empty-title">No matching learning items found</h3>
+          <p class="empty-body">Try a different search word, switch categories, or clear search.</p>
+          <button type="button" class="btn btn-secondary" id="btn-empty-clear">Clear Search</button>
         </div>
 
       </section>
 
+
       <!-- =========================================================
-           3. INNOVATE SECTION — Real-World Practice & Transparent Badges
+           3. INNOVATE SECTION — Real-World Practice & Courage Recognition
+           Restored as an independent, primary destination
+           Organised into: Log a Try, My Week, My Badges, Badge Details, My Progress
            ========================================================= -->
       <section 
         id="section-innovate" 
@@ -402,111 +456,146 @@
         hidden
         tabindex="0">
 
-        <!-- Innovate Header -->
+        <!-- Page Heading & Purpose Explanation -->
         <div class="innovate-header">
           <div class="editorial-kicker">
-            <span class="kicker-kn" lang="kn">ಪ್ರಯೋಗ • ಧೈರ್ಯ</span>
+            <span class="kicker-kn" lang="kn">ಪ್ರಯೋಗ</span>
             <span class="kicker-bullet" aria-hidden="true">•</span>
             <span class="kicker-en">Real-World Practice</span>
           </div>
 
-          <h1 class="innovate-headline">Speak without fear.</h1>
+          <h1 class="innovate-headline">
+            Try speaking in real situations.<br>
+            <em>Every effort is celebrated.</em>
+          </h1>
+
           <p class="innovate-subtext">
-            Every conversation attempt counts. Whether it went smoothly or you froze, you are stepping up.
+            Practising Kannada in real Bengaluru situations and recognising every effort of trying. Zero pressure, zero judgment.
           </p>
 
-          <!-- Sub-Navigation Bar -->
-          <div class="innovate-nav-bar" role="tablist" aria-label="Practice Sub-sections">
-            <button type="button" class="innovate-nav-btn active" data-panel="record" role="tab" aria-selected="true" id="inno-tab-record">
-              <span>Record Practice</span>
-            </button>
-            <button type="button" class="innovate-nav-btn" data-panel="badges" role="tab" aria-selected="false" id="inno-tab-badges">
-              <span>Badges</span>
-              <span class="badge-count-tag" id="badge-earned-counter" hidden>0/9</span>
-            </button>
-            <button type="button" class="innovate-nav-btn" data-panel="log" role="tab" aria-selected="false" id="inno-tab-log">
-              <span>Practice Log</span>
-              <span class="log-count-tag" id="attempt-log-counter" hidden>0</span>
-            </button>
+          <!-- Safe Practice Reassurance Banner (No ranks/streaks/scores) -->
+          <div class="reassurance-banner">
+            <span class="reassurance-green-dot" aria-hidden="true"></span>
+            <span>No ranks, streaks, or competition. Every attempt is a genuine step towards belonging.</span>
           </div>
         </div>
 
-        <!-- Panel A: RECORD A REAL-WORLD ATTEMPT -->
-        <div class="innovate-panel active" id="panel-inno-record" role="tabpanel" aria-labelledby="inno-tab-record">
-          
-          <div class="innovate-card form-attempt-card">
-            
-            <div class="card-header-row">
-              <div class="card-icon-pill">📝</div>
-              <div>
-                <h2 class="card-title">Log a Conversation Moment</h2>
-                <p class="card-subtitle">Keep track of where you practiced and how it felt.</p>
-              </div>
+        <!-- SECTION 2: MY WEEK — Simple Factual Counts -->
+        <div class="my-week-surface" id="innovate-week-stats">
+          <div class="week-stats-header">
+            <span class="week-kicker">Weekly Summary</span>
+            <h2 class="week-title">My Week in Bengaluru</h2>
+          </div>
+          <div class="week-metrics-grid">
+            <div class="week-metric-card">
+              <span class="week-metric-val" id="week-tries-count">0</span>
+              <span class="week-metric-lbl">Tries this week</span>
+            </div>
+            <div class="week-metric-card">
+              <span class="week-metric-val" id="week-words-learned">0</span>
+              <span class="week-metric-lbl">Words learned</span>
+            </div>
+            <div class="week-metric-card">
+              <span class="week-metric-val" id="week-words-tried">0</span>
+              <span class="week-metric-lbl">Words tried</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Innovate Sub-Navigation (Segmented Control for Section Switching) -->
+        <div class="innovate-nav-bar" role="tablist" aria-label="Innovate practice modes">
+          <button type="button" class="innovate-nav-btn active" id="btn-inno-record" data-panel="record" role="tab" aria-selected="true">
+            <span>📝 Log a Try</span>
+          </button>
+          <button type="button" class="innovate-nav-btn" id="btn-inno-badges" data-panel="badges" role="tab" aria-selected="false">
+            <span>🏅 My Badges</span>
+            <span class="nav-count-badge" id="badge-earned-counter" hidden>0/9</span>
+          </button>
+          <button type="button" class="innovate-nav-btn" id="btn-inno-log" data-panel="log" role="tab" aria-selected="false">
+            <span>📊 My Progress &amp; Log</span>
+            <span class="nav-count-badge" id="attempt-log-counter" hidden>0</span>
+          </button>
+        </div>
+
+        <!-- =======================================================
+             PANEL 1: LOG A TRY — Prominent Action to Record an Attempt
+             ======================================================= -->
+        <div class="innovate-panel active" id="panel-inno-record" role="tabpanel" aria-labelledby="btn-inno-record">
+          <div class="innovate-card">
+            <div class="innovate-card-header">
+              <div class="card-eyebrow">Log a Real-World Try</div>
+              <h2 class="card-headline">What did you try today?</h2>
+              <p class="card-description">
+                Whether you greeted your security guard, ordered filter coffee, or asked for the meter — record your courage here.
+              </p>
             </div>
 
-            <!-- Connect to Word Garden Banner -->
-            <div class="garden-connect-strip">
-              <button type="button" class="btn-connect-garden" id="btn-connect-word-garden">
-                <span class="connect-icon" aria-hidden="true">🌿</span>
-                <span>Pick from your Word Garden</span>
-              </button>
-              <div class="connected-garden-chip" id="connected-garden-chip" hidden>
-                <span class="connected-text" id="connected-garden-text"></span>
-                <button type="button" class="btn-remove-link" id="btn-remove-garden-link" aria-label="Disconnect word">&times;</button>
-              </div>
-            </div>
-
-            <!-- Quick Template Inspiration Chips -->
-            <div class="quick-templates-wrapper">
-              <span class="templates-label">Quick Ideas:</span>
-              <div class="templates-scroll-row">
-                <button type="button" class="quick-template-chip" data-situation="Ordered filter coffee at a Darshini" data-cat="food">☕ Darshini Coffee</button>
-                <button type="button" class="quick-template-chip" data-situation="Asked auto driver for fare to Indiranagar" data-cat="transport">🛺 Auto Fare</button>
-                <button type="button" class="quick-template-chip" data-situation="Asked for tomato price at local shop" data-cat="shopping">🍅 Vegetable Market</button>
-                <button type="button" class="quick-template-chip" data-situation="Greeted neighbour with Namaskara" data-cat="everyday">🙏 Namaskara</button>
-              </div>
-            </div>
-
+            <!-- Form -->
             <form id="form-record-attempt" class="attempt-form" novalidate>
               
               <!-- Field 1: Situation / Phrase -->
               <div class="form-group">
-                <label for="input-attempt-situation" class="form-label">
-                  What did you say or try to do? <span class="required-star">*</span>
-                </label>
+                <div class="form-label-row">
+                  <label for="input-attempt-situation" class="form-label">
+                    Situation, word, or phrase <span class="required-star">*</span>
+                  </label>
+                  <button type="button" class="btn-text-link" id="btn-connect-word-garden">
+                    🌿 Pick from Word Garden
+                  </button>
+                </div>
+
                 <input 
                   type="text" 
                   id="input-attempt-situation" 
                   class="form-input" 
-                  placeholder="e.g. Asked 'Ondu filter coffee kodi' at Brahmin's Cafe" 
-                  required
-                  autocomplete="off">
+                  placeholder="e.g. Ordered filter coffee at Darshini, asked 'Meter haaki'..."
+                  autocomplete="off"
+                  required>
+
+                <!-- Connected Word Garden Reference Chip -->
+                <div class="connected-garden-chip" id="connected-garden-chip" hidden>
+                  <span class="chip-label">Connected from Garden:</span>
+                  <span class="chip-text" id="connected-garden-text"></span>
+                  <button type="button" class="btn-chip-remove" id="btn-remove-garden-link" aria-label="Remove connected word">&times;</button>
+                </div>
+
+                <!-- Quick Inspiration Chips -->
+                <div class="quick-chip-tray" aria-label="Quick situation templates">
+                  <span class="chip-tray-label">Quick ideas:</span>
+                  <button type="button" class="quick-template-chip" data-situation="Ordered coffee at Darshini" data-cat="food">☕ Darshini Coffee</button>
+                  <button type="button" class="quick-template-chip" data-situation="Asked auto driver 'Meter haaki'" data-cat="transport">🛺 Auto Meter</button>
+                  <button type="button" class="quick-template-chip" data-situation="Asked price at Kirana store" data-cat="price">🪙 Asking Price</button>
+                  <button type="button" class="quick-template-chip" data-situation="Said 'Namaskara' to neighbour" data-cat="everyday">🙏 Namaskara</button>
+                  <button type="button" class="quick-template-chip" data-situation="Asked directions to Metro" data-cat="transport">📍 Metro Directions</button>
+                </div>
               </div>
 
               <!-- Field 2: Category Selector -->
               <div class="form-group">
-                <label for="select-attempt-category" class="form-label">
-                  Situation Category
-                </label>
-                <select id="select-attempt-category" class="form-select">
-                  <option value="everyday">Everyday conversation (ನಮಸ್ಕಾರ / ಹರಟೆ)</option>
-                  <option value="food">Food and ordering (ದರ್ಶಿನಿ / ಹೋಟೆಲ್)</option>
-                  <option value="transport">Getting around &amp; Commute (ಆಟೋ / ಬಸ್)</option>
-                  <option value="shopping">Shopping &amp; Groceries (ಅಂಗಡಿ / ತರಕಾರಿ)</option>
-                  <option value="price">Price and money (ಬೆಲೆ / ಲೆಕ್ಕ)</option>
-                  <option value="negotiation">Polite negotiation (ಮೀಟರ್ / ವಿನಂತಿ)</option>
-                </select>
+                <label for="select-attempt-category" class="form-label">Category</label>
+                <div class="custom-select-wrapper">
+                  <select id="select-attempt-category" class="form-select">
+                    <option value="everyday">Everyday conversation (ದೈನಂದಿನ ಮಾತು)</option>
+                    <option value="food">Food and ordering (ಆಹಾರ ಮತ್ತು ದರ್ಶಿನಿ)</option>
+                    <option value="transport">Directions &amp; transport (ಸಂಚಾರ ಮತ್ತು ಆಟೋ)</option>
+                    <option value="shopping">Shopping (ಅಂಗಡಿ ಮತ್ತು ಖರೀದಿ)</option>
+                    <option value="price">Prices and payments (ಬೆಲೆ ಮತ್ತು ಹಣ)</option>
+                    <option value="negotiation">Negotiation (ಸೌಜನ್ಯ ಮತ್ತು ಚರ್ಚೆ)</option>
+                    <option value="courage">Courage and trying again (ಧೈರ್ಯದ ಹೆಜ್ಜೆ)</option>
+                  </select>
+                </div>
               </div>
 
-              <!-- Field 3: Three Non-Judgmental Outcomes -->
+              <!-- Field 3: Three Outcomes (All count as tries) -->
               <div class="form-group">
                 <label class="form-label">
-                  How did it feel? <span class="form-hint">(All 3 count as real practice!)</span>
+                  How did it go? <span class="required-star">*</span>
                 </label>
-                
-                <div class="outcome-selector-grid">
+                <p class="form-sublabel">All 3 outcomes count equally as a try and receive the full reward.</p>
+
+                <div class="outcome-selector-grid" role="radiogroup" aria-label="Interaction outcome">
                   
-                  <!-- Outcome 1: Went Well -->
+                  <!-- Outcome 1: It went well -->
                   <label class="outcome-option-card selected" for="outcome-radio-went-well">
                     <input 
                       type="radio" 
@@ -518,14 +607,13 @@
                     <div class="outcome-card-content">
                       <div class="outcome-header-row">
                         <span class="outcome-dot outcome-dot-well" aria-hidden="true"></span>
-                        <span class="outcome-title">Went well</span>
-                        <span class="outcome-kn" lang="kn">ಚೆನ್ನಾಗಿ ಹೋಯಿತು</span>
+                        <span class="outcome-title">It went well</span>
                       </div>
-                      <p class="outcome-desc">Understood, felt encouraging and natural.</p>
+                      <p class="outcome-desc">Understood, felt natural and encouraging.</p>
                     </div>
                   </label>
 
-                  <!-- Outcome 2: Needed Help -->
+                  <!-- Outcome 2: I needed help -->
                   <label class="outcome-option-card" for="outcome-radio-needed-help">
                     <input 
                       type="radio" 
@@ -536,14 +624,13 @@
                     <div class="outcome-card-content">
                       <div class="outcome-header-row">
                         <span class="outcome-dot outcome-dot-help" aria-hidden="true"></span>
-                        <span class="outcome-title">Needed help</span>
-                        <span class="outcome-kn" lang="kn">ಸಹಾಯ ಬೇಕಾಯಿತು</span>
+                        <span class="outcome-title">I needed help</span>
                       </div>
                       <p class="outcome-desc">Switched to English or gestures, but gave it a real try!</p>
                     </div>
                   </label>
 
-                  <!-- Outcome 3: Froze / Stumbled -->
+                  <!-- Outcome 3: I froze -->
                   <label class="outcome-option-card" for="outcome-radio-froze">
                     <input 
                       type="radio" 
@@ -554,17 +641,16 @@
                     <div class="outcome-card-content">
                       <div class="outcome-header-row">
                         <span class="outcome-dot outcome-dot-froze" aria-hidden="true"></span>
-                        <span class="outcome-title">Froze in the moment</span>
-                        <span class="outcome-kn" lang="kn">ಧೈರ್ಯದ ಹೆಜ್ಜೆ</span>
+                        <span class="outcome-title">I froze</span>
                       </div>
-                      <p class="outcome-desc">Forgot the words or hesitated. Trying takes real courage!</p>
+                      <p class="outcome-desc">Forgot words or hesitated. Trying takes genuine courage!</p>
                     </div>
                   </label>
 
                 </div>
               </div>
 
-              <!-- Field 4: Optional Reflection Note -->
+              <!-- Field 4: Optional Personal Note -->
               <div class="form-group">
                 <label for="input-attempt-note" class="form-label">
                   What happened? (Optional note)
@@ -592,70 +678,110 @@
           </div>
         </div>
 
-        <!-- Panel B: TRANSPARENT BADGES SHOWCASE -->
-        <div class="innovate-panel" id="panel-inno-badges" role="tabpanel" aria-labelledby="inno-tab-badges" hidden>
+        <!-- =======================================================
+             PANEL 2: MY BADGES — Meaningful Categories & Inspection
+             ======================================================= -->
+        <div class="innovate-panel" id="panel-inno-badges" role="tabpanel" aria-labelledby="btn-inno-badges" hidden>
           
-          <div class="milestones-summary-card">
-            <div class="milestone-summary-left">
-              <span class="summary-kicker">Meaningful Milestones</span>
-              <h2 class="summary-title">Recognizing Your Courage</h2>
-              <p class="summary-desc">
-                Badges are earned through your genuine real-world attempts. Tap any badge to see the exact moments that unlocked it.
-              </p>
+          <!-- Badges Overview Strip -->
+          <div class="badges-summary-card">
+            <div class="badges-summary-left">
+              <span class="summary-kicker">Practice Milestones</span>
+              <h2 class="summary-title" id="badges-summary-title">My Badges</h2>
+              <p class="summary-sub" id="badges-summary-sub">Select any badge to inspect criteria and supporting conversation records.</p>
             </div>
-            <div class="milestone-stat-circle">
-              <span class="stat-big" id="badges-unlocked-count">0</span>
-              <span class="stat-small">/ 9 Earned</span>
+            <div class="badges-summary-stat">
+              <span class="stat-number" id="badges-unlocked-count">0</span>
+              <span class="stat-label">of 9 Earned</span>
             </div>
           </div>
 
-          <!-- Badge Category Filters -->
-          <div class="category-filter-bar" id="badges-category-bar" role="tablist" aria-label="Badge Categories">
-            <button type="button" class="cat-pill active" data-badge-cat="all">All Badges</button>
-            <button type="button" class="cat-pill" data-badge-cat="courage">Courage &amp; Trying</button>
-            <button type="button" class="cat-pill" data-badge-cat="food">Food &amp; Ordering</button>
-            <button type="button" class="cat-pill" data-badge-cat="transport">Getting Around</button>
-            <button type="button" class="cat-pill" data-badge-cat="shopping">Shopping</button>
-            <button type="button" class="cat-pill" data-badge-cat="price">Price &amp; Numbers</button>
-            <button type="button" class="cat-pill" data-badge-cat="negotiation">Negotiation</button>
-            <button type="button" class="cat-pill" data-badge-cat="everyday">Everyday</button>
+          <!-- Category Filter Bar for Badges (Shopping, Prices, Negotiation, Food, Transport, Everyday) -->
+          <div class="category-filter-bar" id="badges-category-bar" role="tablist" aria-label="Badge categories">
+            <button type="button" class="cat-pill active" data-badge-cat="all" role="tab" aria-selected="true">All Badges</button>
+            <button type="button" class="cat-pill" data-badge-cat="shopping" role="tab" aria-selected="false">Shopping</button>
+            <button type="button" class="cat-pill" data-badge-cat="price" role="tab" aria-selected="false">Prices &amp; Payments</button>
+            <button type="button" class="cat-pill" data-badge-cat="negotiation" role="tab" aria-selected="false">Negotiation</button>
+            <button type="button" class="cat-pill" data-badge-cat="food" role="tab" aria-selected="false">Food &amp; Ordering</button>
+            <button type="button" class="cat-pill" data-badge-cat="transport" role="tab" aria-selected="false">Directions &amp; Transport</button>
+            <button type="button" class="cat-pill" data-badge-cat="everyday" role="tab" aria-selected="false">Everyday Conversations</button>
+            <button type="button" class="cat-pill" data-badge-cat="courage" role="tab" aria-selected="false">Courage</button>
           </div>
 
-          <!-- Badges Dynamic Grid -->
-          <div class="badges-grid" id="innovate-badges-grid" role="region" aria-label="Practice Badges">
+          <!-- Badges Grid Container -->
+          <div class="badges-grid" id="innovate-badges-grid" role="region" aria-label="Visual badges collection">
             <!-- Rendered dynamically by script.js -->
           </div>
 
         </div>
 
-        <!-- Panel C: PRACTICE ATTEMPTS TIMELINE LOG -->
-        <div class="innovate-panel" id="panel-inno-log" role="tabpanel" aria-labelledby="inno-tab-log" hidden>
+        <!-- =======================================================
+             PANEL 3: MY PROGRESS & PRACTICE LOG
+             ======================================================= -->
+        <div class="innovate-panel" id="panel-inno-log" role="tabpanel" aria-labelledby="btn-inno-log" hidden>
           
-          <div class="log-controls-card">
-            <div class="log-header-row">
-              <div>
-                <h2 class="log-title">Your Practice Journey</h2>
-                <p class="log-subtitle"><span id="log-total-attempts">0</span> total speaking moments recorded</p>
-              </div>
+          <!-- SECTION 5: MY PROGRESS — Factual Summaries -->
+          <div class="progress-stats-grid" id="innovate-progress-stats">
+            <div class="progress-metric-card">
+              <span class="progress-metric-num" id="prog-stat-tries">0</span>
+              <span class="progress-metric-lbl">Total Attempts Logged</span>
             </div>
-
-            <!-- Outcome Filter Chips -->
-            <div class="log-filter-row" role="tablist" aria-label="Filter attempts by outcome">
-              <button type="button" class="log-filter-btn active" data-outcome-filter="all">All Attempts</button>
-              <button type="button" class="log-filter-btn" data-outcome-filter="went_well">✓ Went well</button>
-              <button type="button" class="log-filter-btn" data-outcome-filter="needed_help">🤝 Needed help</button>
-              <button type="button" class="log-filter-btn" data-outcome-filter="froze">🌱 Froze / Tried</button>
+            <div class="progress-metric-card">
+              <span class="progress-metric-num" id="prog-stat-garden">0</span>
+              <span class="progress-metric-lbl">Words in Garden</span>
+            </div>
+            <div class="progress-metric-card">
+              <span class="progress-metric-num" id="prog-stat-badges">0 / 9</span>
+              <span class="progress-metric-lbl">Achievements Unlocked</span>
             </div>
           </div>
 
-          <!-- Empty State -->
+          <!-- Outcomes Breakdown Card -->
+          <div class="progress-outcomes-card" id="innovate-outcomes-breakdown">
+            <h3 class="progress-card-title">Attempt Outcomes Breakdown</h3>
+            <p class="progress-card-sub">Every recorded effort helps build confidence.</p>
+            <div class="outcome-breakdown-row">
+              <div class="breakdown-item item-well">
+                <span class="dot dot-well"></span>
+                <span class="lbl">It went well:</span>
+                <span class="val" id="prog-out-well">0</span>
+              </div>
+              <div class="breakdown-item item-help">
+                <span class="dot dot-help"></span>
+                <span class="lbl">I needed help:</span>
+                <span class="val" id="prog-out-help">0</span>
+              </div>
+              <div class="breakdown-item item-froze">
+                <span class="dot dot-froze"></span>
+                <span class="lbl">I froze:</span>
+                <span class="val" id="prog-out-froze">0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- History Header Strip -->
+          <div class="log-header-strip">
+            <div class="log-summary-text">
+              <span id="log-total-attempts">0</span> practice attempts recorded
+            </div>
+            <!-- Filter by Outcome -->
+            <div class="log-filter-chips">
+              <button type="button" class="log-filter-btn active" data-outcome-filter="all">All</button>
+              <button type="button" class="log-filter-btn" data-outcome-filter="went_well">Went Well</button>
+              <button type="button" class="log-filter-btn" data-outcome-filter="needed_help">Needed Help</button>
+              <button type="button" class="log-filter-btn" data-outcome-filter="froze">Froze / Tried</button>
+            </div>
+          </div>
+
+          <!-- Empty State (Shown when 0 attempts) -->
           <div class="log-empty-state" id="log-empty-state">
-            <div class="empty-state-icon" aria-hidden="true">🌱</div>
-            <h3 class="empty-state-title">No practice moments logged yet</h3>
-            <p class="empty-state-desc">
-              Whether you ordered a chai, greeted your security guard, or asked an auto driver for directions, record it here to see your confidence grow.
+            <div class="empty-icon-wrap" aria-hidden="true">🌱</div>
+            <h3 class="empty-title">Your practice log is waiting for your first attempt.</h3>
+            <p class="empty-quote">“Every conversation you try brings you a little closer to feeling at home.”</p>
+            <p class="empty-body">
+              Whenever you try speaking Kannada in Bengaluru, record it here. Even if you only managed a single word, that word took courage.
             </p>
-            <button type="button" class="btn btn-primary btn-sm" id="btn-empty-start-attempt">
+            <button type="button" class="btn btn-primary" id="btn-empty-start-attempt">
               <span>Record Your First Attempt</span>
             </button>
           </div>
@@ -669,8 +795,9 @@
 
       </section>
 
-      <!-- =========================================================
-           4. TRANSFORM SECTION — Welcoming Newcomer Community Experience
+<!-- =========================================================
+           3. TRANSFORM SECTION — Profile-First Supportive Community
+           (User profile is the primary focal point)
            ========================================================= -->
       <section 
         id="section-transform" 
@@ -680,37 +807,24 @@
         hidden
         tabindex="0">
 
-        <!-- Transform Header -->
-        <div class="transform-header">
-          <div class="editorial-kicker">
-            <span class="kicker-kn" lang="kn">ಒಡನಾಟ • ಸಹಯೋಗ</span>
-            <span class="kicker-bullet" aria-hidden="true">•</span>
-            <span class="kicker-en">Community &amp; Belonging</span>
-          </div>
-
-          <h1 class="transform-headline">You are not the only newcomer here.</h1>
-          <p class="transform-subtext">
-            Learn from real experiences of people navigating life and Kannada in Bengaluru.
-          </p>
-        </div>
-
-        <!-- User Profile Card Banner -->
-        <div class="community-profile-card" id="community-profile-card">
-          <div class="profile-top-row">
+        <!-- 1. USER PROFILE SHOWCASE (Primary Focal Point at the Top) -->
+        <div class="community-profile-surface" id="community-profile-card">
+          <div class="profile-hero-row">
             <div class="profile-avatar-circle" id="profile-avatar-display" aria-hidden="true">
-              <span>👤</span>
+              <span class="avatar-initials" id="profile-avatar-initials">BN</span>
             </div>
             <div class="profile-info-group">
               <div class="profile-name-row">
-                <h2 class="profile-display-name" id="profile-display-name">Bengaluru Newcomer</h2>
+                <h1 class="profile-display-name" id="profile-display-name">Bengaluru Newcomer</h1>
                 <span class="profile-status-badge">Explorer</span>
+                <span class="profile-2fa-status-badge" id="profile-2fa-badge" title="2FA Authentication Status">
+                  <span class="badge-dot-2fa" aria-hidden="true"></span>
+                  <span id="profile-2fa-text">2FA Optional</span>
+                </span>
               </div>
               <p class="profile-bio-text" id="profile-bio-text">Learning Kannada one conversation at a time.</p>
             </div>
             <button type="button" class="btn-edit-profile" id="btn-edit-profile" aria-label="Edit Profile">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-              </svg>
               <span>Edit</span>
             </button>
           </div>
@@ -719,54 +833,45 @@
           <div class="profile-stats-strip">
             <div class="profile-stat-item">
               <span class="stat-value" id="profile-garden-count">0</span>
-              <span class="stat-label">Words in Garden</span>
+              <span class="stat-label">Word Garden</span>
             </div>
             <div class="profile-stat-item">
               <span class="stat-value" id="profile-attempts-count">0</span>
-              <span class="stat-label">Practice Attempts</span>
+              <span class="stat-label">Attempts Logged</span>
             </div>
             <div class="profile-stat-item">
-              <span class="stat-value" id="profile-badges-count">0</span>
-              <span class="stat-label">Badges Unlocked</span>
+              <span class="stat-value" id="profile-badges-count">0/9</span>
+              <span class="stat-label">Badges Earned</span>
             </div>
           </div>
         </div>
 
-        <!-- Community Post Creation Bar -->
-        <div class="community-action-card">
+        <!-- 2. COMMUNITY POST CREATION ACTION -->
+        <div class="content-surface-card community-action-surface">
           <div class="action-card-header">
-            <span class="action-card-kicker">Shared Knowledge</span>
-            <h3 class="action-card-title">Share a phrase or ask a question</h3>
+            <h2 class="action-card-title">Share an experience or ask a question</h2>
+            <p class="action-card-subtitle">Connect with fellow newcomers and residents across Bengaluru.</p>
           </div>
           <button type="button" class="btn btn-primary btn-create-post" id="btn-open-create-post">
-            <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            <span>Create Community Post</span>
+            <span>Create Post</span>
           </button>
         </div>
 
-        <!-- Community Feed Filter Tabs -->
-        <div class="category-filter-bar" id="community-category-bar" role="tablist" aria-label="Community Feed Filter">
-          <button type="button" class="cat-pill active" data-feed-cat="all">All Shared</button>
-          <button type="button" class="cat-pill" data-feed-cat="success">🌟 Success Stories</button>
-          <button type="button" class="cat-pill" data-feed-cat="phrase">💡 Learned Phrases</button>
-          <button type="button" class="cat-pill" data-feed-cat="help">🤝 Questions &amp; Help</button>
-          <button type="button" class="cat-pill" data-feed-cat="tip">📍 Bengaluru Tips</button>
+        <!-- 3. COMMUNITY FEED FILTER TABS -->
+        <div class="filter-pills-bar" id="community-category-bar" role="tablist" aria-label="Community Feed Filter">
+          <button type="button" class="filter-pill active" data-feed-cat="all">All Shared</button>
+          <button type="button" class="filter-pill" data-feed-cat="success">Success Stories</button>
+          <button type="button" class="filter-pill" data-feed-cat="phrase">Learned Phrases</button>
+          <button type="button" class="filter-pill" data-feed-cat="help">Questions &amp; Help</button>
+          <button type="button" class="filter-pill" data-feed-cat="tip">Bengaluru Tips</button>
         </div>
 
-        <!-- Authenticity & Storage Transparency Notice -->
+        <!-- Storage Architecture Transparency Notice -->
         <div class="community-notice-banner" role="note">
-          <svg class="notice-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
-          </svg>
           <span>Local Device Storage Prototype • Ready for Multi-User Server Sync</span>
         </div>
 
-        <!-- Community Feed List -->
+        <!-- 4. COMMUNITY FEED LIST -->
         <div class="community-feed-list" id="community-feed-list" role="region" aria-label="Community Discussions">
           <!-- Populated dynamically by script.js -->
         </div>
@@ -775,24 +880,27 @@
 
     </main>
 
-    <!-- Bottom Navigation: Airportr Floating Dock Tab Bar -->
-    <nav class="app-tabbar" role="tablist" aria-label="Main application sections">
+    <!-- Bottom Navigation: Exactly 3 Destinations (Photo, Learn, Transform) -->
+        <!-- Bottom Navigation: Exactly Four Destinations (Photo, Learn, Innovate, Transform) -->
+    <nav class="app-tabbar" role="tablist" aria-label="Main application destinations">
       
+      <!-- Destination 1: PHOTO -->
       <button 
         type="button" 
         role="tab" 
         id="tab-photo" 
         aria-selected="true" 
         aria-controls="section-photo" 
-        class="tab-item active" 
+        class="tab-item tab-item-photo active" 
         data-target="photo">
-        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="3" width="18" height="18" rx="4"/>
-          <circle cx="12" cy="12" r="3.2"/>
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
         </svg>
         <span class="tab-label">Photo</span>
       </button>
 
+      <!-- Destination 2: LEARN -->
       <button 
         type="button" 
         role="tab" 
@@ -801,13 +909,14 @@
         aria-controls="section-learn" 
         class="tab-item" 
         data-target="learn">
-        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
         </svg>
         <span class="tab-label">Learn</span>
       </button>
 
+      <!-- Destination 3: INNOVATE (Restored Primary Destination) -->
       <button 
         type="button" 
         role="tab" 
@@ -816,13 +925,14 @@
         aria-controls="section-innovate" 
         class="tab-item" 
         data-target="innovate">
-        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="9"/>
           <path d="M12 8v8M8 12h8"/>
         </svg>
         <span class="tab-label">Innovate</span>
       </button>
 
+      <!-- Destination 4: TRANSFORM -->
       <button 
         type="button" 
         role="tab" 
@@ -831,33 +941,30 @@
         aria-controls="section-transform" 
         class="tab-item" 
         data-target="transform">
-        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
         </svg>
         <span class="tab-label">Transform</span>
       </button>
+
     </nav>
 
   </div>
 
   <!-- =========================================================
-       MODAL 1: HISTORY LOG BOOK MODAL OVERLAY
+       MODAL 1: HISTORY LOG BOOK MODAL
        ========================================================= -->
-  <div class="history-overlay modal-overlay" id="history-overlay" role="dialog" aria-modal="true" aria-label="History Log Book" hidden>
-    <div class="history-modal modal-window">
-      
-      <div class="modal-header history-modal-header">
+  <div class="modal-overlay" id="history-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="history-modal-title">
+    <div class="modal-window">
+      <div class="modal-header">
         <div class="modal-header-meta">
-          <span class="modal-kicker">Visual History</span>
-          <h2 class="modal-title">History Log Book</h2>
+          <h2 class="modal-title" id="history-modal-title">Scan History</h2>
         </div>
         <div class="history-modal-header-actions">
-          <button type="button" class="btn btn-clear-all" id="btn-clear-all-history">
-            Clear All
-          </button>
-          <button type="button" class="modal-close-btn" id="btn-history-close" aria-label="Close history">
+          <button type="button" class="btn-clear-all" id="btn-clear-all-history" aria-label="Clear all scan history">Clear All</button>
+          <button type="button" class="modal-close-btn" id="btn-history-close" aria-label="Close history modal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="18" y1="6" x2="6" y2="18"/>
               <line x1="6" y1="6" x2="18" y2="18"/>
@@ -865,153 +972,153 @@
           </button>
         </div>
       </div>
-
-      <div class="modal-body history-modal-body" id="history-modal-body">
-        <div class="history-empty" id="history-empty">
-          <div class="history-empty-icon" aria-hidden="true">📖</div>
-          <p class="history-empty-title">No identifications yet</p>
-          <p class="history-empty-body">Take a photo of something around you and tap &ldquo;Identify in Kannada&rdquo; to start your log book.</p>
+      <div class="modal-body" id="history-modal-body">
+        <div class="empty-state" id="history-empty" hidden>
+          <div class="empty-icon">📷</div>
+          <h3 class="empty-title">No Scans Yet</h3>
+          <p class="empty-desc">Photograph everyday objects in Bengaluru to build your history log book.</p>
         </div>
-        <ul class="history-list" id="history-list" aria-label="Recognition history entries"></ul>
+        <ul class="history-list" id="history-list"></ul>
       </div>
-
     </div>
   </div>
 
-  <!-- History Entry Detail Overlay -->
-  <div class="history-detail-overlay modal-overlay" id="history-detail-overlay" role="dialog" aria-modal="true" aria-label="History entry detail" hidden>
-    <div class="history-detail-modal modal-window">
+  <!-- MODAL 1B: HISTORY DETAIL MODAL -->
+  <div class="modal-overlay" id="history-detail-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="history-detail-title">
+    <div class="modal-window">
       <div class="modal-header">
         <div class="modal-header-meta">
-          <span class="modal-kicker">Saved Record</span>
-          <h2 class="modal-title">Object Discovery</h2>
+          <h2 class="modal-title" id="history-detail-title">Object Details</h2>
         </div>
-        <button type="button" class="modal-close-btn" id="btn-detail-close" aria-label="Close detail">
+        <button type="button" class="modal-close-btn" id="btn-detail-close" aria-label="Close details">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
       </div>
-      <div class="modal-body history-detail-body" id="history-detail-body"></div>
+      <div class="modal-body" id="history-detail-body"></div>
     </div>
   </div>
 
   <!-- =========================================================
-       MODAL 2: WORD GARDEN MODAL OVERLAY
+       MODAL 2: RETRO MINECRAFT-INSPIRED WORD GARDEN MODAL
        ========================================================= -->
-  <div class="garden-overlay modal-overlay" id="garden-overlay" role="dialog" aria-modal="true" aria-label="Your Word Garden" hidden>
-    <div class="garden-modal modal-window">
+  <div class="modal-overlay" id="garden-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="garden-modal-title">
+    <div class="modal-window mc-garden-window" id="word-garden-container">
+      
+      <!-- Top Minecraft HUD Bar -->
+      <div class="mc-hud-header">
+        <button type="button" class="mc-btn mc-btn-back" id="btn-garden-back-to-vocab" aria-label="Return to Vocabulary Mode">
+          <span class="mc-btn-arrow" aria-hidden="true">◀</span>
+          <span>Back to Vocabulary</span>
+        </button>
 
-      <div class="modal-header garden-modal-header">
-        <div class="modal-header-meta">
-          <div class="garden-modal-kicker">
-            <span aria-hidden="true">🌿</span>
-            <span>Personal Collection</span>
+        <div class="mc-hud-title-wrap">
+          <div class="mc-title-row">
+            <span class="mc-pixel-icon" aria-hidden="true">🌱</span>
+            <h2 class="mc-pixel-title" id="garden-modal-title">WORD GARDEN</h2>
           </div>
-          <h2 class="modal-title">Your Word Garden</h2>
-          <p class="garden-modal-subtitle">Your collection of words, growing one conversation at a time.</p>
+          <div class="mc-hud-stats" id="mc-hud-stats">
+            <span class="mc-stat-pill" id="mc-garden-badge-pill">Seedling Plot</span>
+            <span class="mc-stat-count" id="mc-garden-count-label">0 Plants Discovered</span>
+          </div>
         </div>
-        <button type="button" class="modal-close-btn" id="btn-garden-close" aria-label="Close Word Garden">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"/>
-            <line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
+
+        <button type="button" class="mc-btn mc-btn-close" id="btn-garden-close" aria-label="Close word garden">
+          <span aria-hidden="true">✕</span>
         </button>
       </div>
 
-      <!-- Controls Strip -->
-      <div class="garden-controls-strip">
-        <div class="garden-stats-strip">
-          <div class="garden-stat-badge">
-            <span class="stat-num" id="garden-total-count">0</span>
-            <span class="stat-lbl" id="garden-total-label">Words &amp; Phrases</span>
-          </div>
-          <div class="garden-stat-sub" id="garden-stat-sub">
-            <span id="garden-words-subcount">0 words</span> • <span id="garden-phrases-subcount">0 phrases</span>
-          </div>
+      <!-- Main Retro Pixel Garden Biome -->
+      <div class="mc-garden-viewport" id="mc-garden-viewport">
+
+        <!-- Sky & Atmosphere Layer -->
+        <div class="mc-sky-backdrop">
+          <div class="mc-cloud mc-cloud-1" aria-hidden="true"></div>
+          <div class="mc-cloud mc-cloud-2" aria-hidden="true"></div>
+          <div class="mc-cloud mc-cloud-3" aria-hidden="true"></div>
+          <div class="mc-sun" aria-hidden="true"></div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="garden-search-wrapper">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input 
-            type="search" 
-            id="garden-search-input" 
-            class="garden-search-input" 
-            placeholder="Search saved words, Kannada, meaning..." 
-            aria-label="Search saved words"
-            autocomplete="off">
-          <button type="button" class="search-clear-btn" id="btn-garden-search-clear" aria-label="Clear search" hidden>&times;</button>
+        <!-- Biome Banner Info Strip -->
+        <div class="mc-biome-banner" id="mc-biome-banner">
+          <div class="mc-biome-info">
+            <span class="mc-biome-tag">PHOTO BIOME</span>
+            <span class="mc-biome-name" id="mc-biome-name">Bengaluru Living Garden</span>
+          </div>
+          <span class="mc-biome-lore">Blooms exclusively from objects discovered via Photo lens</span>
         </div>
 
-        <!-- Filters -->
-        <div class="garden-filter-row">
-          <div class="garden-type-filter" role="tablist" aria-label="Filter by item type">
-            <button type="button" class="garden-pill-btn active" data-type="all">All</button>
-            <button type="button" class="garden-pill-btn" data-type="word">Words</button>
-            <button type="button" class="garden-pill-btn" data-type="phrase">Phrases</button>
+        <!-- Minecraft Soil & Biome Grass Bed -->
+        <div class="mc-garden-bed" id="mc-garden-bed">
+          
+          <!-- Stepped Pixel Grass Fringe (Top edge of dirt blocks) -->
+          <div class="mc-grass-fringe" aria-hidden="true"></div>
+
+          <!-- Garden Grid: Empty State or Plant Plots -->
+          <div class="mc-garden-ground" id="mc-garden-ground" role="region" aria-label="Planted photo words">
+            <!-- Dynamically populated with pixel plants or empty state -->
           </div>
 
-          <div class="garden-cat-wrapper">
-            <select id="garden-category-select" class="garden-select" aria-label="Filter by category">
-              <option value="all">All Categories</option>
-              <option value="greetings">Greetings</option>
-              <option value="numbers">Numbers &amp; Money</option>
-              <option value="food">Food &amp; Dining</option>
-              <option value="transport">Transport</option>
-              <option value="directions">Directions</option>
-              <option value="shopping">Shopping</option>
-              <option value="auto">Auto &amp; Commute</option>
-              <option value="polite">Politeness</option>
-              <option value="daily">Daily Life</option>
-              <option value="everyday">Everyday</option>
-            </select>
+          <!-- Layered Underground Dirt Block Base -->
+          <div class="mc-dirt-subsoil" aria-hidden="true">
+            <div class="mc-dirt-pattern"></div>
           </div>
         </div>
-      </div>
 
-      <!-- Modal Body -->
-      <div class="modal-body garden-modal-body" id="garden-modal-body">
-        
-        <div class="garden-empty-state" id="garden-empty-state">
-          <div class="garden-empty-visual" aria-hidden="true">🌱</div>
-          <h3 class="garden-empty-title">Your garden is waiting for its first word.</h3>
-          <p class="garden-empty-body">
-            Tap the <strong>Save</strong> bookmark button on any word or phrase in LEARN to nurture your personal collection.
-          </p>
-          <button type="button" class="btn btn-primary btn-explore-learn" id="btn-empty-goto-learn">
-            <span>Discover Words in Learn</span>
-          </button>
+        <!-- Lightweight Pixel Plant Inspection Dialogue Card -->
+        <div class="mc-dialogue-card" id="mc-plant-dialogue" hidden role="dialog" aria-modal="false" aria-labelledby="mc-dialogue-english">
+          <div class="mc-dialogue-header">
+            <div class="mc-dialogue-title-row">
+              <span class="mc-dialogue-icon" id="mc-dialogue-plant-icon">🌸</span>
+              <span class="mc-dialogue-kicker" id="mc-dialogue-kicker">Photo Specimen</span>
+            </div>
+            <button type="button" class="mc-dialogue-close" id="btn-mc-dialogue-close" aria-label="Close details">✕</button>
+          </div>
+
+          <div class="mc-dialogue-body">
+            <!-- Optional Photo Thumbnail from recognition record -->
+            <div class="mc-thumb-frame" id="mc-thumb-frame" hidden>
+              <img id="mc-dialogue-thumb" class="mc-thumb-img" src="" alt="Captured specimen photo">
+            </div>
+
+            <!-- Kannada Script (Large, authentic Noto Sans Kannada) -->
+            <div class="mc-kannada-hero" id="mc-dialogue-kannada" lang="kn">ವಸ್ತುವಿನ ಹೆಸರು</div>
+
+            <!-- Phonetic Transliteration & English Meaning -->
+            <div class="mc-meta-block">
+              <div class="mc-translit-text" id="mc-dialogue-translit">Pronunciation</div>
+              <div class="mc-english-title" id="mc-dialogue-english">English Name</div>
+            </div>
+
+            <!-- AI Context or Description (if available) -->
+            <p class="mc-dialogue-desc" id="mc-dialogue-desc"></p>
+
+            <!-- Audio Pronunciation Button (Native trigger, NO sliders) -->
+            <div class="mc-dialogue-actions">
+              <button type="button" class="mc-btn mc-btn-audio" id="btn-mc-audio" aria-label="Listen to Kannada pronunciation">
+                <span class="mc-audio-icon" aria-hidden="true">🔊</span>
+                <span id="btn-mc-audio-text">Listen Pronunciation</span>
+              </button>
+            </div>
+
+            <div class="mc-dialogue-footer">
+              <span class="mc-timestamp-label" id="mc-dialogue-timestamp">Discovered via Photo</span>
+            </div>
+          </div>
         </div>
 
-        <div class="garden-no-results" id="garden-no-results" hidden>
-          <div class="no-results-icon" aria-hidden="true">🔍</div>
-          <p class="no-results-title">No saved items match your filter</p>
-          <button type="button" class="btn btn-secondary" id="btn-garden-reset-filters">Reset Filters</button>
-        </div>
-
-        <div class="garden-items-grid" id="garden-items-grid" aria-label="Saved words and phrases"></div>
       </div>
 
     </div>
   </div>
 
-  <!-- Toast Notification Pill -->
-  <div class="garden-toast" id="garden-toast" role="status" aria-live="polite">
-    <span class="garden-toast-icon" id="garden-toast-icon" aria-hidden="true">🌿</span>
-    <span class="garden-toast-text" id="garden-toast-text"></span>
-  </div>
-
   <!-- =========================================================
-       MODAL 3: BADGE DETAIL MODAL OVERLAY
+       MODAL 3: BADGE DETAIL INSPECTION MODAL
        ========================================================= -->
   <div class="modal-overlay" id="badge-detail-modal" hidden role="dialog" aria-modal="true" aria-labelledby="badge-modal-title">
-    <div class="modal-window badge-modal-window">
-      
+    <div class="modal-window">
       <div class="modal-header">
         <div class="modal-header-meta">
           <span class="modal-kicker" id="badge-modal-category">Badge Details</span>
@@ -1036,12 +1143,7 @@
 
         <div class="badge-criteria-box">
           <div class="criteria-header">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="16" x2="12" y2="12"/>
-              <line x1="12" y1="8" x2="12.01" y2="8"/>
-            </svg>
-            <span>How This Badge Is Earned</span>
+            <span>Criteria</span>
           </div>
           <p class="criteria-text" id="badge-modal-criteria"></p>
           <div class="criteria-progress-bar-wrap" id="badge-modal-progress-wrap">
@@ -1051,10 +1153,10 @@
         </div>
 
         <div class="badge-supporting-section">
-          <h4 class="supporting-title">
+          <h3 class="supporting-title">
             <span>Supporting Attempts</span>
             <span class="supporting-count" id="badge-supporting-count">0</span>
-          </h4>
+          </h3>
           <p class="supporting-sub">Actual real-world moments that contributed to this badge:</p>
           <div class="supporting-attempts-list" id="badge-supporting-list"></div>
         </div>
@@ -1070,7 +1172,6 @@
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-header-meta">
-          <span class="modal-kicker">Word Garden</span>
           <h2 class="modal-title" id="garden-picker-title">Pick a Word to Practice</h2>
         </div>
         <button type="button" class="modal-close-btn" id="btn-garden-picker-close" aria-label="Close word picker">
@@ -1112,7 +1213,6 @@
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-header-meta">
-          <span class="modal-kicker">Newcomer Community</span>
           <h2 class="modal-title" id="create-post-modal-title">Share with the Community</h2>
         </div>
         <button type="button" class="modal-close-btn" id="btn-close-create-post" aria-label="Close post modal">
@@ -1127,21 +1227,21 @@
           <div class="form-group">
             <label for="post-category-select" class="form-label">Post Type</label>
             <select id="post-category-select" class="form-select">
-              <option value="success">🌟 Success Story (A Kannada interaction that worked!)</option>
-              <option value="phrase">💡 Useful Phrase (A great phrase I used today)</option>
-              <option value="help">🤝 Question / Help (Need help with a situation)</option>
-              <option value="tip">📍 Bengaluru Tip (Advice for newcomers)</option>
+              <option value="success">Success Story (A Kannada interaction that worked)</option>
+              <option value="phrase">Useful Phrase (A phrase you used today)</option>
+              <option value="help">Question / Help (Ask for advice on a phrase)</option>
+              <option value="tip">Bengaluru Tip (Helpful advice for newcomers)</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label for="post-title-input" class="form-label">Title / Topic <span class="required-star">*</span></label>
-            <input type="text" id="post-title-input" class="form-input" placeholder="e.g. Finally ordered filter coffee without switching to English!" required>
+            <label for="post-title-input" class="form-label">Title <span class="required-star">*</span></label>
+            <input type="text" id="post-title-input" class="form-input" placeholder="e.g. Ordered coffee at a Darshini today" required>
           </div>
 
           <div class="form-group">
-            <label for="post-content-input" class="form-label">Story / Details <span class="required-star">*</span></label>
-            <textarea id="post-content-input" class="form-textarea" rows="4" placeholder="Share what happened, the Kannada words you used, or what you'd like advice on..." required></textarea>
+            <label for="post-content-input" class="form-label">Details <span class="required-star">*</span></label>
+            <textarea id="post-content-input" class="form-textarea" rows="4" placeholder="Share what happened or what you'd like advice on..." required></textarea>
           </div>
 
           <div class="form-actions">
@@ -1161,7 +1261,6 @@
     <div class="modal-window">
       <div class="modal-header">
         <div class="modal-header-meta">
-          <span class="modal-kicker">Your Profile</span>
           <h2 class="modal-title" id="edit-profile-modal-title">Edit Community Profile</h2>
         </div>
         <button type="button" class="modal-close-btn" id="btn-close-edit-profile" aria-label="Close profile modal">
@@ -1179,8 +1278,8 @@
           </div>
 
           <div class="form-group">
-            <label for="profile-bio-input" class="form-label">Short Bio / Introduction</label>
-            <textarea id="profile-bio-input" class="form-textarea" rows="3" placeholder="e.g. Software engineer from Mumbai living in HSR Layout, learning Kannada for daily conversations."></textarea>
+            <label for="profile-bio-input" class="form-label">Introduction</label>
+            <textarea id="profile-bio-input" class="form-textarea" rows="3" placeholder="e.g. Living in Indiranagar, learning Kannada for daily conversations."></textarea>
           </div>
 
           <div class="form-actions">
@@ -1191,6 +1290,198 @@
         </form>
       </div>
     </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 8: TWO-FACTOR AUTHENTICATION (TOTP) MODAL
+       ========================================================= -->
+  <div class="modal-overlay" id="auth-modal" hidden role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-window auth-modal-window">
+      <div class="modal-header">
+        <div class="modal-header-meta">
+          <span class="modal-kicker">Account Security</span>
+          <h2 class="modal-title" id="auth-modal-title">Two-Factor Authentication</h2>
+        </div>
+        <button type="button" class="modal-close-btn" id="btn-close-auth-modal" aria-label="Close authentication modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body auth-modal-body">
+        
+        <!-- STEP 1: IDENTIFIER & SETUP -->
+        <div class="auth-step-panel" id="auth-step-setup">
+          <div class="auth-flow-badge">
+            <span class="badge-icon">🛡️</span>
+            <span>Google Authenticator / TOTP</span>
+          </div>
+
+          <p class="auth-flow-intro">
+            Protect your Nammooru learning profile with secure, Time-based One-Time Passwords (TOTP). Compatible with Google Authenticator, Microsoft Authenticator, and 1Password.
+          </p>
+
+          <form id="form-auth-setup" class="auth-form" novalidate>
+            <div class="form-group">
+              <label for="auth-identifier-input" class="form-label">
+                User Identifier or Name <span class="required-star">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="auth-identifier-input" 
+                class="form-input" 
+                placeholder="e.g. Maya S. or bengaluru_explorer" 
+                autocomplete="username" 
+                required>
+              <span class="form-help-text">Your identifier links this browser session to your TOTP key.</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full" id="btn-generate-totp">
+              <span>Generate 2FA Setup QR Code</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </form>
+
+          <!-- QR Code Display Area (Revealed after generating secret) -->
+          <div class="auth-qr-section" id="auth-qr-section" hidden>
+            <div class="auth-qr-card">
+              <div class="auth-qr-image-wrapper">
+                <img id="auth-qr-image" src="" alt="Scan this QR code in Google Authenticator" class="auth-qr-img">
+              </div>
+              <div class="auth-qr-meta">
+                <p class="auth-qr-instruction">Scan this QR code in your authenticator app, or copy the manual key below:</p>
+                <div class="auth-secret-row">
+                  <span class="secret-label">Manual Key:</span>
+                  <code class="auth-secret-code" id="auth-secret-display">--------</code>
+                  <button type="button" class="btn-copy-secret" id="btn-copy-secret" title="Copy Secret Key">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>Copy</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-full" id="btn-proceed-to-verify">
+              <span>Next: Enter 6-Digit Code →</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 2: 6-DIGIT TOTP CODE VERIFICATION -->
+        <div class="auth-step-panel" id="auth-step-verify" hidden>
+          <div class="auth-verify-header">
+            <div class="auth-verify-icon">📱</div>
+            <h3 class="auth-verify-title">Enter Authenticator Code</h3>
+            <p class="auth-verify-sub">
+              Enter the 6-digit code currently shown in your authenticator app for <strong id="verify-user-identifier" class="text-teal">user</strong>.
+            </p>
+          </div>
+
+          <!-- 6-digit input boxes with numeric keypad & auto-advance -->
+          <form id="form-auth-verify" class="auth-verify-form" novalidate>
+            <div class="totp-inputs-group" id="totp-digits-container" role="group" aria-label="6-Digit Verification Code">
+              <input type="text" class="totp-digit-input" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="0" aria-label="Digit 1" autofocus>
+              <input type="text" class="totp-digit-input" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="1" aria-label="Digit 2">
+              <input type="text" class="totp-digit-input" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="2" aria-label="Digit 3">
+              <span class="totp-dash" aria-hidden="true">—</span>
+              <input type="text" class="totp-digit-input" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="3" aria-label="Digit 4">
+              <input type="text" class="totp-digit-input" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="4" aria-label="Digit 5">
+              <input type="text" class="totp-digit-input" inputmode="numeric" pattern="[0-9]" maxlength="1" data-index="5" aria-label="Digit 6">
+            </div>
+
+            <div class="totp-timer-indicator">
+              <span class="timer-dot"></span>
+              <span>Codes refresh every 30 seconds</span>
+            </div>
+
+            <!-- Error Banner -->
+            <div class="auth-alert-banner error" id="auth-error-banner" hidden role="alert">
+              <span class="alert-icon">⚠️</span>
+              <span class="alert-msg" id="auth-error-message">Code expired, please check your authenticator app.</span>
+            </div>
+
+            <!-- Success Banner -->
+            <div class="auth-alert-banner success" id="auth-success-banner" hidden role="status">
+              <span class="alert-icon">✅</span>
+              <span class="alert-msg" id="auth-success-message">Authentication verified!</span>
+            </div>
+
+            <div class="form-actions-stacked">
+              <button type="submit" class="btn btn-primary btn-full" id="btn-submit-verify">
+                <span class="btn-text">Verify & Sign In</span>
+                <span class="btn-spinner" id="verify-spinner" hidden>⏳</span>
+              </button>
+
+              <button type="button" class="btn btn-secondary btn-full btn-auth-back" id="btn-back-to-setup">
+                <span>← Back to Setup / Change Account</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- STEP 3: AUTHENTICATED / ACTIVE SESSION PROFILE -->
+        <div class="auth-step-panel" id="auth-step-active" hidden>
+          <div class="auth-success-hero">
+            <div class="auth-shield-badge">🛡️</div>
+            <h3 class="auth-active-title">2FA Active & Authenticated</h3>
+            <p class="auth-active-sub">Your session is secured with Google Authenticator TOTP.</p>
+          </div>
+
+          <div class="auth-session-card">
+            <div class="session-row">
+              <span class="session-label">User Identifier:</span>
+              <span class="session-value" id="session-user-id">Maya S.</span>
+            </div>
+            <div class="session-row">
+              <span class="session-label">Security:</span>
+              <span class="session-value text-teal">TOTP 2FA (RFC 6238)</span>
+            </div>
+            <div class="session-row">
+              <span class="session-label">Verified At:</span>
+              <span class="session-value" id="session-verified-time">Just now</span>
+            </div>
+            <div class="session-row">
+              <span class="session-label">Local Storage:</span>
+              <span class="session-value text-dim">nammooru_auth_session</span>
+            </div>
+          </div>
+
+          <div class="form-actions-stacked">
+            <button type="button" class="btn btn-secondary btn-full" id="btn-reconfigure-2fa">
+              <span>View QR Code / Reconfigure</span>
+            </button>
+            <button type="button" class="btn btn-danger-glass btn-full" id="btn-auth-logout">
+              <span>Sign Out / Disconnect 2FA</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- BYPASS / LOCAL TESTING OPTION -->
+        <div class="auth-bypass-footer">
+          <p class="bypass-text">
+            Testing locally?
+            <button type="button" class="btn-bypass-link" id="btn-auth-bypass">
+              Continue as Guest (Skip 2FA)
+            </button>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Pill -->
+  <div class="garden-toast" id="garden-toast" role="status" aria-live="polite">
+    <span class="garden-toast-icon" id="garden-toast-icon">🌿</span>
+    <span class="garden-toast-text" id="garden-toast-text"></span>
   </div>
 
   <!-- Scripts -->

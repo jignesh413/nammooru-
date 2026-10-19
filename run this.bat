@@ -46,7 +46,7 @@ if %errorlevel% equ 0 (
 if exist "%LOCALAPPDATA%\Programs\Python" (
     for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do (
         if exist "%%D\python.exe" (
-            set "PYTHON_CMD=\"%%D\python.exe\""
+            set "PYTHON_CMD="%%D\python.exe""
             goto :python_detected
         )
     )
@@ -55,7 +55,7 @@ if exist "%LOCALAPPDATA%\Programs\Python" (
 if exist "C:\Program Files\Python" (
     for /d %%D in ("C:\Program Files\Python\Python3*") do (
         if exist "%%D\python.exe" (
-            set "PYTHON_CMD=\"%%D\python.exe\""
+            set "PYTHON_CMD="%%D\python.exe""
             goto :python_detected
         )
     )
@@ -81,6 +81,10 @@ exit /b 1
 
 :python_detected
 echo       Python detected: %PYTHON_CMD%
+
+rem Optional 2FA packages check
+%PYTHON_CMD% -c "import pyotp, qrcode" >nul 2>&1
+if errorlevel 1 %PYTHON_CMD% -m pip install pyotp qrcode[pil] --quiet >nul 2>&1
 
 rem ----------------------------------------------------------------------------
 rem Step 2: Check whether Nammooru is already running at http://localhost:8000/

@@ -25,9 +25,140 @@ import urllib.request
 import urllib.error
 import urllib.parse
 import re
+import secrets
+import time
+import hmac
+import hashlib
+import struct
+import io
+import datetime
 from pathlib import Path
 
+# Optional TOTP & QR dependencies (with standard-library RFC 6238 fallback)
+try:
+    import pyotp
+    HAS_PYOTP = True
+except ImportError:
+    pyotp = None
+    HAS_PYOTP = False
+
+try:
+    import qrcode
+    HAS_QRCODE = True
+except ImportError:
+    qrcode = None
+    HAS_QRCODE = False
+
 PORT = 8000
+BASE_DIR = Path(__file__).resolve().parent
+CONFIG_FILE = BASE_DIR / "api-config.json"
+AUTH_STORE_FILE = BASE_DIR / "auth-store.json"
+
+# ==============================================================================
+# Authentication & TOTP / Google Authenticator Helpers
+# ==============================================================================
+
+def load_auth_store():
+    """Load persistent users and sessions from auth-store.json."""
+    if not AUTH_STORE_FILE.exists():
+        return {"users": {}, "sessions": {}}
+    try:
+        with open(AUTH_STORE_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            if not isinstance(data, dict):
+                return {"users": {}, "sessions": {}}
+            data.setdefault("users", {})
+            data.setdefault("sessions", {})
+            return data
+    except Exception as e:
+        print(f"[Auth] Warning: Could not read auth-store.json -- {e}")
+        return {"users": {}, "sessions": {}}
+
+
+def save_auth_store(store):
+    """Safely persist auth state to disk."""
+    try:
+        with open(AUTH_STORE_FILE, "w", encoding="utf-8") as f:
+            json.dump(store, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[Auth] Error: Could not save auth-store.json -- {e}")
+
+
+def generate_totp_secret():
+    """Generate a high-entropy 32-character Base32 secret for TOTP."""
+    if HAS_PYOTP:
+        return pyotp.random_base32()
+    # RFC 3548 Base32 secret without padding (fallback)
+    return base64.b32encode(secrets.token_bytes(20)).decode("ascii").rstrip("=")
+
+
+def build_provisioning_uri(secret, identifier):
+    """Construct an otpauth:// URI recognized by Google Authenticator, Microsoft Authenticator, etc."""
+    label = identifier.strip() or "Nammooru Explorer"
+    if HAS_PYOTP:
+        totp = pyotp.TOTP(secret)
+        return totp.provisioning_uri(name=label, issuer_name="Nammooru")
+    encoded_label = urllib.parse.quote(f"Nammooru:{label}")
+    return f"otpauth://totp/{encoded_label}?secret={secret}&issuer=Nammooru&algorithm=SHA1&digits=6&period=30"
+
+
+def generate_qr_data_url(uri):
+    """Generate a base64 PNG data URL of the QR code for instant display in browser."""
+    if HAS_QRCODE:
+        try:
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_M,
+                box_size=6,
+                border=2,
+            )
+            qr.add_data(uri)
+            qr.make(fit=True)
+            img = qr.make_image(fill_color="#0D1115", back_color="#FFFFFF")
+            buf = io.BytesIO()
+            img.save(buf, format="PNG")
+            return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+        except Exception as e:
+            print(f"[Auth] QR generation error: {e}")
+    return ""
+
+
+def verify_totp_code(secret, code, valid_window=1):
+    """
+    Verify a 6-digit TOTP code against the secret.
+    Allows valid_window (default: 1, allowing +/- 30s) to handle slight clock drift.
+    Uses pyotp if installed, with RFC 6238 HMAC-SHA1 fallback.
+    """
+    code_clean = str(code).strip().replace(" ", "").replace("-", "")
+    if len(code_clean) != 6 or not code_clean.isdigit():
+        return False
+
+    if HAS_PYOTP:
+        try:
+            totp = pyotp.TOTP(secret)
+            return bool(totp.verify(code_clean, valid_window=valid_window))
+        except Exception as e:
+            print(f"[Auth] pyotp error: {e}")
+
+    # Standard RFC 6238 HMAC-SHA1 implementation
+    try:
+        pad_len = (8 - len(secret) % 8) % 8
+        key = base64.b32decode((secret + ("=" * pad_len)).upper())
+        current_step = int(time.time()) // 30
+        for offset in range(-valid_window, valid_window + 1):
+            step = current_step + offset
+            msg = struct.pack(">Q", step)
+            h = hmac.new(key, msg, hashlib.sha1).digest()
+            offset_idx = h[-1] & 0x0F
+            truncated = struct.unpack(">I", h[offset_idx:offset_idx + 4])[0] & 0x7FFFFFFF
+            calc_code = str(truncated % 1000000).zfill(6)
+            if hmac.compare_digest(calc_code, code_clean):
+                return True
+        return False
+    except Exception as e:
+        print(f"[Auth] RFC 6238 verification error: {e}")
+        return False
+
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG_FILE = BASE_DIR / "api-config.json"
 
@@ -183,11 +314,24 @@ class NammooruHandler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def read_json_body(self):
+        """Safely read and parse incoming JSON request body."""
+        content_length = int(self.headers.get("Content-Length", 0))
+        if content_length > 20 * 1024 * 1024:
+            return None, "Payload exceeds 20MB limit"
+        try:
+            raw = self.rfile.read(content_length).decode("utf-8")
+            if not raw.strip():
+                return {}, None
+            return json.loads(raw), None
+        except Exception as e:
+            return None, f"Invalid JSON: {e}"
+
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With, ngrok-skip-browser-warning, bypass-tunnel-reminder")
         self.end_headers()
 
     def do_GET(self):
@@ -197,6 +341,15 @@ class NammooruHandler(http.server.BaseHTTPRequestHandler):
         if path == "/api/config-status":
             self.api_config = load_api_config()
             self.send_json({"configured": bool(self.api_config.get("geminiApiKey", "").strip())})
+            return
+
+        if path == "/api/auth/status":
+            self.send_json({
+                "status": "ready",
+                "totpLibrary": "pyotp" if HAS_PYOTP else "rfc6238_builtin",
+                "qrLibrary": "qrcode" if HAS_QRCODE else "manual_only",
+                "supports2FA": True
+            })
             return
 
         if path == "/api/tts":
@@ -274,9 +427,194 @@ class NammooruHandler(http.server.BaseHTTPRequestHandler):
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path == "/api/identify":
             self.handle_identify()
+        elif parsed.path == "/api/auth/setup":
+            self.handle_auth_setup()
+        elif parsed.path == "/api/auth/verify":
+            self.handle_auth_verify()
+        elif parsed.path == "/api/auth/session":
+            self.handle_auth_session()
+        elif parsed.path == "/api/auth/logout":
+            self.handle_auth_logout()
         else:
             self.send_response(404)
             self.end_headers()
+
+    def handle_auth_setup(self):
+        """
+        POST /api/auth/setup
+        Payload: { "identifier": "Maya S." }
+        Initializes or retrieves the user's TOTP secret, generates the
+        provisioning URI, and builds a base64 QR code image.
+        """
+        body, err = self.read_json_body()
+        if err or not isinstance(body, dict):
+            self.send_json({"error": "bad_request", "message": err or "Invalid JSON payload."}, 400)
+            return
+
+        identifier = str(body.get("identifier", "")).strip() or "Bengaluru Pioneer"
+        reset = bool(body.get("reset", False))
+
+        store = load_auth_store()
+        users = store["users"]
+
+        if identifier in users and not reset:
+            user_data = users[identifier]
+            secret = user_data["secret"]
+            is_new = False
+        else:
+            secret = generate_totp_secret()
+            users[identifier] = {
+                "secret": secret,
+                "createdAt": int(time.time()),
+                "verified": False,
+                "displayName": identifier
+            }
+            save_auth_store(store)
+            is_new = True
+
+        uri = build_provisioning_uri(secret, identifier)
+        qr_data_url = generate_qr_data_url(uri)
+
+        self.send_json({
+            "success": True,
+            "identifier": identifier,
+            "secret": secret,
+            "uri": uri,
+            "qrCode": qr_data_url,
+            "hasQrCode": bool(qr_data_url),
+            "isNew": is_new,
+            "message": "TOTP setup ready. Scan the QR code or enter the key in Google Authenticator."
+        })
+
+    def handle_auth_verify(self):
+        """
+        POST /api/auth/verify
+        Payload: { "identifier": "...", "code": "123456" }
+        Verifies the 6-digit TOTP code with a 30s window.
+        On success, issues an authenticated session token.
+        """
+        body, err = self.read_json_body()
+        if err or not isinstance(body, dict):
+            self.send_json({"error": "bad_request", "message": err or "Invalid JSON payload."}, 400)
+            return
+
+        identifier = str(body.get("identifier", "")).strip()
+        code = str(body.get("code", "")).strip()
+
+        if not identifier:
+            self.send_json({"error": "missing_identifier", "message": "User identifier is required."}, 400)
+            return
+
+        if not code:
+            self.send_json({"error": "missing_code", "message": "6-digit TOTP code is required."}, 400)
+            return
+
+        store = load_auth_store()
+        user = store["users"].get(identifier)
+
+        if not user:
+            self.send_json({
+                "success": False,
+                "error": "user_not_found",
+                "message": f"User '{identifier}' not found. Please click 'Setup Authenticator' first."
+            }, 404)
+            return
+
+        secret = user["secret"]
+        # Verify 6-digit TOTP code with standard 30s window (valid_window=1 handles clock drift)
+        is_valid = verify_totp_code(secret, code, valid_window=1)
+
+        if not is_valid:
+            self.send_json({
+                "success": False,
+                "error": "invalid_code",
+                "message": "Code expired or incorrect. Please check your authenticator app and try again."
+            }, 400)
+            return
+
+        # Verification successful: generate crypto session token
+        session_token = secrets.token_hex(24)
+        now_ts = int(time.time())
+        expires_ts = now_ts + (7 * 86400)  # 7-day session validity
+
+        store["sessions"][session_token] = {
+            "identifier": identifier,
+            "createdAt": now_ts,
+            "expiresAt": expires_ts
+        }
+        user["verified"] = True
+        user["lastLogin"] = now_ts
+        save_auth_store(store)
+
+        iso_time = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        self.send_json({
+            "success": True,
+            "token": session_token,
+            "identifier": identifier,
+            "verifiedAt": iso_time,
+            "expiresAt": expires_ts,
+            "message": "Two-factor authentication successful! Welcome to Nammooru."
+        })
+
+    def handle_auth_session(self):
+        """
+        POST /api/auth/session
+        Payload: { "token": "..." } or Authorization: Bearer <token>
+        Validates existing session token.
+        """
+        token = ""
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+        if not token:
+            body, _ = self.read_json_body()
+            if isinstance(body, dict):
+                token = body.get("token", "").strip()
+
+        if not token:
+            self.send_json({"valid": False, "message": "No session token provided."}, 401)
+            return
+
+        store = load_auth_store()
+        session = store["sessions"].get(token)
+        now_ts = int(time.time())
+
+        if not session or session.get("expiresAt", 0) < now_ts:
+            if session:
+                del store["sessions"][token]
+                save_auth_store(store)
+            self.send_json({"valid": False, "message": "Session expired or invalid."}, 401)
+            return
+
+        self.send_json({
+            "valid": True,
+            "identifier": session["identifier"],
+            "createdAt": session.get("createdAt"),
+            "expiresAt": session.get("expiresAt")
+        })
+
+    def handle_auth_logout(self):
+        """
+        POST /api/auth/logout
+        Payload: { "token": "..." }
+        Invalidates active session token.
+        """
+        token = ""
+        auth_header = self.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+        if not token:
+            body, _ = self.read_json_body()
+            if isinstance(body, dict):
+                token = body.get("token", "").strip()
+
+        if token:
+            store = load_auth_store()
+            if token in store["sessions"]:
+                del store["sessions"][token]
+                save_auth_store(store)
+
+        self.send_json({"success": True, "message": "Signed out successfully."})
 
     def handle_identify(self):
         content_length = int(self.headers.get("Content-Length", 0))
@@ -336,18 +674,41 @@ def main():
             print(f"\n  ERROR starting server: {e}\n")
         sys.exit(1)
 
+    local_ip = "localhost"
+    try:
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        local_ip = s.getsockname()[0]
+        s.close()
+    except Exception:
+        pass
+
     print()
     print("  Nammooru - Local Development Server")
     print("  =====================================")
-    print(f"  Running at:  http://localhost:{PORT}/")
-    print(f"  Files from:  {BASE_DIR}")
+    print(f"  Local Access:    http://localhost:{PORT}/")
+    print(f"  LAN Access:      http://{local_ip}:{PORT}/")
+    print(f"  Files from:      {BASE_DIR}")
+    print()
+    print("  Physical Smartphone Access (with Camera & PWA):")
+    print("  Mobile browsers require an HTTPS secure context for full camera access.")
+    print("  Forward securely with any tunnel:")
+    print(f"    - Cloudflare:  cloudflared tunnel --url http://localhost:{PORT}")
+    print(f"    - ngrok:       ngrok http {PORT}")
+    print(f"    - Localtunnel: npx localtunnel --port {PORT}")
+    print()
 
     if config.get("geminiApiKey"):
         k = config["geminiApiKey"]
         preview = k[:8] + "..." + k[-4:] if len(k) > 12 else "***"
-        print(f"  Gemini API:  Configured ({preview})")
+        print(f"  Gemini API:      Configured ({preview})")
     else:
-        print("  Gemini API:  NOT configured (create api-config.json)")
+        print("  Gemini API:      NOT configured (create api-config.json)")
+
+    totp_status = "pyotp" if HAS_PYOTP else "RFC 6238 Built-in"
+    qr_status = "qrcode" if HAS_QRCODE else "Manual key only"
+    print(f"  2FA Support:     Active (Engine: {totp_status}, QR: {qr_status})")
 
     print()
     print("  Press Ctrl+C to stop.")

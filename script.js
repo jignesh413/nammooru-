@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabButtons = Array.from(document.querySelectorAll('.app-tabbar [role="tab"]'));
   const viewSections = Array.from(document.querySelectorAll('.app-content .view-section'));
 
-  // Valid section identifiers for the project shell
+  // Valid section identifiers for the project shell (Exactly 4 primary destinations)
   const VALID_SECTIONS = ['photo', 'learn', 'innovate', 'transform'];
   const DEFAULT_SECTION = 'photo';
 
@@ -41,6 +41,27 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {boolean} shouldUpdateHash - Whether to sync window.location.hash
    */
   function switchSection(sectionId, shouldUpdateHash = true) {
+    // Handle subpage deep links gracefully
+    if (sectionId === 'tries') {
+      switchSection('innovate', shouldUpdateHash);
+      if (typeof switchInnovatePanel === 'function') switchInnovatePanel('record');
+      return;
+    }
+    if (sectionId === 'badges' || sectionId === 'achievements') {
+      switchSection('innovate', shouldUpdateHash);
+      if (typeof switchInnovatePanel === 'function') switchInnovatePanel('badges');
+      return;
+    }
+    if (sectionId === 'words' || sectionId === 'phrases') {
+      switchSection('learn', shouldUpdateHash);
+      if (typeof switchLearnMode === 'function') switchLearnMode(sectionId);
+      return;
+    }
+    if (sectionId === 'garden') {
+      if (typeof openGardenModal === 'function') openGardenModal();
+      return;
+    }
+
     const targetId = VALID_SECTIONS.includes(sectionId) ? sectionId : DEFAULT_SECTION;
 
     // 1. Update Tab Buttons (ARIA & visual active class)
@@ -64,6 +85,18 @@ document.addEventListener('DOMContentLoaded', () => {
         section.hidden = true;
       }
     });
+
+    // 3. Render section-specific data on activation
+    if (targetId === 'innovate') {
+      if (typeof updateInnovateStats === 'function') updateInnovateStats();
+      if (typeof renderBadgesShowcase === 'function') renderBadgesShowcase();
+      if (typeof renderPracticeLog === 'function') renderPracticeLog();
+    } else if (targetId === 'learn') {
+      if (typeof renderCurrentMode === 'function') renderCurrentMode();
+    } else if (targetId === 'transform') {
+      if (typeof syncProfileCard === 'function') syncProfileCard();
+      if (typeof renderCommunityFeed === 'function') renderCommunityFeed();
+    }
 
     // 3. Smooth scroll reset to top of content area (scrolling is isolated inside .app-content)
     const contentEl = document.querySelector('.app-content');
@@ -341,13 +374,53 @@ document.addEventListener('DOMContentLoaded', () => {
   // Event Listeners for Photo Actions
   // --------------------------------------------------------------------------
 
+  /**
+   * Safe camera launcher:
+   * - Audits isSecureContext to guide mobile users accessing via tunnels/HTTPS.
+   * - Checks camera permission state (prompt, granted, denied).
+   * - Triggers native environment camera capture, falling back gracefully to gallery picker.
+   */
+  async function triggerCameraCapture() {
+    lastTriggerSource = 'camera';
+    showFeedback('');
+
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const isSecure = window.isSecureContext || isLocal;
+
+    if (!isSecure) {
+      console.warn('[Camera] Page is running in an insecure context (HTTP). Forward over HTTPS tunnel for full camera support.');
+      showFeedback('Notice: Live camera capture requires an HTTPS connection on mobile phones. You can use "Upload from Gallery" or forward over HTTPS.', 'info', 5000);
+    }
+
+    // Check camera permission if Permissions API is supported
+    if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+      try {
+        const permission = await navigator.permissions.query({ name: 'camera' });
+        if (permission.state === 'denied') {
+          showFeedback('Camera access is blocked in your browser settings. You can enable it or use "Upload from Gallery".', 'info', 5000);
+          return;
+        }
+      } catch (err) {
+        // Query for camera permission may not be implemented on some browsers (e.g. Safari); ignore safely
+      }
+    }
+
+    try {
+      if (cameraInput) {
+        cameraInput.click();
+      } else if (galleryInput) {
+        galleryInput.click();
+      }
+    } catch (err) {
+      console.warn('[Camera] Failed to trigger camera input, falling back to gallery', err);
+      if (galleryInput) galleryInput.click();
+    }
+  }
+
   // 1. "Take a Photo" Button
   if (btnTakePhoto && cameraInput) {
     btnTakePhoto.addEventListener('click', () => {
-      lastTriggerSource = 'camera';
-      showFeedback(''); // clear previous message
-      // Opens camera directly on supported mobile browsers, falls back gracefully
-      cameraInput.click();
+      triggerCameraCapture();
     });
 
     cameraInput.addEventListener('change', (event) => {
@@ -387,8 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnRetakePhoto) {
     btnRetakePhoto.addEventListener('click', () => {
       showFeedback('');
-      if (lastTriggerSource === 'camera' && cameraInput) {
-        cameraInput.click();
+      if (lastTriggerSource === 'camera') {
+        triggerCameraCapture();
       } else if (galleryInput) {
         galleryInput.click();
       }
@@ -436,38 +509,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
 
   // --- DOM References ---
-  const btnIdentify        = document.getElementById('btn-identify');
-  const resultPanel        = document.getElementById('result-panel');
-  const resultLoading      = document.getElementById('result-loading');
-  const resultSuccess      = document.getElementById('result-success');
-  const resultError        = document.getElementById('result-error');
-  const resultConfBadge    = document.getElementById('result-confidence-badge');
+  const btnIdentify        = document.getElementById('btn-identify') || document.getElementById('btn-identify-object');
+  const resultPanel        = document.getElementById('result-panel') || document.getElementById('recognition-result-card');
+  const resultLoading      = document.getElementById('result-loading') || document.getElementById('scanning-laser');
+  const resultSuccess      = document.getElementById('result-success') || document.getElementById('recognition-result-card');
+  const resultError        = document.getElementById('result-error') || document.getElementById('photo-feedback');
+  const resultConfBadge    = document.getElementById('result-confidence-badge') || document.querySelector('.result-tag-pill');
   const resultEnglish      = document.getElementById('result-english');
   const resultKannada      = document.getElementById('result-kannada');
-  const resultPronun       = document.getElementById('result-pronunciation');
+  const resultPronun       = document.getElementById('result-pronunciation') || document.getElementById('result-translit');
   const resultDesc         = document.getElementById('result-description');
-  const resultErrorMsg     = document.getElementById('result-error-message');
+  const resultErrorMsg     = document.getElementById('result-error-message') || document.getElementById('feedback-text');
   const btnLearnWord            = document.getElementById('btn-learn-word');
   const btnSaveHistory          = document.getElementById('btn-save-history');
   const btnListenResult         = document.getElementById('btn-listen-result');
-  const btnScanAnother          = document.getElementById('btn-scan-another');
+  const btnScanAnother          = document.getElementById('btn-scan-another') || document.getElementById('btn-retake-photo');
   const btnResultSaveGarden     = document.getElementById('btn-result-save-garden');
   const btnResultSaveGardenText = document.getElementById('btn-result-save-garden-text');
   const btnModeGarden           = document.getElementById('btn-mode-garden');
   const learnGardenTabBadge     = document.getElementById('learn-garden-tab-badge');
   const apiSetupCard            = document.getElementById('api-setup-card');
 
-  const btnHistoryOpen     = document.getElementById('btn-history-open');
+  const btnHistoryOpen     = document.getElementById('btn-history-open') || document.getElementById('btn-history-log');
   const historyCountBadge  = document.getElementById('history-count-badge');
-  const historyOverlay     = document.getElementById('history-overlay');
+  const historyOverlay     = document.getElementById('history-overlay') || document.getElementById('modal-history');
   const btnHistoryClose    = document.getElementById('btn-history-close');
-  const historyList        = document.getElementById('history-list');
+  const historyList        = document.getElementById('history-list') || document.getElementById('history-modal-body');
   const historyEmpty       = document.getElementById('history-empty');
-  const btnClearAll        = document.getElementById('btn-clear-all-history');
+  const btnClearAll        = document.getElementById('btn-clear-all-history') || document.getElementById('btn-history-clear-all');
 
-  const historyDetailOverlay = document.getElementById('history-detail-overlay');
+  const historyDetailOverlay = document.getElementById('history-detail-overlay') || document.getElementById('history-detail-modal');
   const historyDetailBody    = document.getElementById('history-detail-body');
-  const btnDetailClose       = document.getElementById('btn-detail-close');
+  const btnDetailClose       = document.getElementById('btn-detail-close') || document.getElementById('btn-history-detail-close');
 
   // --- State ---
   let apiConfigured      = false;   // Whether server reports API key is set
@@ -883,6 +956,7 @@ document.addEventListener('DOMContentLoaded', () => {
       btnSaveHistory.disabled = true;
 
       updateHistoryBadge();
+      if (typeof updateGardenBadges === 'function') updateGardenBadges();
       showFeedback(`"${record.english}" saved to your History Log Book.`, 'success', 3000);
     });
   }
@@ -1002,6 +1076,7 @@ document.addEventListener('DOMContentLoaded', () => {
     records = records.filter(r => r.id !== id);
     saveHistory(records);
     updateHistoryBadge();
+    if (typeof updateGardenBadges === 'function') updateGardenBadges();
     renderHistoryList();
     // Sync saved state if the deleted record is the currently displayed one
     if (currentResult && currentResultSaved) {
@@ -1013,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!confirm('Delete all history entries? This cannot be undone.')) return;
     try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
     updateHistoryBadge();
+    if (typeof updateGardenBadges === 'function') updateGardenBadges();
     renderHistoryList();
   }
 
@@ -2052,72 +2128,154 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // =========================================================================
-  // WORD GARDEN UI CONTROLLER (Step 5)
+  // MINECRAFT-INSPIRED RETRO PIXEL WORD GARDEN UI CONTROLLER
+  // Strictly Isolated: Populated ONLY from Photo History (nammooru_history_v1)
   // =========================================================================
-  const btnGardenHeader        = document.getElementById('btn-garden-header');
+  const btnGardenHeader        = document.getElementById('btn-garden-header') || document.getElementById('btn-header-garden');
   const headerGardenBadge      = document.getElementById('header-garden-badge');
   const btnOpenGardenFromLearn = document.getElementById('btn-open-garden-from-learn');
   const learnGardenCount       = document.getElementById('learn-garden-count');
   const gardenOverlay          = document.getElementById('garden-overlay');
   const btnGardenClose         = document.getElementById('btn-garden-close');
-  const gardenTotalCount       = document.getElementById('garden-total-count');
-  const gardenWordsSubcount    = document.getElementById('garden-words-subcount');
-  const gardenPhrasesSubcount  = document.getElementById('garden-phrases-subcount');
-  const gardenSearchInput      = document.getElementById('garden-search-input');
-  const btnGardenSearchClear   = document.getElementById('btn-garden-search-clear');
-  const gardenCategorySelect   = document.getElementById('garden-category-select');
-  const gardenTypePills        = Array.from(document.querySelectorAll('.garden-pill-btn'));
-  const gardenEmptyState       = document.getElementById('garden-empty-state');
-  const gardenNoResults        = document.getElementById('garden-no-results');
-  const gardenItemsGrid        = document.getElementById('garden-items-grid');
-  const btnEmptyGotoLearn      = document.getElementById('btn-empty-goto-learn');
-  const btnGardenResetFilters  = document.getElementById('btn-garden-reset-filters');
+  const btnGardenBackToVocab   = document.getElementById('btn-garden-back-to-vocab');
 
-  let gardenSearchQuery = '';
-  let gardenTypeFilter = 'all';
-  let gardenCategoryFilter = 'all';
+  // Minecraft Garden Elements
+  const mcGardenGround         = document.getElementById('mc-garden-ground');
+  const mcGardenBadgePill      = document.getElementById('mc-garden-badge-pill');
+  const mcGardenCountLabel     = document.getElementById('mc-garden-count-label');
+  const mcPlantDialogue        = document.getElementById('mc-plant-dialogue');
+  const mcDialoguePlantIcon    = document.getElementById('mc-dialogue-plant-icon');
+  const mcDialogueKannada      = document.getElementById('mc-dialogue-kannada');
+  const mcDialogueTranslit     = document.getElementById('mc-dialogue-translit');
+  const mcDialogueEnglish      = document.getElementById('mc-dialogue-english');
+  const mcDialogueDesc         = document.getElementById('mc-dialogue-desc');
+  const mcThumbFrame           = document.getElementById('mc-thumb-frame');
+  const mcDialogueThumb        = document.getElementById('mc-dialogue-thumb');
+  const mcDialogueTimestamp    = document.getElementById('mc-dialogue-timestamp');
+  const btnMcAudio             = document.getElementById('btn-mc-audio');
+  const btnMcAudioText         = document.getElementById('btn-mc-audio-text');
+  const btnMcDialogueClose     = document.getElementById('btn-mc-dialogue-close');
 
-  function updateGardenBadges() {
-    const { total, words, phrases } = GardenStore.count();
+  let activeDialoguePlant = null;
 
-    // 1. Header quick pill
-    const headerCountEl = document.getElementById('header-garden-count');
-    if (headerCountEl) {
-      headerCountEl.textContent = total;
+  // 6 Classic 8-Bit Retro Flower Varieties (Pixel SVGs)
+  const MC_FLOWERS = [
+    {
+      name: 'poppy',
+      icon: '🌹',
+      svg: `<svg viewBox="0 0 16 20" width="34" height="42" shape-rendering="crispEdges">
+        <rect x="7" y="8" width="2" height="12" fill="#437d26"/>
+        <rect x="5" y="12" width="2" height="2" fill="#36661e"/>
+        <rect x="9" y="14" width="2" height="2" fill="#589e34"/>
+        <rect x="5" y="2" width="6" height="6" fill="#d32f2f"/>
+        <rect x="4" y="3" width="8" height="4" fill="#e53935"/>
+        <rect x="6" y="1" width="4" height="8" fill="#c62828"/>
+        <rect x="7" y="4" width="2" height="2" fill="#ffebee"/>
+        <rect x="6" y="5" width="4" height="2" fill="#8e0000"/>
+      </svg>`
+    },
+    {
+      name: 'dandelion',
+      icon: '🌼',
+      svg: `<svg viewBox="0 0 16 20" width="34" height="42" shape-rendering="crispEdges">
+        <rect x="7" y="7" width="2" height="13" fill="#437d26"/>
+        <rect x="5" y="13" width="2" height="2" fill="#589e34"/>
+        <rect x="9" y="11" width="2" height="2" fill="#36661e"/>
+        <rect x="5" y="2" width="6" height="5" fill="#fbc02d"/>
+        <rect x="4" y="3" width="8" height="3" fill="#fdd835"/>
+        <rect x="6" y="1" width="4" height="7" fill="#f57f17"/>
+        <rect x="7" y="3" width="2" height="2" fill="#fff9c4"/>
+      </svg>`
+    },
+    {
+      name: 'orchid',
+      icon: '🪻',
+      svg: `<svg viewBox="0 0 16 20" width="34" height="42" shape-rendering="crispEdges">
+        <rect x="7" y="6" width="2" height="14" fill="#36661e"/>
+        <rect x="5" y="10" width="2" height="2" fill="#437d26"/>
+        <rect x="4" y="1" width="3" height="4" fill="#0288d1"/>
+        <rect x="9" y="1" width="3" height="4" fill="#29b6f6"/>
+        <rect x="5" y="4" width="6" height="4" fill="#03a9f4"/>
+        <rect x="7" y="3" width="2" height="2" fill="#e1f5fe"/>
+        <rect x="6" y="6" width="4" height="2" fill="#01579b"/>
+      </svg>`
+    },
+    {
+      name: 'allium',
+      icon: '🟣',
+      svg: `<svg viewBox="0 0 16 20" width="34" height="42" shape-rendering="crispEdges">
+        <rect x="7" y="8" width="2" height="12" fill="#437d26"/>
+        <rect x="5" y="14" width="2" height="2" fill="#589e34"/>
+        <rect x="4" y="2" width="8" height="6" fill="#ab47bc"/>
+        <rect x="5" y="1" width="6" height="8" fill="#ba68c8"/>
+        <rect x="6" y="3" width="4" height="4" fill="#f3e5f5"/>
+        <rect x="5" y="7" width="6" height="2" fill="#6a1b9a"/>
+      </svg>`
+    },
+    {
+      name: 'lily',
+      icon: '🤍',
+      svg: `<svg viewBox="0 0 16 20" width="34" height="42" shape-rendering="crispEdges">
+        <rect x="7" y="7" width="2" height="13" fill="#437d26"/>
+        <rect x="9" y="12" width="2" height="2" fill="#36661e"/>
+        <rect x="5" y="2" width="6" height="6" fill="#f5f5f5"/>
+        <rect x="4" y="3" width="8" height="4" fill="#e0e0e0"/>
+        <rect x="6" y="1" width="4" height="2" fill="#ffffff"/>
+        <rect x="6" y="6" width="4" height="2" fill="#9e9e9e"/>
+      </svg>`
+    },
+    {
+      name: 'sunflower',
+      icon: '🌻',
+      svg: `<svg viewBox="0 0 16 20" width="34" height="42" shape-rendering="crispEdges">
+        <rect x="7" y="8" width="2" height="12" fill="#437d26"/>
+        <rect x="5" y="12" width="2" height="2" fill="#589e34"/>
+        <rect x="9" y="14" width="2" height="2" fill="#36661e"/>
+        <rect x="4" y="1" width="8" height="8" fill="#ffa000"/>
+        <rect x="5" y="2" width="6" height="6" fill="#ffb300"/>
+        <rect x="6" y="3" width="4" height="4" fill="#5d4037"/>
+        <rect x="7" y="4" width="2" height="2" fill="#3e2723"/>
+      </svg>`
     }
-    if (headerGardenBadge) {
-      headerGardenBadge.textContent = total;
-      headerGardenBadge.hidden = (total === 0);
-    }
+  ];
 
-    // 2. Profile stats
-    const profileGardenEl = document.getElementById('profile-garden-count');
-    if (profileGardenEl) {
-      profileGardenEl.textContent = total;
-    }
-
-    // 3. Learn page hero card badge
-    if (learnGardenCount) {
-      learnGardenCount.textContent = total;
-      learnGardenCount.hidden = (total === 0);
-    }
-
-    // 4. Modal stats strip
-    if (gardenTotalCount) {
-      gardenTotalCount.textContent = total;
-    }
-    if (gardenWordsSubcount) {
-      gardenWordsSubcount.textContent = `${words} ${words === 1 ? 'word' : 'words'}`;
-    }
-    if (gardenPhrasesSubcount) {
-      gardenPhrasesSubcount.textContent = `${phrases} ${phrases === 1 ? 'phrase' : 'phrases'}`;
-    }
+  /**
+   * CRITICAL DATA SOURCE ISOLATION:
+   * Reads exclusively from Photo History Log (nammooru_history_v1).
+   * Does NOT mix or merge general vocabulary, deck phrases, or other site data.
+   */
+  function getPhotoGardenWords() {
+    const records = typeof loadHistory === 'function' ? loadHistory() : [];
+    return records.filter(r => r && typeof r.english === 'string' && typeof r.kannada === 'string');
   }
 
-  // Header garden pill click handler
-  const btnHeaderGarden = document.getElementById('btn-header-garden');
-  if (btnHeaderGarden) {
-    btnHeaderGarden.addEventListener('click', openGardenModal);
+  function updateGardenBadges() {
+    const photoWords = getPhotoGardenWords();
+    const count = photoWords.length;
+
+    // 1. Header quick pill (if present)
+    const headerCountEl = document.getElementById('header-garden-count');
+    if (headerCountEl) headerCountEl.textContent = count;
+    if (headerGardenBadge) {
+      headerGardenBadge.textContent = count;
+      headerGardenBadge.hidden = (count === 0);
+    }
+
+    // 2. Profile stats (Word Garden count in Transform tab)
+    const profileGardenEl = document.getElementById('profile-garden-count');
+    if (profileGardenEl) {
+      profileGardenEl.textContent = count;
+    }
+
+    // 3. Learn page hero card badge & mode tab badge
+    if (learnGardenCount) {
+      learnGardenCount.textContent = count;
+      learnGardenCount.hidden = (count === 0);
+    }
+    if (learnGardenTabBadge) {
+      learnGardenTabBadge.textContent = count;
+      learnGardenTabBadge.hidden = (count === 0);
+    }
   }
 
   function openGardenModal() {
@@ -2125,7 +2283,7 @@ document.addEventListener('DOMContentLoaded', () => {
     gardenOverlay.hidden = false;
     document.body.style.overflow = 'hidden';
     updateGardenBadges();
-    renderGardenItems();
+    renderMinecraftWordGarden();
     if (btnGardenClose) btnGardenClose.focus();
   }
 
@@ -2133,225 +2291,129 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!gardenOverlay) return;
     gardenOverlay.hidden = true;
     document.body.style.overflow = '';
+    hidePlantDialogue();
   }
 
-  function formatCategoryName(cat) {
-    if (!cat) return 'General';
-    const map = {
-      greetings: 'Greetings',
-      numbers: 'Numbers & Money',
-      food: 'Food & Dining',
-      transport: 'Transport',
-      directions: 'Directions',
-      shopping: 'Shopping & Prices',
-      auto: 'Auto & Commute',
-      polite: 'Politeness',
-      daily: 'Daily Life',
-      everyday: 'Everyday'
-    };
-    return map[cat.toLowerCase()] || (cat.charAt(0).toUpperCase() + cat.slice(1));
+  function showPlantDialogue(item, flower) {
+    if (!mcPlantDialogue) return;
+    activeDialoguePlant = item;
+
+    if (mcDialoguePlantIcon) mcDialoguePlantIcon.textContent = flower.icon || '🌸';
+    if (mcDialogueKannada)   mcDialogueKannada.textContent = item.kannada || '';
+    if (mcDialogueTranslit)  mcDialogueTranslit.textContent = item.pronunciation ? `"${item.pronunciation}"` : '';
+    if (mcDialogueEnglish)   mcDialogueEnglish.textContent = item.english || '';
+    if (mcDialogueDesc)      mcDialogueDesc.textContent = item.description || 'Captured through the Nammooru optical lens in Bengaluru.';
+
+    const photoSrc = item.thumbnailUrl || item.fullImageUrl;
+    if (mcThumbFrame && mcDialogueThumb) {
+      if (photoSrc) {
+        mcDialogueThumb.src = photoSrc;
+        mcThumbFrame.hidden = false;
+      } else {
+        mcThumbFrame.hidden = true;
+      }
+    }
+
+    if (mcDialogueTimestamp) {
+      const dateStr = item.timestamp ? formatDate(item.timestamp) : 'Recent';
+      mcDialogueTimestamp.textContent = `Discovered via Photo • ${dateStr}`;
+    }
+
+    mcPlantDialogue.hidden = false;
   }
 
-  function renderGardenItems() {
-    if (!gardenItemsGrid) return;
-    const allItems = GardenStore.getAll();
+  function hidePlantDialogue() {
+    if (mcPlantDialogue) mcPlantDialogue.hidden = true;
+    activeDialoguePlant = null;
+  }
 
-    // 1. Overall empty state
-    if (allItems.length === 0) {
-      if (gardenEmptyState) gardenEmptyState.hidden = false;
-      if (gardenNoResults) gardenNoResults.hidden = true;
-      gardenItemsGrid.hidden = true;
-      gardenItemsGrid.innerHTML = '';
+  // Render Minecraft-Inspired Pixel Biome based strictly on Photo History
+  function renderMinecraftWordGarden() {
+    const gardenGround = document.getElementById('mc-garden-ground');
+    if (!gardenGround) return;
+    hidePlantDialogue();
+
+    const photoWords = getPhotoGardenWords();
+    const count = photoWords.length;
+
+    // Visual Progression Badges & Counts
+    if (mcGardenBadgePill && mcGardenCountLabel) {
+      if (count === 0) {
+        mcGardenBadgePill.textContent = 'Seedling Plot';
+        mcGardenCountLabel.textContent = '0 Plants Discovered';
+      } else if (count <= 3) {
+        mcGardenBadgePill.textContent = 'Level 1: Sprouting Garden';
+        mcGardenCountLabel.textContent = `${count} ${count === 1 ? 'Plant' : 'Plants'} Growing`;
+      } else {
+        mcGardenBadgePill.textContent = 'Level 2: Flourishing Biome';
+        mcGardenCountLabel.textContent = `${count} Plants Blooming`;
+      }
+    }
+
+    // Progression Tier 0: 0 Photo Words (Fresh tilled dirt + calm Minecraft prompt)
+    if (count === 0) {
+      gardenGround.innerHTML = `
+        <div class="mc-empty-sign">
+          <div class="mc-sign-board">
+            <div class="mc-sign-icon">🌱</div>
+            <h3 class="mc-sign-title">Tilled Plot Awaiting Seeds</h3>
+            <p class="mc-sign-text">"Take a photo of an object to plant your first seed!"</p>
+            <button type="button" class="mc-btn mc-btn-primary" id="btn-mc-goto-photo">
+              <span>📸 Snap a Photo</span>
+            </button>
+          </div>
+          <div class="mc-sign-post"></div>
+        </div>
+      `;
+
+      const btnGotoPhoto = document.getElementById('btn-mc-goto-photo');
+      if (btnGotoPhoto) {
+        btnGotoPhoto.addEventListener('click', () => {
+          closeGardenModal();
+          switchSection('photo');
+        });
+      }
       return;
     }
 
-    // 2. Filter items
-    const filtered = allItems.filter(item => {
-      // Type filter
-      if (gardenTypeFilter !== 'all' && item.type !== gardenTypeFilter) {
-        return false;
-      }
-      // Category filter
-      if (gardenCategoryFilter !== 'all' && item.category !== gardenCategoryFilter) {
-        return false;
-      }
-      // Search filter
-      if (gardenSearchQuery) {
-        const q = gardenSearchQuery.toLowerCase();
-        const matchesKannada = (item.kannada || '').toLowerCase().includes(q);
-        const matchesTranslit = (item.translit || '').toLowerCase().includes(q);
-        const matchesEnglish = (item.english || '').toLowerCase().includes(q);
-        const matchesNote = (item.note || '').toLowerCase().includes(q);
-        if (!matchesKannada && !matchesTranslit && !matchesEnglish && !matchesNote) {
-          return false;
-        }
-      }
-      return true;
-    });
+    // Progression Tier 1 & 2: Plants Grid
+    const grid = document.createElement('div');
+    grid.className = 'mc-plants-grid';
 
-    // 3. No search / filter matches state
-    if (filtered.length === 0) {
-      if (gardenEmptyState) gardenEmptyState.hidden = true;
-      if (gardenNoResults) gardenNoResults.hidden = false;
-      gardenItemsGrid.hidden = true;
-      gardenItemsGrid.innerHTML = '';
-      return;
-    }
+    photoWords.forEach((item, index) => {
+      const flower = MC_FLOWERS[index % MC_FLOWERS.length];
 
-    // 4. Render matched items
-    if (gardenEmptyState) gardenEmptyState.hidden = true;
-    if (gardenNoResults) gardenNoResults.hidden = true;
-    gardenItemsGrid.hidden = false;
-    gardenItemsGrid.innerHTML = '';
+      const plot = document.createElement('div');
+      plot.className = 'mc-plant-plot';
+      plot.setAttribute('role', 'button');
+      plot.setAttribute('tabindex', '0');
+      plot.setAttribute('aria-label', `${item.english} (${item.kannada})`);
 
-    filtered.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'garden-card';
-      card.id = `garden-card-${item.id}`;
-
-      // Meta: Type pill + Category
-      const meta = document.createElement('div');
-      meta.className = 'garden-card-meta';
-
-      const typeBadge = document.createElement('span');
-      typeBadge.className = 'garden-badge-type';
-      typeBadge.textContent = item.type === 'phrase' ? 'Phrase' : 'Word';
-
-      const catBadge = document.createElement('span');
-      catBadge.className = 'garden-badge-cat';
-      catBadge.textContent = formatCategoryName(item.category);
-
-      meta.appendChild(typeBadge);
-      meta.appendChild(catBadge);
-
-      // Kannada script (large readable font)
-      const kn = document.createElement('div');
-      kn.className = 'garden-card-kannada';
-      kn.setAttribute('lang', 'kn');
-      kn.textContent = item.kannada;
-
-      // Transliteration
-      const translit = document.createElement('div');
-      translit.className = 'garden-card-translit';
-      translit.textContent = item.translit;
-
-      // English meaning
-      const eng = document.createElement('div');
-      eng.className = 'garden-card-english';
-      eng.textContent = item.english;
-
-      // Note / Usage if available
-      let note = null;
-      if (item.note) {
-        note = document.createElement('div');
-        note.className = 'garden-card-note';
-        note.textContent = item.note;
-      }
-
-      // Actions strip
-      const actions = document.createElement('div');
-      actions.className = 'garden-card-actions';
-
-      // 1. Listen Button (Connects to actual Step 4 pronunciation)
-      const listenBtn = document.createElement('button');
-      listenBtn.type = 'button';
-      listenBtn.className = 'btn-listen';
-      listenBtn.setAttribute('aria-label', `Listen to ${item.english}`);
-      listenBtn.innerHTML = `
-        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-        <span>Listen</span>
+      plot.innerHTML = `
+        <div class="mc-plant-nametag">${item.english}</div>
+        <div class="mc-plant-sprite-wrap" style="animation-delay: -${(index * 0.7).toFixed(1)}s">
+          ${flower.svg}
+        </div>
+        <div class="mc-soil-tile"></div>
       `;
-      listenBtn.addEventListener('click', () => {
-        playKannadaAudio(item.listenText || item.kannada, listenBtn);
-      });
 
-      // 2. View in Learn Button
-      const viewLearnBtn = document.createElement('button');
-      viewLearnBtn.type = 'button';
-      viewLearnBtn.className = 'btn-garden-view-learn';
-      viewLearnBtn.setAttribute('aria-label', `View ${item.english} in Learn section`);
-      viewLearnBtn.innerHTML = `
-        <span>View in Learn</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="5" y1="12" x2="19" y2="12"/>
-          <polyline points="12 5 19 12 12 19"/>
-        </svg>
-      `;
-      viewLearnBtn.addEventListener('click', () => {
-        closeGardenModal();
-        switchSection('learn');
-        const targetMode = item.type === 'phrase' ? 'phrases' : 'words';
-        switchLearnMode(targetMode);
-
-        // Reset search in Learn so the card is visible
-        if (learnSearchInput) {
-          learnSearchInput.value = '';
-          currentSearchQuery = '';
-          if (btnSearchClear) btnSearchClear.hidden = true;
-        }
-
-        // Set category to item's category so the card is visible
-        if (targetMode === 'words') {
-          currentWordCategory = item.category || 'all';
-          wordsCategoryBar.querySelectorAll('.cat-pill-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.category === currentWordCategory);
-          });
-          renderWordsGrid();
-        } else {
-          currentPhraseCategory = item.category || 'all';
-          phrasesCategoryBar.querySelectorAll('.cat-pill-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.category === currentPhraseCategory);
-          });
-          renderPhrasesGrid();
-        }
-
-        // Smooth scroll and pulse highlight
-        setTimeout(() => {
-          const cardId = item.type === 'phrase' ? `phrase-${item.id}` : `word-${item.id}`;
-          const targetCard = document.getElementById(cardId);
-          if (targetCard) {
-            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            targetCard.classList.remove('card-highlighted');
-            void targetCard.offsetWidth; // trigger reflow
-            targetCard.classList.add('card-highlighted');
-          }
-        }, 150);
-      });
-
-      // 3. Remove Button
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'btn-garden-remove';
-      removeBtn.setAttribute('aria-label', `Remove ${item.english} from Word Garden`);
-      removeBtn.setAttribute('title', 'Remove from Word Garden');
-      removeBtn.innerHTML = `
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polyline points="3 6 5 6 21 6"/>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-        </svg>
-      `;
-      removeBtn.addEventListener('click', (e) => {
+      plot.addEventListener('click', (e) => {
         e.stopPropagation();
-        GardenStore.remove(item.id);
-        showGardenToast('Removed from your Word Garden.', 'info');
+        showPlantDialogue(item, flower);
       });
 
-      actions.appendChild(listenBtn);
-      actions.appendChild(viewLearnBtn);
-      actions.appendChild(removeBtn);
+      plot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          showPlantDialogue(item, flower);
+        }
+      });
 
-      card.appendChild(meta);
-      card.appendChild(kn);
-      card.appendChild(translit);
-      card.appendChild(eng);
-      if (note) card.appendChild(note);
-      card.appendChild(actions);
-
-      gardenItemsGrid.appendChild(card);
+      grid.appendChild(plot);
     });
+
+    gardenGround.innerHTML = '';
+    gardenGround.appendChild(grid);
   }
 
   // --- Wire Event Listeners for Word Garden ---
@@ -2364,88 +2426,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnGardenClose) {
     btnGardenClose.addEventListener('click', closeGardenModal);
   }
-  if (gardenOverlay) {
-    gardenOverlay.addEventListener('click', (e) => {
-      if (e.target === gardenOverlay) closeGardenModal();
-    });
+  if (btnMcDialogueClose) {
+    btnMcDialogueClose.addEventListener('click', hidePlantDialogue);
   }
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && gardenOverlay && !gardenOverlay.hidden) {
-      closeGardenModal();
-    }
-  });
 
-  if (btnEmptyGotoLearn) {
-    btnEmptyGotoLearn.addEventListener('click', () => {
+  // Clear "Back to Vocabulary" button returns smoothly to normal Learn words
+  if (btnGardenBackToVocab) {
+    btnGardenBackToVocab.addEventListener('click', () => {
       closeGardenModal();
       switchSection('learn');
       switchLearnMode('words');
     });
   }
 
-  // Type filter pills (All, Words, Phrases)
-  gardenTypePills.forEach(btn => {
-    btn.addEventListener('click', () => {
-      gardenTypePills.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      gardenTypeFilter = btn.dataset.type || 'all';
-      renderGardenItems();
-    });
-  });
-
-  // Category select dropdown
-  if (gardenCategorySelect) {
-    gardenCategorySelect.addEventListener('change', () => {
-      gardenCategoryFilter = gardenCategorySelect.value;
-      renderGardenItems();
+  // Audio Pronunciation Button on Dialogue Card (Native TTS playback, NO sliders)
+  if (btnMcAudio) {
+    btnMcAudio.addEventListener('click', () => {
+      if (!activeDialoguePlant || !activeDialoguePlant.kannada) return;
+      playKannadaAudio(activeDialoguePlant.kannada, btnMcAudio);
     });
   }
 
-  // Search input
-  if (gardenSearchInput) {
-    gardenSearchInput.addEventListener('input', () => {
-      gardenSearchQuery = gardenSearchInput.value.trim();
-      if (btnGardenSearchClear) {
-        btnGardenSearchClear.hidden = (gardenSearchQuery === '');
-      }
-      renderGardenItems();
+  // Close modal when clicking on the frosted overlay background
+  if (gardenOverlay) {
+    gardenOverlay.addEventListener('click', (e) => {
+      if (e.target === gardenOverlay) closeGardenModal();
     });
   }
-
-  // Clear search button
-  if (btnGardenSearchClear) {
-    btnGardenSearchClear.addEventListener('click', () => {
-      gardenSearchInput.value = '';
-      gardenSearchQuery = '';
-      btnGardenSearchClear.hidden = true;
-      gardenSearchInput.focus();
-      renderGardenItems();
-    });
-  }
-
-  // Reset all filters button
-  if (btnGardenResetFilters) {
-    btnGardenResetFilters.addEventListener('click', () => {
-      gardenSearchQuery = '';
-      gardenTypeFilter = 'all';
-      gardenCategoryFilter = 'all';
-      if (gardenSearchInput) gardenSearchInput.value = '';
-      if (btnGardenSearchClear) btnGardenSearchClear.hidden = true;
-      if (gardenCategorySelect) gardenCategorySelect.value = 'all';
-      gardenTypePills.forEach(b => b.classList.toggle('active', b.dataset.type === 'all'));
-      renderGardenItems();
-    });
-  }
-
-  // Subscribe GardenStore changes to keep everything synced reactively
-  GardenStore.subscribe(() => {
-    updateGardenBadges();
-    updateAllSaveButtons();
-    if (currentResult) updateResultGardenButton(currentResult);
-    if (gardenOverlay && !gardenOverlay.hidden) {
-      renderGardenItems();
-    }
-  });
 
   // Initial Badges Sync
   updateGardenBadges();
@@ -2454,6 +2461,187 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Initial Render of Learn Content ---
   renderScriptGrid();
 
+  // =========================================================================
+  // LEARN HUB & SUBPAGES CONTROLLER (V2 Editorial Redesign)
+  // =========================================================================
+
+  const learnHubView          = document.getElementById('learn-hub-view');
+  const learnSubpageView      = document.getElementById('learn-subpage-view');
+  const subpageCurrentTitle   = document.getElementById('subpage-current-title');
+  const btnBackToHub          = document.getElementById('btn-back-to-hub');
+  const learnDestinationCards = Array.from(document.querySelectorAll('.learn-destination-card'));
+  const hubGardenCount        = document.getElementById('hub-garden-count');
+  const hubTriesCount         = document.getElementById('hub-tries-count');
+  const hubBadgesCount        = document.getElementById('hub-badges-count');
+
+  const subPanels = {
+    words:        document.getElementById('sub-panel-words'),
+    phrases:      document.getElementById('sub-panel-phrases'),
+    garden:       document.getElementById('sub-panel-garden'),
+    tries:        document.getElementById('sub-panel-tries'),
+    achievements: document.getElementById('sub-panel-achievements'),
+    progress:     document.getElementById('sub-panel-progress'),
+  };
+
+  const SUBPAGE_TITLES = {
+    words:        'Discover Words',
+    phrases:      'Useful Phrases',
+    garden:       'Word Garden',
+    tries:        'My Real-Life Tries',
+    achievements: 'My Achievements',
+    progress:     'My Progress'
+  };
+
+  function updateHubStats() {
+    // Safe placeholder for legacy subpages if any
+  }
+
+  function renderGardenSubpage() {
+    const listEl = document.getElementById('garden-subpage-list');
+    const emptyEl = document.getElementById('garden-subpage-empty');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+
+    const items = typeof GardenStore !== 'undefined' ? GardenStore.getAll() : [];
+    if (items.length === 0) {
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+    if (emptyEl) emptyEl.hidden = true;
+
+    items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'word-card garden-subpage-card';
+      card.innerHTML = `
+        <div class="word-card-top">
+          <div>
+            <div class="word-kannada" lang="kn">${escapeHtml(item.kannada)}</div>
+            <span class="word-translit">${escapeHtml(item.translit || item.pronunciation || '')}</span>
+          </div>
+          <span class="category-tag">${escapeHtml(item.category || 'Saved')}</span>
+        </div>
+        <div class="word-english">${escapeHtml(item.english)}</div>
+        <div class="word-actions">
+          <button type="button" class="btn-listen" aria-label="Listen to ${escapeHtml(item.english)}">
+            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+            </svg>
+            <span>Listen</span>
+          </button>
+          <button type="button" class="btn-remove-garden" aria-label="Remove ${escapeHtml(item.english)} from garden">
+            <span>Remove</span>
+          </button>
+        </div>
+      `;
+
+      card.querySelector('.btn-listen').addEventListener('click', () => {
+        playPronunciation(item.kannada, item.translit || item.pronunciation, item.english);
+      });
+
+      card.querySelector('.btn-remove-garden').addEventListener('click', () => {
+        GardenStore.remove(item.id);
+        renderGardenSubpage();
+        updateHubStats();
+      });
+
+      listEl.appendChild(card);
+    });
+  }
+
+  function renderProgressSummary() {
+    const attempts = typeof AttemptStore !== 'undefined' ? AttemptStore.getAll() : [];
+    const gardenData = typeof GardenStore !== 'undefined' ? GardenStore.count() : { total: 0 };
+    const earnedBadges = typeof BADGE_DEFINITIONS !== 'undefined' 
+      ? BADGE_DEFINITIONS.filter(b => b.evaluate(attempts).earned).length 
+      : 0;
+
+    const statTries = document.getElementById('prog-stat-tries');
+    const statGarden = document.getElementById('prog-stat-garden');
+    const statBadges = document.getElementById('prog-stat-badges');
+
+    if (statTries) statTries.textContent = attempts.length;
+    if (statGarden) statGarden.textContent = gardenData.total;
+    if (statBadges) statBadges.textContent = `${earnedBadges} / 9`;
+
+    const wellCount = attempts.filter(a => a.outcome === 'went_well').length;
+    const helpCount = attempts.filter(a => a.outcome === 'needed_help').length;
+    const frozeCount = attempts.filter(a => a.outcome === 'froze').length;
+
+    const outWell = document.getElementById('prog-out-well');
+    const outHelp = document.getElementById('prog-out-help');
+    const outFroze = document.getElementById('prog-out-froze');
+
+    if (outWell) outWell.textContent = wellCount;
+    if (outHelp) outHelp.textContent = helpCount;
+    if (outFroze) outFroze.textContent = frozeCount;
+  }
+
+  function openLearnSubpage(subpage) {
+    stopAllAudio();
+    if (!subpage || subpage === 'hub') {
+      if (learnHubView) learnHubView.hidden = false;
+      if (learnSubpageView) learnSubpageView.hidden = true;
+      updateHubStats();
+      return;
+    }
+
+    if (learnHubView) learnHubView.hidden = true;
+    if (learnSubpageView) learnSubpageView.hidden = false;
+
+    if (subpageCurrentTitle) {
+      subpageCurrentTitle.textContent = SUBPAGE_TITLES[subpage] || 'Learn & Practice';
+    }
+
+    Object.values(subPanels).forEach(p => {
+      if (p) p.hidden = true;
+    });
+
+    const target = subPanels[subpage];
+    if (target) {
+      target.hidden = false;
+    }
+
+    if (subpage === 'words') {
+      renderCurrentMode();
+    } else if (subpage === 'phrases') {
+      renderPhrasesGrid();
+    } else if (subpage === 'garden') {
+      renderGardenSubpage();
+    } else if (subpage === 'tries') {
+      if (typeof renderAttemptsList === 'function') renderAttemptsList();
+    } else if (subpage === 'achievements') {
+      if (typeof renderBadgesGrid === 'function') renderBadgesGrid();
+    } else if (subpage === 'progress') {
+      renderProgressSummary();
+    }
+
+    const contentEl = document.querySelector('.app-content');
+    if (contentEl) contentEl.scrollTop = 0;
+  }
+
+  // Hook destination cards
+  learnDestinationCards.forEach(card => {
+    card.addEventListener('click', () => {
+      openLearnSubpage(card.dataset.subpage);
+    });
+  });
+
+  if (btnBackToHub) {
+    btnBackToHub.addEventListener('click', () => {
+      openLearnSubpage('hub');
+    });
+  }
+
+  const btnGardenStartDiscover = document.getElementById('btn-garden-start-discover');
+  if (btnGardenStartDiscover) {
+    btnGardenStartDiscover.addEventListener('click', () => {
+      openLearnSubpage('words');
+    });
+  }
+
+  window.openLearnSubpage = openLearnSubpage;
+  window.updateHubStats = updateHubStats;
   // --- Tab Switch Hook: Handle "Learn This Word" passed from PHOTO section ---
   const originalSwitchSection = switchSection;
   window.addEventListener('hashchange', checkFeaturedWord);
@@ -2489,6 +2677,17 @@ document.addEventListener('DOMContentLoaded', () => {
    * AttemptStore: Persistent storage layer for real-world Kannada attempts.
    * Isolates persistence (localStorage) from UI rendering.
    */
+  
+  /**
+   * Calculates and updates factual counts for My Week and My Progress in INNOVATE.
+   * - Tries this week (within last 7 days)
+   * - Words learned (saved in Word Garden)
+   * - Words tried (attempts recorded)
+   * - Outcome counts (Went well, Needed help, Froze)
+   */
+  
+
+
   const AttemptStore = (() => {
     const STORAGE_KEY = 'nammooru_attempts_v1';
     const listeners = new Set();
@@ -2774,6 +2973,56 @@ document.addEventListener('DOMContentLoaded', () => {
   // Expose store singletons to window for testing and external access
   window.AttemptStore = AttemptStore;
   window.BADGE_DEFINITIONS = BADGE_DEFINITIONS;
+
+
+  function updateInnovateStats() {
+    const attempts = typeof AttemptStore !== 'undefined' ? AttemptStore.getAll() : [];
+    const gardenData = typeof GardenStore !== 'undefined' ? GardenStore.count() : { total: 0, words: 0, phrases: 0 };
+    
+    // My Week calculation: attempts within the last 7 days
+    const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    const triesThisWeek = attempts.filter(a => {
+      const t = new Date(a.timestamp).getTime();
+      return !isNaN(t) && t >= oneWeekAgo;
+    }).length;
+
+    const wordsLearned = gardenData.words || gardenData.total || 0;
+    const wordsTried = attempts.filter(a => a.connectedItemText || a.situation).length;
+
+    const elWeekTries = document.getElementById('week-tries-count');
+    const elWeekLearned = document.getElementById('week-words-learned');
+    const elWeekTried = document.getElementById('week-words-tried');
+
+    if (elWeekTries) elWeekTries.textContent = triesThisWeek;
+    if (elWeekLearned) elWeekLearned.textContent = wordsLearned;
+    if (elWeekTried) elWeekTried.textContent = wordsTried;
+
+    // My Progress stats
+    const earnedBadges = typeof BADGE_DEFINITIONS !== 'undefined' 
+      ? BADGE_DEFINITIONS.filter(b => b.evaluate(attempts).earned).length 
+      : 0;
+
+    const statTries = document.getElementById('prog-stat-tries');
+    const statGarden = document.getElementById('prog-stat-garden');
+    const statBadges = document.getElementById('prog-stat-badges');
+
+    if (statTries) statTries.textContent = attempts.length;
+    if (statGarden) statGarden.textContent = gardenData.total;
+    if (statBadges) statBadges.textContent = `${earnedBadges} / 9`;
+
+    const wellCount = attempts.filter(a => a.outcome === 'went_well').length;
+    const helpCount = attempts.filter(a => a.outcome === 'needed_help').length;
+    const frozeCount = attempts.filter(a => a.outcome === 'froze').length;
+
+    const outWell = document.getElementById('prog-out-well');
+    const outHelp = document.getElementById('prog-out-help');
+    const outFroze = document.getElementById('prog-out-froze');
+
+    if (outWell) outWell.textContent = wellCount;
+    if (outHelp) outHelp.textContent = helpCount;
+    if (outFroze) outFroze.textContent = frozeCount;
+  }
+  window.updateInnovateStats = updateInnovateStats;
   window.GardenStore = GardenStore;
   // INNOVATE UI CONTROLLER
   // =========================================================================
@@ -3594,6 +3843,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (profileDisplayName) profileDisplayName.textContent = profile.name;
     if (profileBioText)     profileBioText.textContent = profile.bio;
 
+    const avatarInitials = document.getElementById('profile-avatar-initials');
+    if (avatarInitials && profile.name) {
+      const parts = profile.name.trim().split(/\s+/);
+      const initials = parts.length > 1 
+        ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+        : parts[0].slice(0, 2).toUpperCase();
+      avatarInitials.textContent = initials || 'BN';
+    }
+
     const gardenData = GardenStore.count();
     if (profileGardenCount) profileGardenCount.textContent = gardenData.total;
 
@@ -3821,11 +4079,547 @@ document.addEventListener('DOMContentLoaded', () => {
 
   AttemptStore.subscribe(() => {
     syncProfileCard();
+    updateInnovateStats();
+    renderBadgesShowcase();
+    renderPracticeLog();
   });
 
-  // Global Escape key handler for all modals
+  window.switchSection = switchSection;
+  window.openGardenModal = openGardenModal;
+  window.closeGardenModal = closeGardenModal;
+  window.openHistoryModal = openHistoryModal;
+  window.closeHistoryModal = closeHistoryModal;
+  window.GardenStore = GardenStore;
+  window.AttemptStore = AttemptStore;
+  window.ProfileStore = ProfileStore;
+  window.CommunityStore = CommunityStore;
+  window.BADGE_DEFINITIONS = BADGE_DEFINITIONS;
+  window.updateInnovateStats = updateInnovateStats;
+
+  // ==========================================================================
+  // PART 14: Optional Secure Two-Factor Authentication (TOTP / Google Authenticator)
+  // ==========================================================================
+  const AUTH_STORAGE_KEY = 'nammooru_auth_session';
+
+  // Modal & Trigger DOM Elements
+  const authModal           = document.getElementById('auth-modal');
+  const btnAuthTrigger      = document.getElementById('btn-auth-trigger');
+  const btnCloseAuthModal   = document.getElementById('btn-close-auth-modal');
+  const authPillLabel       = document.getElementById('auth-pill-label');
+  const authPillDot         = document.getElementById('auth-pill-dot');
+  const profile2FaBadge     = document.getElementById('profile-2fa-badge');
+  const profile2FaText      = document.getElementById('profile-2fa-text');
+
+  // Step Panels
+  const stepSetup           = document.getElementById('auth-step-setup');
+  const stepVerify          = document.getElementById('auth-step-verify');
+  const stepActive          = document.getElementById('auth-step-active');
+
+  // Step 1 Elements
+  const formAuthSetup       = document.getElementById('form-auth-setup');
+  const authIdentifierInput = document.getElementById('auth-identifier-input');
+  const btnGenerateTotp     = document.getElementById('btn-generate-totp');
+  const authQrSection       = document.getElementById('auth-qr-section');
+  const authQrImage         = document.getElementById('auth-qr-image');
+  const authSecretDisplay   = document.getElementById('auth-secret-display');
+  const btnCopySecret       = document.getElementById('btn-copy-secret');
+  const btnProceedToVerify  = document.getElementById('btn-proceed-to-verify');
+
+  // Step 2 Elements
+  const formAuthVerify      = document.getElementById('form-auth-verify');
+  const verifyUserIdent     = document.getElementById('verify-user-identifier');
+  const totpDigitInputs     = Array.from(document.querySelectorAll('.totp-digit-input'));
+  const authErrorBanner     = document.getElementById('auth-error-banner');
+  const authErrorMessage   = document.getElementById('auth-error-message');
+  const authSuccessBanner   = document.getElementById('auth-success-banner');
+  const authSuccessMessage = document.getElementById('auth-success-message');
+  const btnSubmitVerify     = document.getElementById('btn-submit-verify');
+  const verifySpinner       = document.getElementById('verify-spinner');
+  const btnBackToSetup      = document.getElementById('btn-back-to-setup');
+
+  // Step 3 Elements
+  const sessionUserId       = document.getElementById('session-user-id');
+  const sessionVerifiedTime = document.getElementById('session-verified-time');
+  const btnReconfigure2fa   = document.getElementById('btn-reconfigure-2fa');
+  const btnAuthLogout       = document.getElementById('btn-auth-logout');
+
+  // Bypass Element
+  const btnAuthBypass       = document.getElementById('btn-auth-bypass');
+
+  // In-memory Auth State
+  let currentSession = null;
+  let pendingAuthData = null;
+
+  // Safe localStorage reading/writing
+  function loadLocalSession() {
+    try {
+      const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.token && parsed.identifier) {
+        return parsed;
+      }
+      return null;
+    } catch (e) {
+      console.warn('[Auth] Error reading auth session from localStorage:', e);
+      return null;
+    }
+  }
+
+  function saveLocalSession(sessionData) {
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(sessionData));
+    } catch (e) {
+      console.warn('[Auth] Error saving auth session to localStorage:', e);
+    }
+  }
+
+  function removeLocalSession() {
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (e) {
+      console.warn('[Auth] Error removing auth session from localStorage:', e);
+    }
+  }
+
+  function updateAuthUI() {
+    if (currentSession && currentSession.is2FAVerified) {
+      // Authenticated state
+      const idName = currentSession.identifier || 'User';
+      const shortName = idName.length > 14 ? idName.slice(0, 12) + '…' : idName;
+      
+      if (authPillLabel) authPillLabel.textContent = `${shortName} • 2FA`;
+      if (btnAuthTrigger) {
+        btnAuthTrigger.classList.add('authenticated');
+        btnAuthTrigger.setAttribute('title', `Logged in with 2FA as ${idName}`);
+      }
+      if (authPillDot) authPillDot.hidden = false;
+
+      // Transform Tab Profile Status
+      if (profile2FaBadge) profile2FaBadge.classList.add('verified');
+      if (profile2FaText) profile2FaText.textContent = '2FA Active';
+
+      // Active panel details
+      if (sessionUserId) sessionUserId.textContent = idName;
+      if (sessionVerifiedTime && currentSession.verifiedAt) {
+        try {
+          const d = new Date(currentSession.verifiedAt);
+          sessionVerifiedTime.textContent = d.toLocaleString();
+        } catch {
+          sessionVerifiedTime.textContent = currentSession.verifiedAt;
+        }
+      }
+    } else {
+      // Unauthenticated state
+      if (authPillLabel) authPillLabel.textContent = '2FA Login';
+      if (btnAuthTrigger) {
+        btnAuthTrigger.classList.remove('authenticated');
+        btnAuthTrigger.setAttribute('title', 'Open 2FA Login / Setup');
+      }
+      if (authPillDot) authPillDot.hidden = true;
+
+      // Transform Tab Profile Status
+      if (profile2FaBadge) profile2FaBadge.classList.remove('verified');
+      if (profile2FaText) profile2FaText.textContent = '2FA Optional';
+    }
+  }
+
+  function showAuthPanel(panelName) {
+    if (stepSetup)  stepSetup.hidden  = (panelName !== 'setup');
+    if (stepVerify) stepVerify.hidden = (panelName !== 'verify');
+    if (stepActive) stepActive.hidden = (panelName !== 'active');
+    hideAuthAlerts();
+  }
+
+  function hideAuthAlerts() {
+    if (authErrorBanner)   authErrorBanner.hidden = true;
+    if (authSuccessBanner) authSuccessBanner.hidden = true;
+  }
+
+  function showAuthError(msg) {
+    if (authErrorBanner && authErrorMessage) {
+      authErrorMessage.textContent = msg || 'An error occurred. Please try again.';
+      authErrorBanner.hidden = false;
+    }
+    if (authSuccessBanner) authSuccessBanner.hidden = true;
+  }
+
+  function showAuthSuccess(msg) {
+    if (authSuccessBanner && authSuccessMessage) {
+      authSuccessMessage.textContent = msg || 'Success!';
+      authSuccessBanner.hidden = false;
+    }
+    if (authErrorBanner) authErrorBanner.hidden = true;
+  }
+
+  function openAuthModal() {
+    if (!authModal) return;
+    authModal.hidden = false;
+    if (btnAuthTrigger) btnAuthTrigger.setAttribute('aria-expanded', 'true');
+
+    if (currentSession && currentSession.is2FAVerified) {
+      showAuthPanel('active');
+    } else if (pendingAuthData) {
+      showAuthPanel('verify');
+      focusFirstTotpInput();
+    } else {
+      showAuthPanel('setup');
+      if (authIdentifierInput) {
+        const currentProfile = (typeof ProfileStore !== 'undefined' && ProfileStore.get) 
+          ? ProfileStore.get().name 
+          : 'Bengaluru Pioneer';
+        authIdentifierInput.value = currentProfile || 'Bengaluru Pioneer';
+        authIdentifierInput.focus();
+      }
+    }
+  }
+
+  function closeAuthModal() {
+    if (!authModal) return;
+    authModal.hidden = true;
+    if (btnAuthTrigger) btnAuthTrigger.setAttribute('aria-expanded', 'false');
+    hideAuthAlerts();
+  }
+
+  // --- Step 1: Request 2FA Setup from Backend ---
+  async function requestTotpSetup(identifier, reset = false) {
+    const cleanId = (identifier || '').trim();
+    if (!cleanId) {
+      showAuthError('Please enter a user identifier or display name.');
+      return;
+    }
+
+    try {
+      if (btnGenerateTotp) {
+        btnGenerateTotp.disabled = true;
+        btnGenerateTotp.style.opacity = '0.7';
+      }
+
+      const res = await fetch('/api/auth/setup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: cleanId, reset })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || 'Failed to setup TOTP');
+      }
+
+      pendingAuthData = data;
+
+      // Update QR Code display
+      if (authQrImage && data.qrCode) {
+        authQrImage.src = data.qrCode;
+        authQrImage.hidden = false;
+      }
+      if (authSecretDisplay) {
+        authSecretDisplay.textContent = data.secret || '---';
+      }
+      if (authQrSection) {
+        authQrSection.hidden = false;
+      }
+
+      showGardenToast('QR code generated! Scan in Google Authenticator 📱', 'success', 3000);
+    } catch (err) {
+      console.error('[Auth Setup Error]', err);
+      showAuthError(err.message || 'Could not connect to authentication server.');
+    } finally {
+      if (btnGenerateTotp) {
+        btnGenerateTotp.disabled = false;
+        btnGenerateTotp.style.opacity = '1';
+      }
+    }
+  }
+
+  // --- Step 2: Verify 6-Digit TOTP Code ---
+  async function verifyTotpCode(code) {
+    if (!pendingAuthData || !pendingAuthData.identifier) {
+      showAuthError('Session expired. Please set up your authenticator first.');
+      showAuthPanel('setup');
+      return;
+    }
+
+    const cleanCode = (code || '').replace(/\D/g, '');
+    if (cleanCode.length !== 6) {
+      showAuthError('Please enter all 6 numeric digits from your authenticator app.');
+      return;
+    }
+
+    hideAuthAlerts();
+    if (btnSubmitVerify) {
+      btnSubmitVerify.disabled = true;
+      if (verifySpinner) verifySpinner.hidden = false;
+    }
+
+    try {
+      const res = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: pendingAuthData.identifier,
+          code: cleanCode
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        // Clear digit inputs and refocus
+        clearTotpInputs();
+        focusFirstTotpInput();
+        showAuthError(data.message || 'Code expired or incorrect. Please check your authenticator app.');
+        return;
+      }
+
+      // Verification Success!
+      currentSession = {
+        token: data.token,
+        identifier: data.identifier,
+        verifiedAt: data.verifiedAt || new Date().toISOString(),
+        expiresAt: data.expiresAt,
+        is2FAVerified: true
+      };
+
+      saveLocalSession(currentSession);
+      updateAuthUI();
+      showAuthSuccess('Two-Factor Authentication verified successfully! ✨');
+      showGardenToast('🌿 2FA Authenticated! Welcome to Nammooru.', 'success', 3500);
+
+      // Transition to active panel after brief celebration
+      setTimeout(() => {
+        showAuthPanel('active');
+      }, 1000);
+
+    } catch (err) {
+      console.error('[Auth Verify Error]', err);
+      showAuthError('Connection error. Please check that the local server is running.');
+    } finally {
+      if (btnSubmitVerify) {
+        btnSubmitVerify.disabled = false;
+        if (verifySpinner) verifySpinner.hidden = true;
+      }
+    }
+  }
+
+  // --- Step 3: Logout / Disconnect ---
+  async function logoutAuth() {
+    if (currentSession && currentSession.token) {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: currentSession.token })
+        });
+      } catch (e) {
+        console.warn('[Auth] Remote logout notification failed:', e);
+      }
+    }
+
+    currentSession = null;
+    pendingAuthData = null;
+    removeLocalSession();
+    clearTotpInputs();
+    updateAuthUI();
+    showAuthPanel('setup');
+    showGardenToast('Signed out of 2FA. Browsing in Guest Mode.', 'info', 2500);
+  }
+
+  // --- 6-Digit TOTP Input Behavior (Numeric Keypad, Auto-Advance, Paste) ---
+  function clearTotpInputs() {
+    totpDigitInputs.forEach(input => {
+      input.value = '';
+      input.classList.remove('filled');
+    });
+  }
+
+  function focusFirstTotpInput() {
+    if (totpDigitInputs.length > 0) {
+      setTimeout(() => totpDigitInputs[0].focus(), 80);
+    }
+  }
+
+  function getCombinedTotpCode() {
+    return totpDigitInputs.map(input => input.value.trim()).join('');
+  }
+
+  totpDigitInputs.forEach((input, index) => {
+    // Input event: auto advance
+    input.addEventListener('input', (e) => {
+      const val = input.value.replace(/\D/g, '');
+      input.value = val ? val.slice(-1) : '';
+      input.classList.toggle('filled', Boolean(input.value));
+
+      hideAuthAlerts();
+
+      if (input.value && index < totpDigitInputs.length - 1) {
+        totpDigitInputs[index + 1].focus();
+      }
+
+      // If all 6 digits entered, auto-verify
+      if (getCombinedTotpCode().length === 6) {
+        verifyTotpCode(getCombinedTotpCode());
+      }
+    });
+
+    // Keydown event: backspace and arrow navigation
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace') {
+        if (!input.value && index > 0) {
+          totpDigitInputs[index - 1].focus();
+          totpDigitInputs[index - 1].value = '';
+          totpDigitInputs[index - 1].classList.remove('filled');
+        } else {
+          input.value = '';
+          input.classList.remove('filled');
+        }
+      } else if (e.key === 'ArrowLeft' && index > 0) {
+        totpDigitInputs[index - 1].focus();
+      } else if (e.key === 'ArrowRight' && index < totpDigitInputs.length - 1) {
+        totpDigitInputs[index + 1].focus();
+      }
+    });
+
+    // Paste event: distribute 6 digits automatically across inputs
+    input.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const pasted = (e.clipboardData || window.clipboardData).getData('text') || '';
+      const digits = pasted.replace(/\D/g, '').slice(0, 6);
+      if (!digits) return;
+
+      digits.split('').forEach((d, i) => {
+        if (totpDigitInputs[i]) {
+          totpDigitInputs[i].value = d;
+          totpDigitInputs[i].classList.add('filled');
+        }
+      });
+
+      const nextIdx = Math.min(digits.length, totpDigitInputs.length - 1);
+      totpDigitInputs[nextIdx].focus();
+
+      if (digits.length === 6) {
+        verifyTotpCode(digits);
+      }
+    });
+  });
+
+  // --- Copy Secret Button ---
+  if (btnCopySecret) {
+    btnCopySecret.addEventListener('click', async () => {
+      const secret = authSecretDisplay ? authSecretDisplay.textContent.trim() : '';
+      if (!secret || secret === '--------') return;
+
+      try {
+        await navigator.clipboard.writeText(secret);
+        btnCopySecret.classList.add('copied');
+        const span = btnCopySecret.querySelector('span');
+        if (span) span.textContent = 'Copied!';
+        setTimeout(() => {
+          btnCopySecret.classList.remove('copied');
+          if (span) span.textContent = 'Copy';
+        }, 2000);
+      } catch {
+        // Fallback for non-secure contexts
+        const textarea = document.createElement('textarea');
+        textarea.value = secret;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        const span = btnCopySecret.querySelector('span');
+        if (span) span.textContent = 'Copied!';
+        setTimeout(() => {
+          if (span) span.textContent = 'Copy';
+        }, 2000);
+      }
+    });
+  }
+
+  // --- Form & Button Event Listeners ---
+  if (btnAuthTrigger) {
+    btnAuthTrigger.addEventListener('click', () => {
+      openAuthModal();
+    });
+  }
+
+  if (btnCloseAuthModal) {
+    btnCloseAuthModal.addEventListener('click', () => {
+      closeAuthModal();
+    });
+  }
+
+  if (formAuthSetup) {
+    formAuthSetup.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = authIdentifierInput ? authIdentifierInput.value.trim() : '';
+      requestTotpSetup(id);
+    });
+  }
+
+  if (btnProceedToVerify) {
+    btnProceedToVerify.addEventListener('click', () => {
+      if (!pendingAuthData) {
+        showAuthError('Please generate a setup QR code first.');
+        return;
+      }
+      if (verifyUserIdent) {
+        verifyUserIdent.textContent = pendingAuthData.identifier || 'User';
+      }
+      showAuthPanel('verify');
+      clearTotpInputs();
+      focusFirstTotpInput();
+    });
+  }
+
+  if (formAuthVerify) {
+    formAuthVerify.addEventListener('submit', (e) => {
+      e.preventDefault();
+      verifyTotpCode(getCombinedTotpCode());
+    });
+  }
+
+  if (btnBackToSetup) {
+    btnBackToSetup.addEventListener('click', () => {
+      showAuthPanel('setup');
+    });
+  }
+
+  if (btnReconfigure2fa) {
+    btnReconfigure2fa.addEventListener('click', () => {
+      const id = currentSession ? currentSession.identifier : '';
+      showAuthPanel('setup');
+      if (id) {
+        requestTotpSetup(id, true);
+      }
+    });
+  }
+
+  if (btnAuthLogout) {
+    btnAuthLogout.addEventListener('click', () => {
+      logoutAuth();
+    });
+  }
+
+  if (btnAuthBypass) {
+    btnAuthBypass.addEventListener('click', () => {
+      closeAuthModal();
+      showGardenToast('Guest mode active — Explore Learn, Photo, and Innovate freely!', 'info', 2800);
+    });
+  }
+
+  // Close modal when clicking on the frosted overlay background
+  if (authModal) {
+    authModal.addEventListener('click', (e) => {
+      if (e.target === authModal) {
+        closeAuthModal();
+      }
+    });
+  }
+
+  // Global Escape key handler for all modals including auth
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+      if (authModal && !authModal.hidden) closeAuthModal();
       if (badgeDetailModal && !badgeDetailModal.hidden) closeBadgeDetailModal();
       if (attemptDetailModal && !attemptDetailModal.hidden) closeAttemptDetailModal();
       if (gardenPickerModal && !gardenPickerModal.hidden) closeGardenPicker();
@@ -3833,6 +4627,45 @@ document.addEventListener('DOMContentLoaded', () => {
       if (modalEditProfile && !modalEditProfile.hidden) closeEditProfileModal();
     }
   });
+
+  // --- Initial Session Boot Check ---
+  currentSession = loadLocalSession();
+  updateAuthUI();
+
+  // Non-blocking server validation for existing session
+  if (currentSession && currentSession.token) {
+    fetch('/api/auth/session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentSession.token}`
+      },
+      body: JSON.stringify({ token: currentSession.token })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (!data.valid) {
+        console.info('[Auth] Previous session expired on server. Returning to guest state.');
+        currentSession = null;
+        removeLocalSession();
+        updateAuthUI();
+      }
+    })
+    .catch(() => {
+      // If offline, keep local state intact
+    });
+  }
+
+  // Expose NammooruAuth globally for testing & external extensions
+  window.NammooruAuth = {
+    getSession: () => currentSession,
+    isAuthenticated: () => Boolean(currentSession && currentSession.is2FAVerified),
+    openModal: openAuthModal,
+    closeModal: closeAuthModal,
+    logout: logoutAuth,
+    requestSetup: requestTotpSetup,
+    verifyCode: verifyTotpCode
+  };
 
   // Expose stores for modularity and verification
   window.ProfileStore = ProfileStore;
