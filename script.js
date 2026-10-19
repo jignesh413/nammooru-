@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cameraInput = document.getElementById('camera-input');
   const galleryInput = document.getElementById('gallery-input');
   const btnTakePhoto = document.getElementById('btn-take-photo');
-  const btnUploadGallery = document.getElementById('btn-upload-gallery');
+  const btnUploadGallery = document.getElementById('btn-gallery') || document.getElementById('btn-upload-gallery');
   const captureActions = document.getElementById('capture-actions');
 
   const feedbackBanner = document.getElementById('photo-feedback');
@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastTriggerSource = 'camera'; // 'camera' or 'gallery'
   let feedbackTimeoutId = null;
   let activeFile = null;
+  let activeCompressedData = null;
 
   /**
    * Displays a friendly message in the feedback banner.
@@ -269,14 +270,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Handles user file selection from camera or gallery input.
-   * Validates size, formats preview, and updates interface state.
+   * Compresses image on off-screen HTML5 Canvas (max 1080px, ~82% quality)
+   * and updates viewfinder HUD badge and preview.
    * 
    * @param {File} file - Selected file object
    */
-  function handleFileSelection(file) {
+  async function handleFileSelection(file) {
     if (!file) {
-      // User cancelled picker without selecting
-      if (!currentObjectUrl) {
+      if (!currentObjectUrl && !activeCompressedData) {
         showFeedback('No photo was selected. You can take a photo or pick one from your gallery anytime.', 'info', 4000);
       }
       return;
@@ -304,21 +305,38 @@ document.addEventListener('DOMContentLoaded', () => {
       currentObjectUrl = null;
     }
 
-    // 4. Generate new object URL for preview
     try {
-      currentObjectUrl = URL.createObjectURL(file);
-      previewImage.src = currentObjectUrl;
+      activeFile = file;
+
+      // 4. Client-Side Image Compactor:
+      // Compress on off-screen HTML5 Canvas before processing (max 1080px, ~82% quality)
+      const compressed = await compressImageFile(file);
+      if (compressed) {
+        activeCompressedData = compressed;
+        previewImage.src = compressed.dataUrl;
+
+        // Display subtle HUD badge indicating compression savings (e.g., "Compressed: 4.8MB → 112KB")
+        const hudChip = document.getElementById('compression-hud-chip');
+        const hudText = document.getElementById('compression-hud-text');
+        if (hudChip && hudText) {
+          hudText.textContent = `${compressed.savingsLabel} (-${compressed.savingsPct}%)`;
+          hudChip.hidden = false;
+        }
+      } else {
+        currentObjectUrl = URL.createObjectURL(file);
+        previewImage.src = currentObjectUrl;
+      }
 
       // Update metadata bar
       const sizeFormatted = formatFileSize(file.size);
-      previewFilename.textContent = `${file.name || 'Photo'} (${sizeFormatted})`;
-
-      // Track active file for Step 3 object recognition
-      activeFile = file;
+      if (previewFilename) {
+        previewFilename.textContent = `${file.name || 'Photo'} (${sizeFormatted})`;
+      }
 
       // 5. Update UI Viewport States
-      previewContainer.hidden = false;
-      captureActions.hidden = true;
+      if (previewContainer) previewContainer.hidden = false;
+      const idleSensor = document.getElementById('optical-idle-sensor');
+      if (idleSensor) idleSensor.hidden = true;
 
       const btnIdentifyEl = document.getElementById('btn-identify');
       if (btnIdentifyEl) btnIdentifyEl.hidden = false;
@@ -328,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
         heroAmbientVisual.hidden = true;
       }
 
-      showFeedback('Photo ready! You can retake or remove it below.', 'success', 3500);
+      showFeedback('Photo ready for identification!', 'success', 3500);
     } catch (err) {
       console.error('Error generating photo preview:', err);
       showFeedback('Could not load the photo preview. Please try taking or selecting the photo again.', 'error');
@@ -344,31 +362,46 @@ document.addEventListener('DOMContentLoaded', () => {
       currentObjectUrl = null;
     }
 
+    activeCompressedData = null;
     previewImage.removeAttribute('src');
-    previewFilename.textContent = '';
-    cameraInput.value = '';
-    galleryInput.value = '';
+    if (previewFilename) previewFilename.textContent = '';
+    if (cameraInput) cameraInput.value = '';
+    if (galleryInput) galleryInput.value = '';
 
-    previewContainer.hidden = true;
-    captureActions.hidden = false;
+    const hudChip = document.getElementById('compression-hud-chip');
+    if (hudChip) hudChip.hidden = true;
+
+    if (previewContainer) previewContainer.hidden = true;
+    const idleSensor = document.getElementById('optical-idle-sensor');
+    if (idleSensor) idleSensor.hidden = false;
+
+    if (captureActions) captureActions.hidden = false;
 
     activeFile = null;
     const btnIdentifyEl = document.getElementById('btn-identify');
     if (btnIdentifyEl) btnIdentifyEl.hidden = true;
-    const resultPanelEl = document.getElementById('result-panel');
-    if (resultPanelEl) resultPanelEl.hidden = true;
+    hideResultPanel();
 
     if (heroAmbientVisual) {
       heroAmbientVisual.hidden = false;
     }
 
     if (showNotice) {
-      showFeedback('Photo removed. Take a photo or upload anytime.', 'info', 3000);
+      showFeedback('Photo reset. Align any object to discover its Kannada name.', 'info', 3000);
     }
   }
 
   // Ensure clean initial state on page load
   removeActivePhoto(false);
+
+  // Allow tapping preview container to reset/retake photo
+  if (previewContainer) {
+    previewContainer.addEventListener('click', (e) => {
+      if (!e.target.closest('#compression-hud-chip')) {
+        removeActivePhoto(true);
+      }
+    });
+  }
 
   // --------------------------------------------------------------------------
   // Event Listeners for Photo Actions
@@ -417,10 +450,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 1. "Take a Photo" Button
+  // 1. "Take a Photo" Button (Shutter)
   if (btnTakePhoto && cameraInput) {
     btnTakePhoto.addEventListener('click', () => {
-      triggerCameraCapture();
+      if (activeFile && typeof identifyObject === 'function') {
+        identifyObject();
+      } else {
+        triggerCameraCapture();
+      }
     });
 
     cameraInput.addEventListener('change', (event) => {
@@ -472,6 +509,25 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnRemovePhoto) {
     btnRemovePhoto.addEventListener('click', () => {
       removeActivePhoto(true);
+    });
+  }
+
+  // 4b. Tap-to-Focus Reticle Micro-Pulse Interaction on Viewfinder
+  const apertureFrame = document.getElementById('scanner-frame-ambient');
+  if (apertureFrame) {
+    apertureFrame.addEventListener('click', (e) => {
+      if (e.target.closest('#capture-actions') || e.target.closest('.viewfinder-status-hud') || e.target.closest('#identify-action-wrapper')) return;
+      const idleRing = document.querySelector('.sensor-halo-ring');
+      if (idleRing) {
+        idleRing.style.transform = 'scale(0.88)';
+        idleRing.style.boxShadow = '0 0 32px rgba(56, 189, 248, 0.75)';
+        idleRing.style.borderColor = 'var(--accent-cyan)';
+        setTimeout(() => {
+          idleRing.style.transform = '';
+          idleRing.style.boxShadow = '';
+          idleRing.style.borderColor = '';
+        }, 320);
+      }
     });
   }
 
@@ -530,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const learnGardenTabBadge     = document.getElementById('learn-garden-tab-badge');
   const apiSetupCard            = document.getElementById('api-setup-card');
 
-  const btnHistoryOpen     = document.getElementById('btn-history-open') || document.getElementById('btn-history-log');
+  const btnHistoryOpen     = document.getElementById('btn-history') || document.getElementById('btn-history-open') || document.getElementById('btn-history-log');
   const historyCountBadge  = document.getElementById('history-count-badge');
   const historyOverlay     = document.getElementById('history-overlay') || document.getElementById('modal-history');
   const btnHistoryClose    = document.getElementById('btn-history-close');
@@ -571,12 +627,13 @@ document.addEventListener('DOMContentLoaded', () => {
   checkApiConfig();
 
   // -------------------------------------------------------------------------
-  // B. Image Compression (Canvas-based, max 1024px, JPEG 85%)
-  //    Reduces payload before sending to the API proxy.
+  // B. Client-Side Image Compactor (HTML5 Canvas, max 1080px, JPEG 82%)
+  //    Ingests camera or gallery images and downscales on an off-screen canvas.
   // -------------------------------------------------------------------------
   function compressImageFile(file) {
     return new Promise((resolve) => {
-      const MAX_SIDE = 1024;
+      const MAX_SIDE = 1080; // Scaled to max width/height 1080px
+      const COMPRESSION_QUALITY = 0.82; // Compressed quality to ~82%
       const url = URL.createObjectURL(file);
       const img = new Image();
 
@@ -584,7 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(url);
         let { width, height } = img;
 
-        // Only downscale, never upscale
+        // Automatically scale down large images to a maximum width/height of 1080px
         if (width > MAX_SIDE || height > MAX_SIDE) {
           if (width >= height) {
             height = Math.round((height / width) * MAX_SIDE);
@@ -601,24 +658,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Also make a small thumbnail (96px for history list)
+        // Off-screen canvas thumbnail (96px for history log book)
         const THUMB_SIZE = 96;
         const tRatio = Math.min(THUMB_SIZE / width, THUMB_SIZE / height);
         const thumbCanvas = document.createElement('canvas');
-        thumbCanvas.width  = Math.round(width  * tRatio);
-        thumbCanvas.height = Math.round(height * tRatio);
+        thumbCanvas.width  = Math.max(1, Math.round(width  * tRatio));
+        thumbCanvas.height = Math.max(1, Math.round(height * tRatio));
         thumbCanvas.getContext('2d').drawImage(img, 0, 0, thumbCanvas.width, thumbCanvas.height);
 
+        const dataUrl = canvas.toDataURL('image/jpeg', COMPRESSION_QUALITY);
+        const thumbUrl = thumbCanvas.toDataURL('image/jpeg', 0.70);
+
+        // Calculate exact compression metrics
+        const origBytes = file.size;
+        const base64Str = dataUrl.split(',')[1] || '';
+        const compBytes = Math.round((base64Str.length * 3) / 4);
+        const savingsPct = origBytes > compBytes 
+          ? Math.round(((origBytes - compBytes) / origBytes) * 100)
+          : 0;
+
+        const origFormatted = formatFileSize(origBytes);
+        const compFormatted = formatFileSize(compBytes);
+        const savingsLabel = `Compressed: ${origFormatted} → ${compFormatted}`;
+
         resolve({
-          dataUrl:    canvas.toDataURL('image/jpeg', 0.85),
-          thumbUrl:   thumbCanvas.toDataURL('image/jpeg', 0.70),
-          mimeType:   'image/jpeg',
+          dataUrl,
+          thumbUrl,
+          mimeType: 'image/jpeg',
+          origBytes,
+          compBytes,
+          origFormatted,
+          compFormatted,
+          savingsPct,
+          savingsLabel,
+          width,
+          height
         });
       };
 
       img.onerror = () => {
         URL.revokeObjectURL(url);
-        resolve(null); // Let the caller handle gracefully
+        resolve(null);
       };
 
       img.src = url;
@@ -626,19 +706,71 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------------------
-  // C. Show/Hide Result Panel States
+  // C. Show/Hide Interactive Frosted Glass Bottom Sheet Drawer
   // -------------------------------------------------------------------------
   function showResultPanel(state) {
-    resultPanel.hidden = false;
-    resultLoading.hidden = (state !== 'loading');
-    resultSuccess.hidden = (state !== 'success');
-    resultError.hidden   = (state !== 'error');
+    if (!resultPanel) return;
+    const scrim = document.getElementById('result-sheet-scrim');
+    const laser = document.getElementById('scanning-laser');
+
+    if (state === 'loading') {
+      if (laser) laser.hidden = false;
+      return;
+    }
+
+    if (state === 'success') {
+      if (laser) laser.hidden = true;
+      resultPanel.hidden = false;
+      // Smooth slide-up transition
+      requestAnimationFrame(() => {
+        resultPanel.classList.add('sheet-open');
+      });
+      if (scrim) {
+        scrim.hidden = false;
+        requestAnimationFrame(() => {
+          scrim.classList.add('visible');
+        });
+      }
+      return;
+    }
+
+    if (state === 'error') {
+      if (laser) laser.hidden = true;
+      if (resultErrorMsg && resultErrorMsg.textContent) {
+        showFeedback(resultErrorMsg.textContent, 'error', 5000);
+      }
+    }
   }
 
   function hideResultPanel() {
-    resultPanel.hidden = true;
+    if (!resultPanel) return;
+    resultPanel.classList.remove('sheet-open');
+    const scrim = document.getElementById('result-sheet-scrim');
+    if (scrim) {
+      scrim.classList.remove('visible');
+      setTimeout(() => {
+        if (!resultPanel.classList.contains('sheet-open')) {
+          scrim.hidden = true;
+        }
+      }, 350);
+    }
+    setTimeout(() => {
+      if (!resultPanel.classList.contains('sheet-open')) {
+        resultPanel.hidden = true;
+      }
+    }, 380);
     currentResult = null;
     currentResultSaved = false;
+  }
+
+  // Close triggers for Bottom Sheet Drawer
+  const btnSheetClose = document.getElementById('btn-result-sheet-close');
+  if (btnSheetClose) {
+    btnSheetClose.addEventListener('click', hideResultPanel);
+  }
+  const resultSheetScrim = document.getElementById('result-sheet-scrim');
+  if (resultSheetScrim) {
+    resultSheetScrim.addEventListener('click', hideResultPanel);
   }
 
   // -------------------------------------------------------------------------
@@ -649,40 +781,44 @@ document.addEventListener('DOMContentLoaded', () => {
     currentResultSaved = false;
 
     // Confidence badge
-    resultConfBadge.textContent = data.confidence === 'high'
-      ? 'Identified'
-      : data.confidence === 'medium'
-        ? 'Probable'
-        : 'Possible';
-    resultConfBadge.className = 'result-eyebrow';
-    if (data.confidence === 'medium') resultConfBadge.classList.add('medium-confidence');
-    if (data.confidence === 'low')    resultConfBadge.classList.add('low-confidence');
+    if (resultConfBadge) {
+      resultConfBadge.textContent = data.confidence === 'high'
+        ? 'Identified'
+        : data.confidence === 'medium'
+          ? 'Probable'
+          : 'Possible';
+      resultConfBadge.className = 'result-tag-pill';
+      if (data.confidence === 'medium') resultConfBadge.classList.add('medium-confidence');
+      if (data.confidence === 'low')    resultConfBadge.classList.add('low-confidence');
+    }
 
-    resultEnglish.textContent  = data.english      || '';
-    resultKannada.textContent  = data.kannada       || '';
-    resultPronun.textContent   = data.pronunciation || '';
-    resultDesc.textContent     = data.description   || '';
+    if (resultEnglish) resultEnglish.textContent = data.english || '';
+    if (resultKannada) resultKannada.textContent = data.kannada || '';
+    if (resultPronun)  resultPronun.textContent  = data.pronunciation || '';
+    if (resultDesc)    resultDesc.textContent    = data.description || '';
 
     // Reset save button
-    btnSaveHistory.textContent = '';
-    const saveIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    saveIcon.setAttribute('class', 'btn-icon');
-    saveIcon.setAttribute('width', '18');
-    saveIcon.setAttribute('height', '18');
-    saveIcon.setAttribute('viewBox', '0 0 24 24');
-    saveIcon.setAttribute('fill', 'none');
-    saveIcon.setAttribute('stroke', 'currentColor');
-    saveIcon.setAttribute('stroke-width', '2');
-    saveIcon.setAttribute('stroke-linecap', 'round');
-    saveIcon.setAttribute('stroke-linejoin', 'round');
-    saveIcon.setAttribute('aria-hidden', 'true');
-    saveIcon.innerHTML = '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>';
-    const saveSpan = document.createElement('span');
-    saveSpan.textContent = 'Save to History';
-    btnSaveHistory.appendChild(saveIcon);
-    btnSaveHistory.appendChild(saveSpan);
-    btnSaveHistory.classList.remove('saved');
-    btnSaveHistory.disabled = false;
+    if (btnSaveHistory) {
+      btnSaveHistory.textContent = '';
+      const saveIcon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      saveIcon.setAttribute('class', 'btn-icon');
+      saveIcon.setAttribute('width', '15');
+      saveIcon.setAttribute('height', '15');
+      saveIcon.setAttribute('viewBox', '0 0 24 24');
+      saveIcon.setAttribute('fill', 'none');
+      saveIcon.setAttribute('stroke', 'currentColor');
+      saveIcon.setAttribute('stroke-width', '2');
+      saveIcon.setAttribute('stroke-linecap', 'round');
+      saveIcon.setAttribute('stroke-linejoin', 'round');
+      saveIcon.setAttribute('aria-hidden', 'true');
+      saveIcon.innerHTML = '<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>';
+      const saveSpan = document.createElement('span');
+      saveSpan.textContent = 'Save to History';
+      btnSaveHistory.appendChild(saveIcon);
+      btnSaveHistory.appendChild(saveSpan);
+      btnSaveHistory.classList.remove('saved');
+      btnSaveHistory.disabled = false;
+    }
 
     // Update Garden Save Button state for current result
     updateResultGardenButton(data);
@@ -694,25 +830,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // E. Identify Object — Main Flow
   // -------------------------------------------------------------------------
   async function identifyObject() {
-    if (!activeFile) {
-      showFeedback('Please select a photo first.', 'info', 3000);
+    if (!activeFile && !activeCompressedData) {
+      showFeedback('Please select or capture a photo first.', 'info', 3000);
       return;
     }
 
     if (!apiConfigured) {
       showResultPanel('error');
-      resultErrorMsg.textContent =
-        'Object recognition is not set up yet. See the setup instructions below.';
+      if (resultErrorMsg) {
+        resultErrorMsg.textContent =
+          'Object recognition is not set up yet. See the setup instructions below.';
+      }
       return;
     }
 
     // Show loading state
     showResultPanel('loading');
-    btnIdentify.disabled = true;
+    if (btnIdentify) btnIdentify.disabled = true;
 
     try {
-      // 1. Compress image
-      const compressed = await compressImageFile(activeFile);
+      // 1. Use client-side compressed data or compress now
+      let compressed = activeCompressedData;
+      if (!compressed && activeFile) {
+        compressed = await compressImageFile(activeFile);
+      }
       if (!compressed) {
         throw new Error('Could not process the image file.');
       }
@@ -742,23 +883,29 @@ document.addEventListener('DOMContentLoaded', () => {
           apiConfigured = false;
           if (apiSetupCard) apiSetupCard.hidden = false;
           showResultPanel('error');
-          resultErrorMsg.textContent =
-            'The API key is not configured. Please follow the setup instructions below.';
+          if (resultErrorMsg) {
+            resultErrorMsg.textContent =
+              'The API key is not configured. Please follow the setup instructions below.';
+          }
           return;
         }
 
         // Person, unclear, text_only, api_error, server_error
         showResultPanel('error');
-        resultErrorMsg.textContent = data.message ||
-          'Something went wrong. Please try again with a clearer photo.';
+        if (resultErrorMsg) {
+          resultErrorMsg.textContent = data.message ||
+            'Something went wrong. Please try again with a clearer photo.';
+        }
         return;
       }
 
       // 5. Validate we have the essential fields
       if (!data.english || !data.kannada) {
         showResultPanel('error');
-        resultErrorMsg.textContent =
-          'The response was incomplete. Please try again or take a clearer photo.';
+        if (resultErrorMsg) {
+          resultErrorMsg.textContent =
+            'The response was incomplete. Please try again or take a clearer photo.';
+        }
         return;
       }
 
@@ -768,21 +915,32 @@ document.addEventListener('DOMContentLoaded', () => {
         data._fullDataUrl  = compressed.dataUrl;
       }
 
+      // 7. Auto-save to History Log Book
+      const savedRecord = saveToHistory(data);
+      if (savedRecord) {
+        currentResultSaved = true;
+      }
+
       displayResult(data);
+      showFeedback('Object identified in Kannada!', 'success', 3000);
 
     } catch (err) {
       console.error('[Identify Error]', err);
       showResultPanel('error');
 
-      if (err.message.includes('fetch') || err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
-        resultErrorMsg.textContent =
-          'Could not reach the server. Make sure the server (run this.bat) is running.';
-      } else {
-        resultErrorMsg.textContent =
-          err.message || 'An unexpected error occurred. Please try again.';
+      if (resultErrorMsg) {
+        if (err.message.includes('fetch') || err.message.includes('NetworkError') || err.message.includes('Failed to fetch')) {
+          resultErrorMsg.textContent =
+            'Could not reach the server. Make sure the server (run this.bat) is running.';
+        } else {
+          resultErrorMsg.textContent =
+            err.message || 'An unexpected error occurred. Please try again.';
+        }
       }
     } finally {
-      btnIdentify.disabled = false;
+      if (btnIdentify) btnIdentify.disabled = false;
+      const laser = document.getElementById('scanning-laser');
+      if (laser) laser.hidden = true;
     }
   }
 
@@ -791,11 +949,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------------------
-  // F. "Learn This Word" — connects to LEARN tab (future: passes the word)
+  // F. "Learn This Word" — connects to LEARN tab
   // -------------------------------------------------------------------------
   if (btnLearnWord) {
     btnLearnWord.addEventListener('click', () => {
-      // Store the current word so LEARN section can pick it up in later steps
       if (currentResult) {
         try {
           sessionStorage.setItem('nammooru_featured_word', JSON.stringify({
@@ -805,6 +962,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }));
         } catch { /* ignore storage errors */ }
       }
+      hideResultPanel();
       // Navigate to LEARN section
       switchSection('learn');
     });
@@ -824,7 +982,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isSaved = typeof GardenStore !== 'undefined' && GardenStore.has(itemId);
     btnResultSaveGarden.classList.toggle('saved', isSaved);
     if (btnResultSaveGardenText) {
-      btnResultSaveGardenText.textContent = isSaved ? '✓ In Garden' : 'Add to Word Garden';
+      btnResultSaveGardenText.textContent = isSaved ? '✓ Planted in Garden' : 'Plant in Word Garden';
     }
   }
 
@@ -838,6 +996,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnScanAnother) {
     btnScanAnother.addEventListener('click', () => {
+      hideResultPanel();
       removeActivePhoto(false);
       const contentEl = document.querySelector('.app-content');
       if (contentEl) contentEl.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1093,6 +1252,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (btnHistoryOpen)  btnHistoryOpen.addEventListener('click',  openHistoryModal);
+  const btnHistoryLog = document.getElementById('btn-history-log');
+  if (btnHistoryLog)   btnHistoryLog.addEventListener('click',   openHistoryModal);
   if (btnHistoryClose) btnHistoryClose.addEventListener('click', closeHistoryModal);
   if (btnClearAll)     btnClearAll.addEventListener('click',    clearAllHistory);
 
@@ -1478,7 +1639,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function readStorage() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem('nammooru_garden') || localStorage.getItem(STORAGE_KEY);
         if (!raw) return [];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) {
@@ -1501,7 +1662,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function writeStorage(items) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        localStorage.setItem('nammooru_garden', JSON.stringify(items));
         notifyListeners(items);
+        if (typeof window.updateWordPetCompanion === 'function') {
+          window.updateWordPetCompanion();
+        }
         return true;
       } catch (err) {
         console.error('[GardenStore] Storage write failed (quota exceeded or storage blocked):', err);
@@ -2694,7 +2859,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function readStorage() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem('nammooru_tries') || localStorage.getItem(STORAGE_KEY);
         if (!raw) return [];
         const parsed = JSON.parse(raw);
         if (!Array.isArray(parsed)) return [];
@@ -2708,9 +2873,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function writeStorage(items) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        localStorage.setItem('nammooru_tries', JSON.stringify(items));
         listeners.forEach(fn => {
           try { fn(items); } catch (e) { console.error('[AttemptStore listener error]', e); }
         });
+        if (typeof window.updateWordPetCompanion === 'function') {
+          window.updateWordPetCompanion();
+        }
         return true;
       } catch (err) {
         console.error('[AttemptStore write error]', err);
@@ -4674,6 +4843,272 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial Sync
   syncProfileCard();
   renderCommunityFeed();
+
+  // =========================================================================
+  // INTERACTIVE OPTICAL LENS MOTION GRAPHIC (Touch & Cursor Reactive)
+  // =========================================================================
+  function initLensMotionGraphic() {
+    const canvas = document.getElementById('lens-motion-canvas');
+    const container = document.getElementById('scanner-frame-ambient');
+    const sensorHalo = document.getElementById('sensor-halo-ring');
+    const guidancePill = document.getElementById('optical-guidance-pill');
+    if (!canvas || !container) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let width = 0;
+    let height = 0;
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    function resize() {
+      const rect = container.getBoundingClientRect();
+      width = rect.width;
+      height = rect.height;
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+      canvas.style.width = width + 'px';
+      canvas.style.height = height + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    let targetX = width / 2;
+    let targetY = height / 2;
+    let currentX = targetX;
+    let currentY = targetY;
+    let isInteracting = false;
+    let animId = null;
+
+    // Rings and Ripples
+    const ripples = [];
+    function addRipple(x, y, color = '#FFD027') {
+      ripples.push({
+        x,
+        y,
+        radius: 10,
+        maxRadius: Math.max(width, height) * 0.75,
+        alpha: 1,
+        color
+      });
+      if (ripples.length > 8) ripples.shift();
+    }
+
+    // Particles
+    const PARTICLE_COUNT = 36;
+    const particles = [];
+    const colors = ['#FFD027', '#818CF8', '#22C55E', '#FB7185', '#38BDF8'];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * (width || 360),
+        y: Math.random() * (height || 400),
+        vx: (Math.random() - 0.5) * 0.8,
+        vy: (Math.random() - 0.5) * 0.8,
+        radius: Math.random() * 2.5 + 1.5,
+        color: colors[i % colors.length],
+        angle: Math.random() * Math.PI * 2,
+        dist: Math.random() * 80 + 30
+      });
+    }
+
+    // Pointer Events
+    function updatePointer(clientX, clientY, isDown = false) {
+      const rect = container.getBoundingClientRect();
+      targetX = Math.max(20, Math.min(rect.width - 20, clientX - rect.left));
+      targetY = Math.max(20, Math.min(rect.height - 20, clientY - rect.top));
+      isInteracting = true;
+      if (isDown) {
+        addRipple(targetX, targetY, colors[Math.floor(Math.random() * colors.length)]);
+      }
+    }
+
+    container.addEventListener('pointermove', (e) => {
+      updatePointer(e.clientX, e.clientY, false);
+    }, { passive: true });
+
+    container.addEventListener('pointerdown', (e) => {
+      updatePointer(e.clientX, e.clientY, true);
+      if (sensorHalo) {
+        sensorHalo.classList.add('pulse-active');
+        setTimeout(() => sensorHalo.classList.remove('pulse-active'), 300);
+      }
+    });
+
+    container.addEventListener('pointerleave', () => {
+      isInteracting = false;
+      targetX = width / 2;
+      targetY = height / 2;
+    });
+
+    // Touch fallback
+    container.addEventListener('touchmove', (e) => {
+      if (e.touches && e.touches[0]) {
+        updatePointer(e.touches[0].clientX, e.touches[0].clientY, false);
+      }
+    }, { passive: true });
+
+    container.addEventListener('touchstart', (e) => {
+      if (e.touches && e.touches[0]) {
+        updatePointer(e.touches[0].clientX, e.touches[0].clientY, true);
+      }
+    }, { passive: true });
+
+    let t = 0;
+    function render() {
+      // Only render if photo section is active and preview image is not visible
+      const photoSection = document.getElementById('section-photo');
+      const previewContainer = document.getElementById('photo-preview-container');
+      const isVisible = photoSection && !photoSection.hidden && (!previewContainer || previewContainer.hidden);
+
+      if (!isVisible) {
+        animId = requestAnimationFrame(render);
+        return;
+      }
+
+      t += 0.02;
+
+      // Smooth dampening towards target
+      currentX += (targetX - currentX) * 0.12;
+      currentY += (targetY - currentY) * 0.12;
+
+      // Update center sensor translation slightly for physical depth
+      if (sensorHalo) {
+        const dx = (currentX - width / 2) * 0.22;
+        const dy = (currentY - height / 2) * 0.22;
+        sensorHalo.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+
+      // Clear with dark OLED / rich backdrop
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#0E1116';
+      ctx.fillRect(0, 0, width, height);
+
+      // 1. Draw Subtle Background Tech Grid
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+      const gridSize = 32;
+      for (let x = 0; x < width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      // 2. Draw Reactive Radial Glow
+      const glowGrad = ctx.createRadialGradient(currentX, currentY, 10, currentX, currentY, 180);
+      glowGrad.addColorStop(0, 'rgba(255, 208, 39, 0.25)');
+      glowGrad.addColorStop(0.5, 'rgba(129, 140, 248, 0.12)');
+      glowGrad.addColorStop(1, 'rgba(14, 17, 22, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // 3. Draw Concentric Reactive Sonar Rings
+      const ringCount = 4;
+      for (let r = 1; r <= ringCount; r++) {
+        const pulse = Math.sin(t * 1.5 + r * 0.6) * 6;
+        const radius = r * 34 + pulse;
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = r === 1 ? 'rgba(255, 208, 39, 0.8)' : `rgba(255, 208, 39, ${0.45 - r * 0.08})`;
+        ctx.lineWidth = r === 1 ? 2.5 : 1.5;
+        if (r % 2 === 0) {
+          ctx.setLineDash([6, 6]);
+        } else {
+          ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // 4. Draw Orbiting Aperture Crosshairs
+      const rot = t * 0.8;
+      ctx.save();
+      ctx.translate(currentX, currentY);
+      ctx.rotate(rot);
+      ctx.strokeStyle = '#FFD027';
+      ctx.lineWidth = 2;
+      const bladeLen = 22;
+      const gap = 14;
+      for (let a = 0; a < 4; a++) {
+        ctx.beginPath();
+        ctx.moveTo(gap, 0);
+        ctx.lineTo(gap + bladeLen, 0);
+        ctx.stroke();
+        ctx.rotate(Math.PI / 2);
+      }
+      ctx.restore();
+
+      // 5. Draw Particles Swirling in Gravity Field
+      particles.forEach((p, idx) => {
+        // Orbit around current focal point
+        p.angle += (idx % 2 === 0 ? 0.015 : -0.015);
+        const targetPx = currentX + Math.cos(p.angle) * p.dist;
+        const targetPy = currentY + Math.sin(p.angle) * p.dist * 0.85;
+
+        p.x += (targetPx - p.x) * 0.06 + p.vx;
+        p.y += (targetPy - p.y) * 0.06 + p.vy;
+
+        // Draw particle
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Connect near neighbors with faint energy lines
+        for (let j = idx + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const distSq = (p.x - p2.x) ** 2 + (p.y - p2.y) ** 2;
+          if (distSq < 3200) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.12 - distSq / 32000})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+        }
+      });
+
+      // 6. Draw Shockwave Ripples
+      for (let i = ripples.length - 1; i >= 0; i--) {
+        const rip = ripples[i];
+        rip.radius += 5.5;
+        rip.alpha *= 0.94;
+
+        if (rip.alpha <= 0.02 || rip.radius >= rip.maxRadius) {
+          ripples.splice(i, 1);
+          continue;
+        }
+
+        ctx.beginPath();
+        ctx.arc(rip.x, rip.y, rip.radius, 0, Math.PI * 2);
+        ctx.strokeStyle = rip.color;
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = rip.alpha;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
+      animId = requestAnimationFrame(render);
+    }
+
+    render();
+  }
+
+  initLensMotionGraphic();
+  if (typeof window.updateWordPetCompanion === 'function') {
+    window.updateWordPetCompanion();
+  }
 
 });
 

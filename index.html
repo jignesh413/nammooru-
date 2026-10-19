@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="description" content="Nammooru — A cinematic digital companion for newcomers to Bengaluru learning Kannada.">
-  <meta name="theme-color" content="#174F4D">
+  <meta name="theme-color" content="#FAF8F5">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Nammooru">
   <meta name="mobile-web-app-capable" content="yes">
   <title>Nammooru</title>
@@ -15,12 +15,12 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.png">
 
-  <!-- Typography: Helvetica primary fallback + Playfair Display (Editorial Italic) & Noto Sans Kannada & Retro Pixel Press Start 2P -->
+  <!-- Typography: Plus Jakarta Sans + Noto Sans Kannada (Strict Design System) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400;1,600;1,700&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=9.1">
 </head>
 <body>
   <!-- Main Application Viewport -->
@@ -32,6 +32,7 @@
         <!-- Pure Brand Wordmark: Exactly 'Nammooru', No logo/icon, No translations -->
         <div class="brand" aria-label="Nammooru">
           <span class="brand-name">Nammooru</span>
+          <span class="brand-dot" aria-hidden="true"></span>
         </div>
         
         <div class="header-right-group">
@@ -60,6 +61,9 @@
       <!-- =========================================================
            1. PHOTO SECTION — Heroic Cinematic Optical Viewfinder
            ========================================================= -->
+      <!-- =========================================================
+           1. PHOTO SECTION — Heroic Cinematic Optical Viewfinder
+           ========================================================= -->
       <section 
         id="section-photo" 
         class="view-section active photo-section-canvas" 
@@ -67,56 +71,76 @@
         aria-labelledby="tab-photo"
         tabindex="0">
 
-        <!-- Photo Canvas Header -->
+        <!-- Photo Canvas Minimal Editorial Header -->
         <div class="photo-editorial-header">
-          <div class="photo-header-row">
-            <div>
-              <h1 class="photo-main-headline">Point. Identify. Discover.</h1>
-              <p class="editorial-tagline"><em>A quiet lens for discovering the sounds of Bengaluru.</em></p>
-            </div>
-            
-            <!-- History Log Trigger -->
-            <button type="button" class="btn-history-trigger" id="btn-history-open" aria-label="Open History Log Book">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
-              </svg>
-              <span>History</span>
-              <span class="history-count-badge" id="history-count-badge" hidden>0</span>
-            </button>
-          </div>
-
-          <p class="photo-main-subtext">Photograph any everyday object around Bengaluru to discover its name and pronunciation in Kannada.</p>
+          <h1 class="photo-main-headline">Point. Identify. Discover.</h1>
+          <p class="editorial-tagline"><em>A quiet lens for discovering the sounds of Bengaluru.</em></p>
         </div>
 
         <!-- Distinct Optical Viewfinder Studio Card -->
         <div class="photo-optical-studio" id="photo-capture-card">
           
-          <!-- Optical Viewfinder Aperture (Fuller, taller camera experience) -->
-          <div class="optical-aperture" id="scanner-frame-ambient">
-            <div class="optical-grid-reticle" aria-hidden="true">
-              <div class="reticle-line h"></div>
-              <div class="reticle-line v"></div>
-              <div class="reticle-corner tl"></div>
-              <div class="reticle-corner tr"></div>
-              <div class="reticle-corner bl"></div>
-              <div class="reticle-corner br"></div>
+          <!-- Word Pet Companion Hero Card (Option B - Neo-Brutalist) -->
+          <div class="word-pet-hero-card" id="word-pet-hero-card">
+            
+            <!-- Top Badge: White rounded pill displaying current mascot stage -->
+            <div class="pet-header-row">
+              <div class="pet-stage-badge" id="pet-stage-badge">MASCOT • STAGE 1</div>
+              <div class="pet-status-dot-wrap" aria-hidden="true">
+                <span class="pet-live-dot"></span>
+                <span class="pet-live-label">COMPANION</span>
+              </div>
             </div>
 
-            <!-- Optical Sensor Center (Animated ring rendered via CSS pseudo-element) -->
-            <div class="optical-sensor-center" aria-hidden="true">
-              <svg class="sensor-icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <circle cx="12" cy="12" r="4"/>
-                <line x1="12" y1="2" x2="12" y2="4"/>
-                <line x1="12" y1="20" x2="12" y2="22"/>
-                <line x1="2" y1="12" x2="4" y2="12"/>
-                <line x1="20" y1="12" x2="22" y2="12"/>
-              </svg>
+            <!-- Inner Elements: Avatar Squircle + Persona Titles & Quote -->
+            <div class="pet-main-row">
+              <!-- Avatar Box: White squircle (90px × 90px, border: 2.5px solid #000; border-radius: 18px;) -->
+              <div class="pet-avatar-box" id="pet-avatar-box" role="button" aria-label="Word Pet Mascot Avatar. Click to wiggle." tabindex="0">
+                <div class="pet-avatar-visual" id="pet-mascot-visual">
+                  <!-- Dynamic Mascot SVG will be populated here -->
+                </div>
+              </div>
+
+              <!-- Persona Titles -->
+              <div class="pet-persona-info">
+                <div class="pet-titles">
+                  <!-- English Title (font-weight: 800; font-size: 20px; color: #111;) -->
+                  <h2 class="pet-title-en" id="pet-name-en">CHOTU-BOT</h2>
+                  <!-- Kannada Script (font-family: 'Noto Sans Kannada'; font-size: 15px; font-weight: 700; color: #111; line-height: 1.5;) -->
+                  <div class="pet-title-kn" id="pet-name-kn">ಚೋಟು ಬೋಟ್</div>
+                </div>
+                <!-- Encouragement speech quote (font-size: 13px; color: #262626; font-style: italic;) -->
+                <div class="pet-quote-bubble">
+                  <p class="pet-quote-text" id="pet-quote-text">Namaskara! Snap your first word.</p>
+                </div>
+              </div>
             </div>
 
-            <div class="optical-guidance-text">
-              <span>Align object in center frame</span>
+            <!-- Bottom Stats Bar: White rounded card (border: 2px solid #000; border-radius: 12px; padding: 8px 14px; font-weight: 700; font-size: 12px; display: flex; justify-content: space-between;) -->
+            <div class="pet-stats-bar" id="pet-stats-bar">
+              <span class="pet-stat-bloomed" id="pet-stat-bloomed">🌱 0 Bloomed</span>
+              <span class="pet-stat-tries" id="pet-stat-tries">⚡ 0 Tries Logged</span>
             </div>
+
+            <!-- Active Photo Preview Container (Housed within the Hero Card for seamless client-side image compression & preview) -->
+            <div class="photo-preview-container" id="photo-preview-container" hidden>
+              <div class="preview-image-wrapper">
+                <img id="preview-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Captured preview for Kannada recognition" class="preview-img">
+                <div class="preview-badge" id="preview-filename" hidden>photo.jpg</div>
+                
+                <!-- Scanning Animation Laser Overlay -->
+                <div class="scanning-laser" id="scanning-laser" hidden></div>
+
+                <!-- Client-Side Canvas Compression Savings HUD Chip -->
+                <div class="compression-hud-chip" id="compression-hud-chip" hidden aria-live="polite">
+                  <svg class="comp-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                  <span id="compression-hud-text">Compressed: 4.8MB → 112KB (-97%)</span>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- Hidden Native File Inputs -->
@@ -135,138 +159,122 @@
             class="visually-hidden" 
             aria-label="Upload an image from gallery">
 
-          <!-- Action Shutter Bar (High-Contrast White Tactile Capsule + Frosted Secondary) -->
-          <div class="photo-action-bar" id="capture-actions">
-            <button type="button" class="btn btn-shutter-action" id="btn-take-photo">
-              <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-              <span>Take Photo</span>
-            </button>
-
-            <button type="button" class="btn btn-upload-action" id="btn-upload-gallery">
-              <svg class="btn-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5"/>
-                <polyline points="21 15 16 10 5 21"/>
-              </svg>
-              <span>Upload from Gallery</span>
-            </button>
-          </div>
-
           <!-- Feedback & Validation Alert -->
           <div class="feedback-banner" id="photo-feedback" role="alert" aria-live="polite" hidden>
             <span class="feedback-icon" id="feedback-icon" aria-hidden="true">ℹ️</span>
             <span class="feedback-text" id="feedback-text"></span>
           </div>
 
-          <!-- Active Photo Preview Container -->
-          <div class="photo-preview-container" id="photo-preview-container" hidden>
-            <div class="preview-image-wrapper">
-              <img id="preview-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Captured preview for Kannada recognition" class="preview-img">
-              <div class="preview-badge" id="preview-filename">photo.jpg</div>
-              
-              <!-- Scanning Animation Overlay while identifying -->
-              <div class="scanning-laser" id="scanning-laser" hidden></div>
+          <!-- Hero Camera Shutter (Centered) -->
+          <div class="camera-shutter-container" id="capture-actions">
+            <button type="button" class="shutter-hero-btn" id="btn-take-photo" aria-label="Capture photo with camera">
+              <span class="shutter-inner-ring" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <!-- Secondary Action Row (Directly Below Shutter) -->
+          <div class="secondary-actions-row">
+            <button type="button" class="btn-secondary-action btn-gallery-action" id="btn-gallery" aria-label="Upload image from gallery">
+              <span>🖼 GALLERY</span>
+            </button>
+            <button type="button" class="btn-secondary-action btn-history-action" id="btn-history" aria-label="Open history log">
+              <span>◷ HISTORY</span>
+              <span class="history-count-badge" id="history-count-badge" hidden>0</span>
+            </button>
+          </div>
+
+          <!-- Hidden Elements for JS Compatibility -->
+          <button type="button" id="btn-identify" class="visually-hidden" aria-hidden="true"></button>
+          <button type="button" id="btn-upload-gallery" class="visually-hidden" aria-hidden="true"></button>
+          <button type="button" id="btn-history-log" class="visually-hidden" aria-hidden="true"></button>
+          <button type="button" id="btn-history-open" class="visually-hidden" aria-hidden="true"></button>
+          <button type="button" id="btn-retake-photo" class="visually-hidden" aria-hidden="true"></button>
+          <button type="button" id="btn-remove-photo" class="visually-hidden" aria-hidden="true"></button>
+
+        </div>
+
+        <!-- Frosted Glass Bottom-Sheet Drawer for Results -->
+        <div class="sheet-scrim" id="result-sheet-scrim" hidden></div>
+        <div class="result-bottom-sheet" id="result-panel" hidden role="dialog" aria-modal="true" aria-labelledby="result-kannada">
+          
+          <div class="sheet-drag-handle-bar" id="sheet-drag-handle">
+            <span class="sheet-drag-pill"></span>
+          </div>
+
+          <div class="result-header-strip">
+            <span class="result-tag-pill" id="result-confidence-badge">Identified Object</span>
+            <div class="result-header-right">
+              <span class="result-timestamp" id="result-timestamp">Just now</span>
+              <button type="button" class="btn-sheet-close" id="btn-result-sheet-close" aria-label="Dismiss results">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="result-content-body">
+            <div class="result-main-words">
+              <div class="result-kannada" id="result-kannada" lang="kn">ಕಾಫಿ</div>
+              <div class="result-translit" id="result-pronunciation">Kaafi</div>
+              <div class="result-english" id="result-english">Coffee / Filter Coffee</div>
             </div>
 
-            <div class="preview-controls">
-              <!-- Identify Action Button -->
-              <button type="button" class="btn btn-primary btn-identify" id="btn-identify">
+            <div class="result-description-box" id="result-description-box">
+              <p class="result-desc-text" id="result-description">
+                A steaming tumbler and dabarah of traditional South Indian filter coffee.
+              </p>
+            </div>
+
+            <!-- Primary Result Actions Bar: Audio Listen (No sliders) & Plant in Word Garden -->
+            <div class="result-actions-row">
+              <button type="button" class="btn btn-listen-result" id="btn-listen-result" aria-label="Listen to Kannada pronunciation">
                 <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                 </svg>
-                <span id="btn-identify-label">Identify in Kannada</span>
+                <span>Listen</span>
               </button>
 
-              <div class="preview-secondary-actions">
-                <button type="button" class="btn btn-secondary btn-sm" id="btn-retake-photo">
-                  <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M23 4v6h-6M1 20v-6h6"/>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-                  </svg>
-                  <span>Retake</span>
-                </button>
+              <button type="button" class="btn btn-save-garden" id="btn-result-save-garden" aria-label="Plant in Word Garden">
+                <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 4v12m-6-6h12"/>
+                </svg>
+                <span id="btn-result-save-garden-text">Plant in Word Garden</span>
+              </button>
+            </div>
 
-                <button type="button" class="btn btn-ghost btn-sm" id="btn-remove-photo">
-                  <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                  <span>Remove</span>
-                </button>
-              </div>
+            <!-- Secondary Actions -->
+            <div class="result-secondary-row">
+              <button type="button" class="btn btn-save-history" id="btn-save-history" aria-label="Save to History Log Book">
+                <svg class="btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                  <polyline points="17 21 17 13 7 13 7 21"/>
+                  <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                <span>Save to History</span>
+              </button>
+
+              <button type="button" class="btn btn-learn-cta" id="btn-learn-word">
+                <span>Learn Related Phrases →</span>
+              </button>
+            </div>
+
+            <div class="result-footer-row">
+              <button type="button" class="btn btn-ghost btn-sm" id="btn-scan-another" aria-label="Scan another item">
+                <span>Scan Another</span>
+              </button>
             </div>
           </div>
-
-          <!-- Specimen Discovery Card (Result) -->
-          <div class="recognition-result-card" id="result-panel" hidden>
-            <div class="result-header-strip">
-              <span class="result-tag-pill">Identified Object</span>
-              <span class="result-timestamp" id="result-timestamp">Just now</span>
-            </div>
-
-            <div class="result-content-body">
-              <div class="result-main-words">
-                <div class="result-kannada" id="result-kannada" lang="kn">ಕಾಫಿ</div>
-                <div class="result-translit" id="result-pronunciation">Kaafi</div>
-                <div class="result-english" id="result-english">Coffee / Filter Coffee</div>
-              </div>
-
-              <div class="result-description-box" id="result-description-box">
-                <p class="result-desc-text" id="result-description">
-                  A steaming tumbler and dabarah of traditional South Indian filter coffee.
-                </p>
-              </div>
-
-              <!-- Result Actions Bar -->
-              <div class="result-actions-row">
-                <button type="button" class="btn btn-secondary btn-listen-result" id="btn-listen-result" aria-label="Listen to Kannada pronunciation">
-                  <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                  </svg>
-                  <span>Pronounce</span>
-                </button>
-
-                <button type="button" class="btn btn-secondary btn-save-garden" id="btn-result-save-garden" aria-label="Add to Word Garden">
-                  <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                  </svg>
-                  <span id="btn-result-save-garden-text">Add to Garden</span>
-                </button>
-
-                <button type="button" class="btn btn-secondary btn-save-history" id="btn-save-history" aria-label="Save to History Log Book">
-                  <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                    <polyline points="17 21 17 13 7 13 7 21"/>
-                    <polyline points="7 3 7 8 15 8"/>
-                  </svg>
-                  <span>Save to History</span>
-                </button>
-              </div>
-
-              <div class="result-footer-row">
-                <button type="button" class="btn btn-primary btn-full" id="btn-learn-word">
-                  <span>Learn Related Phrases</span>
-                </button>
-                <button type="button" class="btn btn-ghost btn-sm" id="btn-scan-another" aria-label="Scan another item">
-                  <span>Scan Another</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
         </div>
 
       </section>
 
       <!-- =========================================================
            2. LEARN SECTION — Everyday Curriculum (Restored Classic Layout)
-           Retains improved Helvetica and Playfair typography
+           Retains clean Plus Jakarta Sans and Noto Sans Kannada typography
            ========================================================= -->
       <section 
         id="section-learn" 
@@ -1485,7 +1493,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="learn-data.js"></script>
-  <script src="script.js"></script>
+  <script src="learn-data.js?v=9.1"></script>
+  <script src="script.js?v=9.1"></script>
+  <script src="app.js?v=9.1"></script>
 </body>
 </html>
