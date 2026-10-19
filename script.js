@@ -411,81 +411,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------------------------------------------------------
 
   /**
-   * Safe camera launcher:
-   * - Audits isSecureContext to guide mobile users accessing via tunnels/HTTPS.
-   * - Checks camera permission state (prompt, granted, denied).
-  /**
-   * Starts camera access using navigator.mediaDevices.getUserMedia with fallback to native capture.
-   * Includes comprehensive .catch() error fallback displaying a user-friendly error if camera permission is denied.
+   * Directly triggers native camera capture on mobile devices.
+   * Using <input type="file" accept="image/*" capture="environment"> synchronously
+   * opens the phone's native camera shutter without gesture invalidation.
    */
-  async function startCamera() {
+  function startCamera() {
     lastTriggerSource = 'camera';
     showFeedback('');
-
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const isSecure = window.isSecureContext || isLocal;
-
-    if (!isSecure) {
-      console.warn('[Camera] Page is running in an insecure context (HTTP). Forward over HTTPS tunnel for full camera support.');
-      showFeedback('Notice: Live camera capture requires an HTTPS connection on mobile phones. You can use "Upload from Gallery" or forward over HTTPS.', 'info', 5000);
-    }
-
-    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-          .catch((err) => {
-            console.warn('[Camera Permission / Hardware]: getUserMedia rejected:', err);
-            let friendlyError = 'Camera access was denied or is unavailable. Please check your camera permissions or choose a photo from Gallery.';
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-              friendlyError = 'Camera permission denied. Please allow camera access in browser settings or choose a photo from Gallery.';
-            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-              friendlyError = 'No camera found on this device. Please upload an image using GALLERY.';
-            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-              friendlyError = 'Camera hardware is busy in another app. Please close other camera apps and try again.';
-            }
-            showFeedback(friendlyError, 'error', 6000);
-            return null;
-          });
-
-        if (stream) {
-          // Release stream tracks after permission confirmation so native camera input is free
-          if (typeof stream.getTracks === 'function') {
-            stream.getTracks().forEach(track => track.stop());
-          }
-          if (cameraInput) {
-            cameraInput.click();
-          } else if (galleryInput) {
-            galleryInput.click();
-          }
-          return stream;
-        }
-      } catch (err) {
-        showFeedback('Could not open camera. Please use GALLERY to select a photo.', 'error', 4000);
+    try {
+      if (cameraInput) {
+        cameraInput.value = '';
+        cameraInput.click();
+      } else if (galleryInput) {
+        galleryInput.value = '';
+        galleryInput.click();
       }
-    } else {
-      // Fallback for browsers without navigator.mediaDevices
-      try {
-        if (cameraInput) {
-          cameraInput.click();
-        } else if (galleryInput) {
-          galleryInput.click();
-        }
-      } catch (err) {
-        showFeedback('Camera input error. Please use GALLERY to select a photo.', 'error', 4000);
-      }
+    } catch (err) {
+      console.warn('[Camera Launch Error]:', err);
+      showFeedback('Could not open camera. Please use GALLERY to select a photo.', 'error', 4000);
     }
-    return null;
   }
 
   window.startCamera = startCamera;
 
-  async function triggerCameraCapture() {
+  function triggerCameraCapture() {
     return startCamera();
   }
 
   // 1. "Take a Photo" Button (Shutter)
   if (btnTakePhoto) {
-    btnTakePhoto.addEventListener('click', () => {
+    btnTakePhoto.addEventListener('click', (e) => {
+      e.preventDefault();
       if (activeFile && typeof identifyObject === 'function') {
         identifyObject();
       } else {
@@ -508,12 +464,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 2. "Upload from Gallery" Button
+  // 2. "Upload from Gallery" Button (Pure Gallery Picker)
   if (btnUploadGallery) {
-    btnUploadGallery.addEventListener('click', () => {
+    btnUploadGallery.addEventListener('click', (e) => {
+      e.preventDefault();
       lastTriggerSource = 'gallery';
       showFeedback('');
-      if (galleryInput) galleryInput.click();
+      if (galleryInput) {
+        galleryInput.value = '';
+        galleryInput.click();
+      }
     });
   }
 
@@ -532,11 +492,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 3. "Retake" Button
   if (btnRetakePhoto) {
-    btnRetakePhoto.addEventListener('click', () => {
+    btnRetakePhoto.addEventListener('click', (e) => {
+      e.preventDefault();
       showFeedback('');
       if (lastTriggerSource === 'camera') {
         triggerCameraCapture();
       } else if (galleryInput) {
+        galleryInput.value = '';
         galleryInput.click();
       }
     });

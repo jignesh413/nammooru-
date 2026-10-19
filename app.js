@@ -223,9 +223,9 @@
   });
 
   /**
-   * Safe camera start function with user-friendly error fallbacks.
+   * Direct camera start function with fallback.
    */
-  async function safeStartCamera() {
+  function safeStartCamera() {
     if (typeof window.startCamera === 'function' && window.startCamera !== safeStartCamera) {
       return window.startCamera();
     }
@@ -241,30 +241,21 @@
       }
     };
 
-    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-          .catch((err) => {
-            console.warn('[Camera Permission / Hardware]: getUserMedia rejected:', err);
-            let friendlyError = 'Camera access was denied or is unavailable. Please check your camera permissions or choose a photo from Gallery.';
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-              friendlyError = 'Camera permission denied. Please allow camera access in browser settings or choose a photo from Gallery.';
-            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-              friendlyError = 'No camera found on this device. Please upload an image using GALLERY.';
-            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-              friendlyError = 'Camera hardware is busy in another app. Please close other camera apps and try again.';
-            }
-            showMsg(friendlyError, true);
-            return null;
-          });
-        return stream;
-      } catch (err) {
-        showMsg('Could not open camera. Please use GALLERY to select a photo.', true);
-        return null;
+    const cameraInput = document.getElementById('camera-input');
+    const galleryInput = document.getElementById('gallery-input');
+    try {
+      if (cameraInput) {
+        cameraInput.value = '';
+        cameraInput.click();
+      } else if (galleryInput) {
+        galleryInput.value = '';
+        galleryInput.click();
+      } else {
+        showMsg('Your browser does not support direct camera capture. Please select a photo from your gallery.', true);
       }
-    } else {
-      showMsg('Your browser does not support direct camera capture. Please select a photo from your gallery.', true);
-      return null;
+    } catch (err) {
+      console.warn('[Camera Launch Error]:', err);
+      showMsg('Could not open camera. Please use GALLERY to select a photo.', true);
     }
   }
 
