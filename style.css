@@ -2686,6 +2686,31 @@ h2.week-title {
   box-sizing: border-box;
   text-align: center;
   margin: auto;
+  position: relative;
+}
+
+.btn-gate-dismiss {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid #000000;
+  background: #F1F5F9;
+  color: #0F172A;
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #000000;
+  transition: transform 0.1s ease;
+}
+
+.btn-gate-dismiss:active {
+  transform: scale(0.92);
 }
 
 .auth-gate-badge {

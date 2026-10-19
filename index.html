@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=9.6">
+  <link rel="stylesheet" href="style.css?v=9.7">
 </head>
 <body>
   <!-- =========================================================
@@ -29,6 +29,7 @@
        ========================================================= -->
   <div id="app-auth-gate" class="auth-gate-overlay" style="display: none;">
     <div class="auth-gate-card">
+      <button type="button" class="btn-gate-dismiss" id="btn-gate-close" aria-label="Close and continue as guest">✕</button>
       
       <!-- Brand & Welcome Header -->
       <div class="auth-gate-header">
@@ -174,6 +175,22 @@
               <span class="pet-stat-tries" id="pet-stat-tries">⚡ 0 Tries Logged</span>
             </div>
           </div>
+
+          <!-- Hidden Native File Inputs -->
+          <input 
+            type="file" 
+            id="camera-input" 
+            accept="image/*" 
+            capture="environment" 
+            class="visually-hidden" 
+            aria-label="Take a photo with camera">
+
+          <input 
+            type="file" 
+            id="gallery-input" 
+            accept="image/*" 
+            class="visually-hidden" 
+            aria-label="Upload an image from gallery">
 
           <!-- Dedicated Photo Preview & Identification Container -->
           <div class="photo-preview-container" id="photo-preview-container" hidden>
@@ -1617,8 +1634,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="learn-data.js?v=9.6"></script>
-  <script src="script.js?v=9.6"></script>
-  <script src="app.js?v=9.6"></script>
+  <script src="learn-data.js?v=9.7"></script>
+  <script src="script.js?v=9.7"></script>
+  <script src="app.js?v=9.7"></script>
 </body>
 </html>

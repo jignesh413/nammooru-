@@ -907,20 +907,32 @@
       });
     }
 
-    // 5. Continue as Guest
-    if (btnGuest) {
-      btnGuest.addEventListener('click', () => {
-        const session = {
-          isLoggedIn: true,
-          method: 'guest',
-          email: 'guest@nammooru.app',
-          name: 'Guest Explorer',
-          avatar: 'GE',
-          loggedInAt: new Date().toISOString()
-        };
-        unlockApp(session);
-      });
+    // 5. Continue as Guest / Dismiss
+    const btnClose = document.getElementById('btn-gate-close');
+    function setGuestAndUnlock() {
+      const session = {
+        isLoggedIn: true,
+        method: 'guest',
+        email: 'guest@nammooru.app',
+        name: 'Guest Explorer',
+        avatar: 'GE',
+        loggedInAt: new Date().toISOString()
+      };
+      unlockApp(session);
     }
+
+    if (btnGuest) {
+      btnGuest.addEventListener('click', setGuestAndUnlock);
+    }
+    if (btnClose) {
+      btnClose.addEventListener('click', setGuestAndUnlock);
+    }
+    // Also allow clicking outside card to dismiss
+    authGate.addEventListener('click', (e) => {
+      if (e.target === authGate) {
+        setGuestAndUnlock();
+      }
+    });
 
     // 6. Sign Out
     if (btnSignOut) {
