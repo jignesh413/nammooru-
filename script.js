@@ -921,6 +921,35 @@ document.addEventListener('DOMContentLoaded', () => {
     showResultPanel('success');
   }
 
+  /**
+   * Saves identified recognition record to local History Log Book.
+   */
+  function saveToHistory(data) {
+    if (!data || !data.english || !data.kannada) return null;
+    try {
+      const records = typeof loadHistory === 'function' ? loadHistory() : [];
+      const record = {
+        id:            typeof generateId === 'function' ? generateId() : Date.now().toString(36),
+        timestamp:     new Date().toISOString(),
+        english:       data.english       || '',
+        kannada:       data.kannada        || '',
+        pronunciation: data.pronunciation  || '',
+        description:   data.description    || '',
+        confidence:    data.confidence     || 'high',
+        thumbnailUrl:  data._thumbnailUrl  || null,
+        fullImageUrl:  data._fullDataUrl   || null,
+      };
+      records.unshift(record);
+      if (records.length > MAX_HISTORY) records.splice(MAX_HISTORY);
+      if (typeof saveHistory === 'function') saveHistory(records);
+      if (typeof updateHistoryBadge === 'function') updateHistoryBadge();
+      return record;
+    } catch (err) {
+      console.warn('[History Auto-Save Error]:', err);
+      return null;
+    }
+  }
+
   // -------------------------------------------------------------------------
   // E. Identify Object — Main Flow
   // -------------------------------------------------------------------------
@@ -1007,10 +1036,16 @@ document.addEventListener('DOMContentLoaded', () => {
         data._fullDataUrl  = compressed.dataUrl;
       }
 
-      // 7. Auto-save to History Log Book
-      const savedRecord = saveToHistory(data);
-      if (savedRecord) {
-        currentResultSaved = true;
+      // 7. Auto-save to History Log Book (safe guard)
+      try {
+        if (typeof saveToHistory === 'function') {
+          const savedRecord = saveToHistory(data);
+          if (savedRecord) {
+            currentResultSaved = true;
+          }
+        }
+      } catch (saveErr) {
+        console.warn('[History Auto-Save Guard]:', saveErr);
       }
 
       displayResult(data);
