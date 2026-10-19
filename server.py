@@ -196,10 +196,27 @@ Return ONLY valid JSON -- no markdown, no code fences, no explanation text, noth
 If you can identify the object clearly, return this exact structure:
 {
   "english": "Object Name (capitalize first letter, keep it short -- 1-3 words)",
-  "kannada": "ವಸ್ತುವಿನ ಹೆಸರು",
-  "pronunciation": "phonetic reading for English speakers (e.g. 'kup-pay')",
+  "kannada": "ವಸ್ತುವಿನ ಹೆಸರು (authentic Kannada script)",
+  "pronunciation": "phonetic reading for English speakers (e.g. 'Kaafi')",
   "description": "One friendly sentence about this object relevant to life in Bengaluru.",
-  "confidence": "high"
+  "confidence": "high",
+  "conversation_starters": [
+    {
+      "kannada": "First natural Kannada sentence using this object (e.g. at a shop, cafe, or auto)",
+      "pronunciation": "English phonetic transliteration of the sentence",
+      "english": "English translation"
+    },
+    {
+      "kannada": "Second useful colloquial phrase for life in Bengaluru",
+      "pronunciation": "English transliteration of the sentence",
+      "english": "English translation"
+    },
+    {
+      "kannada": "Third everyday phrase",
+      "pronunciation": "English transliteration of the sentence",
+      "english": "English translation"
+    }
+  ]
 }
 
 Use "medium" confidence if you can identify the object but are not fully certain.
@@ -211,9 +228,9 @@ Special cases -- return these exact error objects:
 - If the image shows text/writing only with no object: {"error":"text_only","message":"Only text was detected. Try photographing the object that carries the text, or photograph a different everyday item."}
 
 CRITICAL RULES:
-1. The "kannada" field MUST be authentic Kannada script (Unicode), not transliteration.
-2. The "pronunciation" field must use simple Latin letters readable by English speakers.
-3. Never invent or guess Kannada if you are not confident -- use the error format instead.
+1. The "kannada" fields MUST be authentic Kannada script (Unicode), not transliteration.
+2. The "pronunciation" fields must use simple Latin letters readable by English speakers.
+3. Include 2 to 3 practical everyday conversation starters relevant to Bengaluru.
 4. Return NOTHING except the JSON object."""
 
 

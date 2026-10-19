@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=9.5">
+  <link rel="stylesheet" href="style.css?v=9.6">
 </head>
 <body>
   <!-- =========================================================
@@ -173,43 +173,43 @@
               <span class="pet-stat-bloomed" id="pet-stat-bloomed">🌱 0 Bloomed</span>
               <span class="pet-stat-tries" id="pet-stat-tries">⚡ 0 Tries Logged</span>
             </div>
+          </div>
 
-            <!-- Active Photo Preview Container (Housed within the Hero Card for seamless client-side image compression & preview) -->
-            <div class="photo-preview-container" id="photo-preview-container" hidden>
-              <div class="preview-image-wrapper">
-                <img id="preview-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Captured preview for Kannada recognition" class="preview-img">
-                <div class="preview-badge" id="preview-filename" hidden>photo.jpg</div>
-                
-                <!-- Scanning Animation Laser Overlay -->
-                <div class="scanning-laser" id="scanning-laser" hidden></div>
+          <!-- Dedicated Photo Preview & Identification Container -->
+          <div class="photo-preview-container" id="photo-preview-container" hidden>
+            <div class="preview-header-bar">
+              <span class="preview-status-pill">📸 PHOTO CAPTURED</span>
+              <button type="button" class="btn-preview-clear" id="btn-remove-photo" aria-label="Clear photo">✕</button>
+            </div>
+            
+            <div class="preview-image-wrapper">
+              <img id="preview-image" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E" alt="Captured preview for Kannada recognition" class="preview-img">
+              <div class="preview-badge" id="preview-filename" hidden>photo.jpg</div>
+              
+              <!-- Scanning Animation Laser Overlay -->
+              <div class="scanning-laser" id="scanning-laser" hidden></div>
 
-                <!-- Client-Side Canvas Compression Savings HUD Chip -->
-                <div class="compression-hud-chip" id="compression-hud-chip" hidden aria-live="polite">
-                  <svg class="comp-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                  </svg>
-                  <span id="compression-hud-text">Compressed: 4.8MB → 112KB (-97%)</span>
-                </div>
+              <!-- Client-Side Canvas Compression Savings HUD Chip -->
+              <div class="compression-hud-chip" id="compression-hud-chip" hidden aria-live="polite">
+                <svg class="comp-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+                <span id="compression-hud-text">Compressed: 4.8MB → 112KB (-97%)</span>
               </div>
             </div>
 
+            <!-- Prominent Primary Action: Identify Object in Kannada -->
+            <div class="photo-identify-actions">
+              <button type="button" class="btn-hero-identify" id="btn-identify">
+                <span class="btn-identify-icon" aria-hidden="true">✨</span>
+                <span class="btn-identify-label" id="btn-identify-label">IDENTIFY IN KANNADA</span>
+                <span class="btn-identify-sub">(ಕನ್ನಡದಲ್ಲಿ ಗುರುತಿಸಿ)</span>
+              </button>
+              <button type="button" class="btn-retake-action" id="btn-retake-photo">
+                <span>↺ Retake / Choose Another</span>
+              </button>
+            </div>
           </div>
-
-          <!-- Hidden Native File Inputs -->
-          <input 
-            type="file" 
-            id="camera-input" 
-            accept="image/*" 
-            capture="environment" 
-            class="visually-hidden" 
-            aria-label="Take a photo with camera">
-
-          <input 
-            type="file" 
-            id="gallery-input" 
-            accept="image/*" 
-            class="visually-hidden" 
-            aria-label="Upload an image from gallery">
 
           <!-- Feedback & Validation Alert -->
           <div class="feedback-banner" id="photo-feedback" role="alert" aria-live="polite" hidden>
@@ -225,7 +225,7 @@
           </div>
 
           <!-- Secondary Action Row (Directly Below Shutter) -->
-          <div class="secondary-actions-row">
+          <div class="secondary-actions-row" id="secondary-actions-row">
             <button type="button" class="btn-secondary-action btn-gallery-action" id="btn-gallery" aria-label="Upload image from gallery">
               <span>🖼 GALLERY</span>
             </button>
@@ -236,12 +236,9 @@
           </div>
 
           <!-- Hidden Elements for JS Compatibility -->
-          <button type="button" id="btn-identify" class="visually-hidden" aria-hidden="true"></button>
           <button type="button" id="btn-upload-gallery" class="visually-hidden" aria-hidden="true"></button>
           <button type="button" id="btn-history-log" class="visually-hidden" aria-hidden="true"></button>
           <button type="button" id="btn-history-open" class="visually-hidden" aria-hidden="true"></button>
-          <button type="button" id="btn-retake-photo" class="visually-hidden" aria-hidden="true"></button>
-          <button type="button" id="btn-remove-photo" class="visually-hidden" aria-hidden="true"></button>
 
         </div>
 
@@ -277,6 +274,17 @@
               <p class="result-desc-text" id="result-description">
                 A steaming tumbler and dabarah of traditional South Indian filter coffee.
               </p>
+            </div>
+
+            <!-- Everyday Bengaluru Conversation Starters -->
+            <div class="result-conversations-section" id="result-conversations-section">
+              <div class="conversations-header-badge">
+                <span class="conv-badge-icon">💬</span>
+                <span class="conv-badge-text">Everyday Conversation Starters (ದೈನಂದಿನ ಸಂಭಾಷಣೆ)</span>
+              </div>
+              <div class="conversation-starters-list" id="conversation-starters-list">
+                <!-- Dynamically populated conversation starter cards with audio buttons -->
+              </div>
             </div>
 
             <!-- Primary Result Actions Bar: Audio Listen (No sliders) & Plant in Word Garden -->
@@ -1609,8 +1617,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="learn-data.js?v=9.5"></script>
-  <script src="script.js?v=9.5"></script>
-  <script src="app.js?v=9.5"></script>
+  <script src="learn-data.js?v=9.6"></script>
+  <script src="script.js?v=9.6"></script>
+  <script src="app.js?v=9.6"></script>
 </body>
 </html>

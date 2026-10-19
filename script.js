@@ -337,12 +337,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 5. Update UI Viewport States
+      // 5. Update UI Viewport States
       if (previewContainer) previewContainer.hidden = false;
       const idleSensor = document.getElementById('optical-idle-sensor');
       if (idleSensor) idleSensor.hidden = true;
 
+      // Hide shutter & gallery row while photo is active so user focuses on Identify
+      if (captureActions) captureActions.hidden = true;
+      const secRow = document.getElementById('secondary-actions-row');
+      if (secRow) secRow.hidden = true;
+
       const btnIdentifyEl = document.getElementById('btn-identify');
-      if (btnIdentifyEl) btnIdentifyEl.hidden = false;
+      if (btnIdentifyEl) {
+        btnIdentifyEl.disabled = false;
+        const labelEl = document.getElementById('btn-identify-label');
+        if (labelEl) labelEl.textContent = 'IDENTIFY IN KANNADA';
+      }
+
+      // Update mascot encouragement quote
+      const quoteEl = document.getElementById('pet-quote-text');
+      if (quoteEl) {
+        quoteEl.textContent = 'Nice shot! Tap Identify to learn it in Kannada.';
+      }
 
       // Subtly hide ambient city visual to focus on user's photo
       if (heroAmbientVisual) {
@@ -379,10 +395,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (idleSensor) idleSensor.hidden = false;
 
     if (captureActions) captureActions.hidden = false;
+    const secRow = document.getElementById('secondary-actions-row');
+    if (secRow) secRow.hidden = false;
 
     activeFile = null;
     const btnIdentifyEl = document.getElementById('btn-identify');
-    if (btnIdentifyEl) btnIdentifyEl.hidden = true;
+    if (btnIdentifyEl) {
+      btnIdentifyEl.disabled = false;
+      const labelEl = document.getElementById('btn-identify-label');
+      if (labelEl) labelEl.textContent = 'IDENTIFY IN KANNADA';
+    }
+
+    const quoteEl = document.getElementById('pet-quote-text');
+    if (quoteEl) {
+      quoteEl.textContent = 'Namaskara! Snap your first word.';
+    }
+
     hideResultPanel();
 
     if (heroAmbientVisual) {
@@ -397,12 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Ensure clean initial state on page load
   removeActivePhoto(false);
 
-  // Allow tapping preview container to reset/retake photo
-  if (previewContainer) {
-    previewContainer.addEventListener('click', (e) => {
-      if (!e.target.closest('#compression-hud-chip')) {
-        removeActivePhoto(true);
-      }
+  // Wire clear photo button explicitly
+  const btnRemovePhotoEl = document.getElementById('btn-remove-photo');
+  if (btnRemovePhotoEl) {
+    btnRemovePhotoEl.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeActivePhoto(true);
     });
   }
 
@@ -794,6 +823,75 @@ document.addEventListener('DOMContentLoaded', () => {
     if (resultPronun)  resultPronun.textContent  = data.pronunciation || '';
     if (resultDesc)    resultDesc.textContent    = data.description || '';
 
+    // Render Dynamic Conversation Starters for this Object
+    const convSection = document.getElementById('result-conversations-section');
+    const convList = document.getElementById('conversation-starters-list');
+    if (convList) {
+      convList.innerHTML = '';
+      let starters = data.conversation_starters || data.conversationStarters || [];
+      if (!Array.isArray(starters) || starters.length === 0) {
+        const knWord = data.kannada || 'ಇದು';
+        const enWord = (data.english || 'this').toLowerCase();
+        starters = [
+          {
+            kannada: `${knWord} ಎಲ್ಲಿ ಸಿಗುತ್ತದೆ?`,
+            pronunciation: `${data.pronunciation || 'Idu'} elli siguttade?`,
+            english: `Where can I get ${enWord}?`
+          },
+          {
+            kannada: `ದಯವಿಟ್ಟು ಒಂದು ${knWord} ಕೊಡಿ.`,
+            pronunciation: `Dayavittu ondu ${data.pronunciation || 'idu'} kodi.`,
+            english: `Please give me one ${enWord}.`
+          },
+          {
+            kannada: `ಈ ${knWord} ಬೆಲೆ ಎಷ್ಟು?`,
+            pronunciation: `Ee ${data.pronunciation || 'idu'} bele eshtu?`,
+            english: `How much does this ${enWord} cost?`
+          }
+        ];
+      }
+
+      starters.forEach((item) => {
+        const card = document.createElement('div');
+        card.className = 'conversation-starter-card';
+
+        const info = document.createElement('div');
+        info.className = 'conv-info';
+
+        const kn = document.createElement('div');
+        kn.className = 'conv-kannada';
+        kn.textContent = item.kannada;
+
+        const pr = document.createElement('div');
+        pr.className = 'conv-pronun';
+        pr.textContent = item.pronunciation;
+
+        const en = document.createElement('div');
+        en.className = 'conv-english';
+        en.textContent = item.english;
+
+        info.appendChild(kn);
+        info.appendChild(pr);
+        info.appendChild(en);
+
+        const listenBtn = document.createElement('button');
+        listenBtn.type = 'button';
+        listenBtn.className = 'btn-conv-listen';
+        listenBtn.setAttribute('aria-label', `Listen to: ${item.english}`);
+        listenBtn.innerHTML = '🔊';
+        listenBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          playKannadaAudio(item.kannada, listenBtn);
+        });
+
+        card.appendChild(info);
+        card.appendChild(listenBtn);
+        convList.appendChild(card);
+      });
+
+      if (convSection) convSection.hidden = false;
+    }
+
     // Reset save button
     if (btnSaveHistory) {
       btnSaveHistory.textContent = '';
@@ -832,18 +930,15 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    if (!apiConfigured) {
-      showResultPanel('error');
-      if (resultErrorMsg) {
-        resultErrorMsg.textContent =
-          'Object recognition is not set up yet. See the setup instructions below.';
-      }
-      return;
-    }
-
     // Show loading state
     showResultPanel('loading');
-    if (btnIdentify) btnIdentify.disabled = true;
+    if (btnIdentify) {
+      btnIdentify.disabled = true;
+      const labelEl = document.getElementById('btn-identify-label');
+      if (labelEl) labelEl.textContent = 'IDENTIFYING IN KANNADA...';
+    }
+    const laser = document.getElementById('scanning-laser');
+    if (laser) laser.hidden = false;
 
     try {
       // 1. Use client-side compressed data or compress now
@@ -935,9 +1030,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     } finally {
-      if (btnIdentify) btnIdentify.disabled = false;
-      const laser = document.getElementById('scanning-laser');
-      if (laser) laser.hidden = true;
+      if (btnIdentify) {
+        btnIdentify.disabled = false;
+        const labelEl = document.getElementById('btn-identify-label');
+        if (labelEl) labelEl.textContent = 'IDENTIFY IN KANNADA';
+      }
+      const laserEl = document.getElementById('scanning-laser');
+      if (laserEl) laserEl.hidden = true;
     }
   }
 
