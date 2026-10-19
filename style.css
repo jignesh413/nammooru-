@@ -273,7 +273,7 @@ h2.week-title {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
 }
 
@@ -1816,4 +1816,863 @@ h2.week-title {
 .garden-toast.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* =============================================================================
+   WORD GARDEN BIOME: NEO-BRUTALIST LAUNCH CARD (Standard Design System)
+   ============================================================================= */
+.garden-entry-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: var(--accent-primary, #FFD027);
+  border: var(--border-main);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-hard);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.garden-entry-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0px #000000;
+}
+
+.garden-entry-card:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.garden-entry-icon {
+  font-size: 26px;
+  line-height: 1;
+  width: 48px;
+  height: 48px;
+  background: var(--bg-surface-white);
+  border: 2px solid #000000;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0px #000000;
+  flex-shrink: 0;
+}
+
+.garden-entry-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.garden-entry-meta h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: #111111;
+  margin: 0 0 3px 0;
+  letter-spacing: -0.2px;
+}
+
+.garden-entry-meta p {
+  font-size: 13px;
+  font-weight: 500;
+  color: #222222;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.garden-entry-arrow {
+  font-size: 16px;
+  font-weight: 800;
+  color: #000000;
+  width: 32px;
+  height: 32px;
+  background: var(--bg-surface-white);
+  border: 2px solid #000000;
+  border-radius: var(--radius-pill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+/* =============================================================================
+   WORD GARDEN BIOME: ISOLATED 16-BIT MINECRAFT PIXEL GARDEN
+   ============================================================================= */
+.minecraft-garden-view {
+  font-family: 'Press Start 2P', 'Courier New', monospace;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  padding-bottom: 24px;
+  color: #FFFFFF;
+}
+
+/* 1. Navigation & Level Bar */
+.mc-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.mc-btn-back {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  line-height: 1.4;
+  background: #737373;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  box-shadow: inset -2px -2px 0px #373737, inset 2px 2px 0px #FFFFFF;
+  padding: 8px 12px;
+  cursor: pointer;
+  text-shadow: 1px 1px 0px #222222;
+  border-radius: 0;
+  transition: background 0.1s ease;
+}
+
+.mc-btn-back:active {
+  box-shadow: inset 2px 2px 0px #373737, inset -2px -2px 0px #FFFFFF;
+  background: #5A5A5A;
+}
+
+.mc-badge-xp {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  background: #111111;
+  color: #55FF55;
+  border: 2px solid #00AA00;
+  box-shadow: inset 1px 1px 0px #000000, 2px 2px 0px #000000;
+  padding: 8px 12px;
+  text-shadow: 1px 1px 0px #003300;
+  border-radius: 0;
+}
+
+/* 2. Minecraft Sky Banner with Pixel Clouds */
+.mc-sky-banner {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, #4AA0E6 0%, #70B8FF 70%, #90D0FF 100%);
+  border: 3px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  padding: 24px 16px 20px 16px;
+  margin-bottom: 14px;
+  border-radius: 0;
+  text-align: center;
+}
+
+.mc-clouds-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.mc-cloud {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.12);
+}
+
+.mc-cloud.c1 {
+  top: 8px;
+  left: -80px;
+  width: 64px;
+  height: 18px;
+  animation: mc-cloud-drift 24s linear infinite;
+}
+
+.mc-cloud.c2 {
+  top: 22px;
+  left: -120px;
+  width: 96px;
+  height: 22px;
+  animation: mc-cloud-drift 32s linear infinite 10s;
+}
+
+@keyframes mc-cloud-drift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(520px); }
+}
+
+.mc-banner-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: #FFFF55;
+  text-shadow: 2px 2px 0px #000000;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.mc-banner-sub {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: #FFFFFF;
+  text-shadow: 1px 1px 0px #000000;
+  line-height: 1.5;
+  position: relative;
+  z-index: 1;
+}
+
+/* 3. Minecraft Meadow Stage (Dynamic Living Wildflower Meadow) */
+.mc-meadow-stage {
+  position: relative;
+  background: linear-gradient(180deg, #5DB23C 0%, #4FA332 25%, #428F27 55%, #357B1E 85%, #2B6717 100%);
+  background-image: 
+    radial-gradient(rgba(255, 255, 255, 0.08) 15%, transparent 16%), 
+    radial-gradient(rgba(0, 0, 0, 0.08) 15%, transparent 16%), 
+    linear-gradient(180deg, #5DB23C 0%, #4FA332 25%, #428F27 55%, #357B1E 85%, #2B6717 100%);
+  background-size: 24px 24px, 24px 24px, 100% 100%;
+  background-position: 0 0, 12px 12px, 0 0;
+  border: 3px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  border-top: 6px solid #73CF4C; /* Vibrant grassy rim */
+  min-height: 480px;
+  overflow: hidden;
+  border-radius: 0;
+  margin-bottom: 24px;
+  transition: min-height 0.3s ease;
+}
+
+/* Ambient Grass Tufts & Subtle Wildflower Decor */
+.mc-meadow-ambience {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.mc-ambient-tuft {
+  position: absolute;
+  width: 14px;
+  height: 8px;
+  background: #366D1B;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.15);
+  clip-path: polygon(0% 100%, 30% 0%, 50% 60%, 70% 10%, 100% 100%);
+}
+
+.mc-ambient-tuft.t1 { top: 70px; left: 10%; }
+.mc-ambient-tuft.t2 { top: 180px; left: 82%; }
+.mc-ambient-tuft.t3 { top: 290px; left: 24%; }
+.mc-ambient-tuft.t4 { top: 380px; left: 70%; }
+.mc-ambient-tuft.t5 { top: 480px; left: 45%; }
+
+.mc-ambient-pebble {
+  position: absolute;
+  width: 10px;
+  height: 6px;
+  background: #888888;
+  border: 1px solid #444444;
+}
+
+.mc-ambient-pebble.p1 { top: 120px; left: 52%; }
+.mc-ambient-pebble.p2 { top: 340px; left: 88%; }
+
+/* Meadow Canvas Layer holding all flowers */
+.mc-meadow-field {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* 4. Organic Wildflower Items (Scattered Randomly in the Meadow) */
+.mc-wildflower-item {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transform-origin: bottom center;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.18s ease;
+  padding: 6px;
+}
+
+.mc-wildflower-item:hover,
+.mc-wildflower-item:focus {
+  transform: translate(-50%, -100%) scale(1.18) !important;
+  z-index: 999 !important;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 85, 0.7));
+}
+
+.mc-wildflower-item:active {
+  transform: translate(-50%, -96%) scale(1.1) !important;
+}
+
+.mc-flower-bloom-anchor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.mc-flower-graphic {
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.45));
+  animation: mc-flower-sway 2.8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes mc-flower-sway {
+  0%   { transform: rotate(-3deg); }
+  100% { transform: rotate(4deg); }
+}
+
+.mc-flower-shadow {
+  width: 32px;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 50%;
+  margin-top: -3px;
+}
+
+/* Floating Parchment Nametag */
+.mc-flower-nametag {
+  margin-top: 5px;
+  background: rgba(18, 18, 18, 0.9);
+  border: 1.5px solid #FFFF55;
+  box-shadow: 2px 2px 0px #000000;
+  padding: 3px 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.mc-nametag-kn {
+  font-family: 'Noto Sans Kannada', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFF55;
+  line-height: 1.2;
+  text-shadow: 1px 1px 0px #000000;
+}
+
+.mc-nametag-en {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6.5px;
+  color: #FFFFFF;
+  line-height: 1.2;
+  text-shadow: 1px 1px 0px #000000;
+  margin-top: 1px;
+  opacity: 0.95;
+}
+
+/* Empty State Meadow Signpost */
+.mc-empty-meadow-sign {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 48px);
+  max-width: 330px;
+  background: #A06838; /* Minecraft Oak Wood Planks */
+  border: 3px solid #000000;
+  box-shadow: inset 3px 3px 0px #C58A55, inset -3px -3px 0px #6A411E, 4px 4px 0px #000000;
+  padding: 18px 14px;
+  text-align: center;
+  color: #FFFFFF;
+}
+
+.mc-sign-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  color: #FFFF55;
+  text-shadow: 2px 2px 0px #000000;
+  margin-bottom: 8px;
+}
+
+.mc-sign-text {
+  font-size: 8px;
+  line-height: 1.6;
+  color: #FFF2DF;
+  text-shadow: 1px 1px 0px #000000;
+  margin-bottom: 14px;
+}
+
+.mc-btn-snap {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8.5px;
+  background: #22C55E;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: inset -2px -2px 0px #15803D, inset 2px 2px 0px #86EFAC, 2px 2px 0px #000000;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  border-radius: 0;
+  transition: transform 0.1s ease;
+}
+
+.mc-btn-snap:active {
+  box-shadow: inset 2px 2px 0px #15803D, inset -2px -2px 0px #86EFAC;
+  transform: translate(1px, 1px);
+}
+
+/* 5. Minecraft GUI Dialog Modal (Inspection) */
+.mc-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 16px;
+  touch-action: manipulation;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+.mc-gui-dialog {
+  position: relative;
+  z-index: 100001;
+  pointer-events: auto;
+  width: 100%;
+  max-width: 360px;
+  background: #C6C6C6;
+  border: 4px solid #000000;
+  box-shadow: inset 4px 4px 0px #FFFFFF, inset -4px -4px 0px #555555, 0 12px 30px rgba(0, 0, 0, 0.7);
+  padding: 14px;
+  border-radius: 0;
+  font-family: 'Press Start 2P', monospace;
+  color: #3F3F3F;
+  touch-action: auto;
+}
+
+.mc-gui-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 2px solid #555555;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.mc-gui-title {
+  font-size: 11px;
+  color: #3F3F3F;
+  letter-spacing: 0.5px;
+}
+
+.mc-gui-close {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  background: #8B8B8B;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  box-shadow: inset -2px -2px 0px #373737, inset 2px 2px 0px #FFFFFF;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  border-radius: 0;
+}
+
+.mc-gui-close:active {
+  box-shadow: inset 2px 2px 0px #373737, inset -2px -2px 0px #FFFFFF;
+  background: #6A6A6A;
+}
+
+.mc-gui-body {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  background: #A0A0A0;
+  border: 2px solid #373737;
+  border-right-color: #FFFFFF;
+  border-bottom-color: #FFFFFF;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.mc-item-slot {
+  width: 52px;
+  height: 52px;
+  background: #8B8B8B;
+  border: 3px solid #373737;
+  border-right-color: #FFFFFF;
+  border-bottom-color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.mc-slot-glyph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mc-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.mc-kannada-text {
+  font-family: 'Noto Sans Kannada', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111111;
+  line-height: 1.25;
+  margin-bottom: 4px;
+}
+
+.mc-roman-text {
+  font-size: 9px;
+  color: #1E4620;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.mc-meaning-text {
+  font-size: 10px;
+  color: #222222;
+  line-height: 1.4;
+}
+
+.mc-gui-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mc-btn-action {
+  flex: 1;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  background: #737373;
+  color: #FFFFFF;
+  border: 2px solid #000000;
+  box-shadow: inset -2px -2px 0px #373737, inset 2px 2px 0px #FFFFFF;
+  padding: 12px 14px;
+  min-height: 46px;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  text-shadow: 1px 1px 0px #222222;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 0;
+  transition: background 0.1s ease;
+}
+
+.mc-btn-action:hover {
+  background: #7E7E7E;
+}
+
+.mc-btn-action:active {
+  box-shadow: inset 2px 2px 0px #373737, inset -2px -2px 0px #FFFFFF;
+  background: #5A5A5A;
+}
+
+.mc-btn-action.mc-btn-speaking {
+  background: #22C55E !important;
+  color: #000000 !important;
+  box-shadow: inset 2px 2px 0px #15803D, inset -2px -2px 0px #86EFAC !important;
+  animation: mc-pulse-speaking 0.7s infinite alternate ease-in-out;
+}
+
+@keyframes mc-pulse-speaking {
+  0%   { filter: brightness(1); }
+  100% { filter: brightness(1.22); }
+}
+
+.mc-modal-scrim {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* ==========================================================================
+   INITIAL AUTHENTICATION GATE (Start Login Protocol)
+   ========================================================================== */
+.auth-gate-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-app, #FAF8F5);
+  background-image: 
+    radial-gradient(circle at 10% 20%, rgba(255, 208, 39, 0.14) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, rgba(34, 197, 94, 0.14) 0%, transparent 40%);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.auth-gate-card {
+  width: 100%;
+  max-width: 420px;
+  background: #FFFFFF;
+  border: var(--border-thick, 3px solid #000000);
+  box-shadow: 6px 6px 0px #000000;
+  border-radius: 24px;
+  padding: 30px 24px;
+  box-sizing: border-box;
+  text-align: center;
+  margin: auto;
+}
+
+.auth-gate-badge {
+  display: inline-block;
+  background: var(--accent-yellow, #FFD027);
+  border: 2.5px solid #000000;
+  box-shadow: 2.5px 2.5px 0px #000000;
+  padding: 5px 16px;
+  border-radius: var(--radius-pill, 999px);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #000000;
+  margin-bottom: 14px;
+}
+
+.auth-gate-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111111;
+  letter-spacing: -0.5px;
+  margin: 0 0 8px 0;
+}
+
+.auth-gate-sub {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #4B5563;
+  margin: 0 0 22px 0;
+}
+
+.auth-google-wrapper {
+  margin-bottom: 18px;
+}
+
+.btn-auth-google {
+  width: 100%;
+  height: 52px;
+  background: #FFFFFF;
+  border: 2.5px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn-auth-google:hover {
+  background: #FAFAFA;
+}
+
+.btn-auth-google:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.auth-gate-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.auth-gate-divider .divider-line {
+  flex: 1;
+  height: 2px;
+  background: #000000;
+}
+
+.auth-gate-divider .divider-text {
+  font-size: 11px;
+  font-weight: 800;
+  color: #111111;
+  letter-spacing: 0.8px;
+}
+
+.auth-tab-switch {
+  display: flex;
+  background: #F3F4F6;
+  border: 2.5px solid #000000;
+  border-radius: 14px;
+  padding: 3px;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.auth-tab-btn {
+  flex: 1;
+  height: 38px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #6B7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.auth-tab-btn.active {
+  background: #FFD027;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.auth-input-group {
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+.auth-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: #111111;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.auth-gate-input {
+  width: 100%;
+  height: 48px;
+  border: 2.5px solid #000000;
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 3px 3px 0px #000000;
+  outline: none;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-gate-input:focus {
+  border-color: #22C55E;
+  box-shadow: 3px 3px 0px #22C55E;
+}
+
+.auth-gate-alert {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  border: 2px solid #000000;
+}
+
+.auth-gate-alert.error {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.auth-gate-alert.success {
+  background: #DCFCE7;
+  color: #166534;
+}
+
+.btn-auth-submit {
+  width: 100%;
+  height: 52px;
+  background: #22C55E;
+  border: 2.5px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #000000;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.btn-auth-submit:hover {
+  background: #16A34A;
+  color: #FFFFFF;
+}
+
+.btn-auth-submit:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.auth-gate-footer {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px dashed #E5E7EB;
+}
+
+.btn-auth-guest {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4B5563;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 6px 12px;
+  transition: color 0.15s ease;
+}
+
+.btn-auth-guest:hover {
+  color: #111111;
+}
+
+/* Profile Hero Actions & Sign Out Button */
+.profile-hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.btn-sign-out {
+  background: #FEE2E2;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #991B1B;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-sign-out:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0px #000000;
 }

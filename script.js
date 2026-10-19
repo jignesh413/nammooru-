@@ -193,6 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const heroAmbientVisual = document.getElementById('hero-ambient-visual');
   const captureCard = document.getElementById('photo-capture-card');
+  const resultPanel = document.getElementById('result-panel') || document.getElementById('recognition-result-card');
+  const resultSheetScrim = document.getElementById('result-sheet-scrim');
+  const resultErrorMsg = document.getElementById('result-error-message') || document.getElementById('feedback-text');
 
   // Configuration Constants
   const MAX_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 Megabytes
@@ -411,9 +414,11 @@ document.addEventListener('DOMContentLoaded', () => {
    * Safe camera launcher:
    * - Audits isSecureContext to guide mobile users accessing via tunnels/HTTPS.
    * - Checks camera permission state (prompt, granted, denied).
-   * - Triggers native environment camera capture, falling back gracefully to gallery picker.
+  /**
+   * Starts camera access using navigator.mediaDevices.getUserMedia with fallback to native capture.
+   * Includes comprehensive .catch() error fallback displaying a user-friendly error if camera permission is denied.
    */
-  async function triggerCameraCapture() {
+  async function startCamera() {
     lastTriggerSource = 'camera';
     showFeedback('');
 
@@ -425,33 +430,61 @@ document.addEventListener('DOMContentLoaded', () => {
       showFeedback('Notice: Live camera capture requires an HTTPS connection on mobile phones. You can use "Upload from Gallery" or forward over HTTPS.', 'info', 5000);
     }
 
-    // Check camera permission if Permissions API is supported
-    if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       try {
-        const permission = await navigator.permissions.query({ name: 'camera' });
-        if (permission.state === 'denied') {
-          showFeedback('Camera access is blocked in your browser settings. You can enable it or use "Upload from Gallery".', 'info', 5000);
-          return;
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+          .catch((err) => {
+            console.warn('[Camera Permission / Hardware]: getUserMedia rejected:', err);
+            let friendlyError = 'Camera access was denied or is unavailable. Please check your camera permissions or choose a photo from Gallery.';
+            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+              friendlyError = 'Camera permission denied. Please allow camera access in browser settings or choose a photo from Gallery.';
+            } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+              friendlyError = 'No camera found on this device. Please upload an image using GALLERY.';
+            } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+              friendlyError = 'Camera hardware is busy in another app. Please close other camera apps and try again.';
+            }
+            showFeedback(friendlyError, 'error', 6000);
+            return null;
+          });
+
+        if (stream) {
+          // Release stream tracks after permission confirmation so native camera input is free
+          if (typeof stream.getTracks === 'function') {
+            stream.getTracks().forEach(track => track.stop());
+          }
+          if (cameraInput) {
+            cameraInput.click();
+          } else if (galleryInput) {
+            galleryInput.click();
+          }
+          return stream;
         }
       } catch (err) {
-        // Query for camera permission may not be implemented on some browsers (e.g. Safari); ignore safely
+        showFeedback('Could not open camera. Please use GALLERY to select a photo.', 'error', 4000);
+      }
+    } else {
+      // Fallback for browsers without navigator.mediaDevices
+      try {
+        if (cameraInput) {
+          cameraInput.click();
+        } else if (galleryInput) {
+          galleryInput.click();
+        }
+      } catch (err) {
+        showFeedback('Camera input error. Please use GALLERY to select a photo.', 'error', 4000);
       }
     }
+    return null;
+  }
 
-    try {
-      if (cameraInput) {
-        cameraInput.click();
-      } else if (galleryInput) {
-        galleryInput.click();
-      }
-    } catch (err) {
-      console.warn('[Camera] Failed to trigger camera input, falling back to gallery', err);
-      if (galleryInput) galleryInput.click();
-    }
+  window.startCamera = startCamera;
+
+  async function triggerCameraCapture() {
+    return startCamera();
   }
 
   // 1. "Take a Photo" Button (Shutter)
-  if (btnTakePhoto && cameraInput) {
+  if (btnTakePhoto) {
     btnTakePhoto.addEventListener('click', () => {
       if (activeFile && typeof identifyObject === 'function') {
         identifyObject();
@@ -459,7 +492,9 @@ document.addEventListener('DOMContentLoaded', () => {
         triggerCameraCapture();
       }
     });
+  }
 
+  if (cameraInput) {
     cameraInput.addEventListener('change', (event) => {
       const file = event.target.files && event.target.files[0];
       handleFileSelection(file);
@@ -474,13 +509,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 2. "Upload from Gallery" Button
-  if (btnUploadGallery && galleryInput) {
+  if (btnUploadGallery) {
     btnUploadGallery.addEventListener('click', () => {
       lastTriggerSource = 'gallery';
       showFeedback('');
-      galleryInput.click();
+      if (galleryInput) galleryInput.click();
     });
+  }
 
+  if (galleryInput) {
     galleryInput.addEventListener('change', (event) => {
       const file = event.target.files && event.target.files[0];
       handleFileSelection(file);
@@ -566,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- DOM References ---
   const btnIdentify        = document.getElementById('btn-identify') || document.getElementById('btn-identify-object');
-  const resultPanel        = document.getElementById('result-panel') || document.getElementById('recognition-result-card');
+  // resultPanel and resultErrorMsg declared at top of module
   const resultLoading      = document.getElementById('result-loading') || document.getElementById('scanning-laser');
   const resultSuccess      = document.getElementById('result-success') || document.getElementById('recognition-result-card');
   const resultError        = document.getElementById('result-error') || document.getElementById('photo-feedback');
@@ -575,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultKannada      = document.getElementById('result-kannada');
   const resultPronun       = document.getElementById('result-pronunciation') || document.getElementById('result-translit');
   const resultDesc         = document.getElementById('result-description');
-  const resultErrorMsg     = document.getElementById('result-error-message') || document.getElementById('feedback-text');
   const btnLearnWord            = document.getElementById('btn-learn-word');
   const btnSaveHistory          = document.getElementById('btn-save-history');
   const btnListenResult         = document.getElementById('btn-listen-result');
@@ -768,7 +804,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnSheetClose) {
     btnSheetClose.addEventListener('click', hideResultPanel);
   }
-  const resultSheetScrim = document.getElementById('result-sheet-scrim');
   if (resultSheetScrim) {
     resultSheetScrim.addEventListener('click', hideResultPanel);
   }
@@ -1423,12 +1458,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const voices = window.speechSynthesis.getVoices();
-      kannadaSpeechVoice = voices.find(v => {
+      const voices = window.speechSynthesis.getVoices() || [];
+      const knVoices = voices.filter(v => {
         const lang = (v.lang || '').toLowerCase();
         const name = (v.name || '').toLowerCase();
         return lang === 'kn-in' || lang.startsWith('kn') || name.includes('kannada') || name.includes('ಕನ್ನಡ');
-      }) || null;
+      });
+
+      // Prioritize female voice (e.g. Sapna)
+      kannadaSpeechVoice = knVoices.find(v => {
+        const name = (v.name || '').toLowerCase();
+        return name.includes('sapna') || name.includes('ಸಪ್ನಾ') || name.includes('female') ||
+               (!name.includes('gagan') && !name.includes('ಗಗನ್') && !name.includes('male'));
+      }) || knVoices[0] || null;
 
       if (kannadaSpeechVoice) {
         updateAudioEngineBadge(true, `Native Voice Ready (${kannadaSpeechVoice.name})`);
@@ -1534,43 +1576,65 @@ document.addEventListener('DOMContentLoaded', () => {
       if (audioPillLabel) audioPillLabel.textContent = `Speaking: ${text}`;
     }
 
-    // Path A: Native browser speech synthesis with a Kannada voice
-    if (isSpeechSynthesisSupported && kannadaSpeechVoice) {
-      try {
-        const u = new SpeechSynthesisUtterance(text);
-        u.voice = kannadaSpeechVoice;
-        u.lang = 'kn-IN';
-        u.rate = 0.9; // deliberate pace for learners
-        u.pitch = 1.0;
+    const cleanText = (text || '').replace(/\(.*?\)/g, '').split('/')[0].trim();
 
-        u.onend = () => {
+    // Primary: Authentic Native Local Kannada Female Audio Stream
+    playViaServerTts(cleanText, btn, () => {
+      // Fallback: Browser Native Kannada Voice
+      if (isSpeechSynthesisSupported) {
+        try {
+          const voices = window.speechSynthesis.getVoices() || [];
+          const knVoices = voices.filter(v => {
+            const lang = (v.lang || '').toLowerCase();
+            const name = (v.name || '').toLowerCase();
+            return lang === 'kn-in' || lang.startsWith('kn') || name.includes('kannada') || name.includes('ಕನ್ನಡ');
+          });
+
+          const knVoice = kannadaSpeechVoice || knVoices.find(v => {
+            const name = (v.name || '').toLowerCase();
+            return name.includes('sapna') || name.includes('ಸಪ್ನಾ') || name.includes('female') ||
+                   (!name.includes('gagan') && !name.includes('ಗಗನ್') && !name.includes('male'));
+          }) || knVoices[0] || null;
+
+          const u = new SpeechSynthesisUtterance(cleanText);
+          if (knVoice) {
+            u.voice = knVoice;
+            u.lang = knVoice.lang || 'kn-IN';
+          } else {
+            u.lang = 'kn-IN';
+          }
+          u.rate = 0.75;
+          u.pitch = 1.0;
+          u.volume = 1.0;
+          u.onend = () => {
+            if (currentlyPlayingBtn === btn) stopAllAudio();
+          };
+          u.onerror = () => {
+            if (currentlyPlayingBtn === btn) stopAllAudio();
+          };
+          activeUtterance = u;
+          window.speechSynthesis.speak(u);
+        } catch {
           if (currentlyPlayingBtn === btn) stopAllAudio();
-        };
-
-        u.onerror = (e) => {
-          console.warn('[SpeechSynthesis Error, falling back to server TTS]', e);
-          playViaServerTts(text, btn);
-        };
-
-        activeUtterance = u;
-        window.speechSynthesis.speak(u);
-        return;
-      } catch (err) {
-        console.warn('[SpeechSynthesis failed, trying server TTS]', err);
+        }
+      } else {
+        if (currentlyPlayingBtn === btn) stopAllAudio();
       }
-    }
-
-    // Path B: Fallback to server audio proxy (/api/tts)
-    playViaServerTts(text, btn);
+    });
   }
 
+  window.playKannadaAudio = playKannadaAudio;
+
   /**
-   * Streams native Kannada pronunciation audio via /api/tts.
+   * Streams native local Kannada female pronunciation audio via /api/tts.
    */
-  function playViaServerTts(text, btn) {
+  function playViaServerTts(text, btn, onFail) {
     const audioUrl = `/api/tts?text=${encodeURIComponent(text)}`;
     const audio = new Audio(audioUrl);
     activeAudio = audio;
+    audio.playbackRate = 0.85; // Natural, clear, slow local pace
+
+    let hasStarted = false;
 
     audio.onended = () => {
       if (currentlyPlayingBtn === btn) stopAllAudio();
@@ -1578,14 +1642,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     audio.onerror = () => {
       console.warn('[Audio Playback Error] Could not stream audio from /api/tts');
-      showFeedback('Could not play audio pronunciation. Please ensure the server is running.', 'error', 3500);
-      stopAllAudio();
+      if (!hasStarted && typeof onFail === 'function') {
+        onFail();
+      } else {
+        stopAllAudio();
+      }
     };
 
-    audio.play().catch(err => {
-      console.warn('[Audio play failed]', err);
-      stopAllAudio();
-    });
+    audio.play()
+      .then(() => {
+        hasStarted = true;
+      })
+      .catch(err => {
+        console.warn('[Audio play failed, triggering fallback]', err);
+        if (typeof onFail === 'function') {
+          onFail();
+        } else {
+          stopAllAudio();
+        }
+      });
   }
 
   // ==========================================================================
@@ -1846,7 +1921,11 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function switchLearnMode(mode) {
     if (mode === 'garden') {
-      openGardenModal();
+      if (typeof window.openWordGardenBiome === 'function') {
+        window.openWordGardenBiome();
+      } else {
+        openGardenModal();
+      }
       return;
     }
     if (!modePanels[mode]) return;
@@ -1881,7 +1960,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnModeGarden) {
     btnModeGarden.addEventListener('click', () => {
-      openGardenModal();
+      if (typeof window.openWordGardenBiome === 'function') {
+        window.openWordGardenBiome();
+      } else {
+        openGardenModal();
+      }
     });
   }
 
@@ -2700,15 +2783,21 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      card.querySelector('.btn-listen').addEventListener('click', () => {
-        playPronunciation(item.kannada, item.translit || item.pronunciation, item.english);
-      });
+      const listenBtn = card.querySelector('.btn-listen');
+      if (listenBtn) {
+        listenBtn.addEventListener('click', () => {
+          playPronunciation(item.kannada, item.translit || item.pronunciation, item.english);
+        });
+      }
 
-      card.querySelector('.btn-remove-garden').addEventListener('click', () => {
-        GardenStore.remove(item.id);
-        renderGardenSubpage();
-        updateHubStats();
-      });
+      const removeBtn = card.querySelector('.btn-remove-garden');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          GardenStore.remove(item.id);
+          renderGardenSubpage();
+          updateHubStats();
+        });
+      }
 
       listEl.appendChild(card);
     });

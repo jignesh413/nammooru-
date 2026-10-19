@@ -20,37 +20,89 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=9.1">
+  <link rel="stylesheet" href="style.css?v=9.4">
 </head>
 <body>
+  <!-- =========================================================
+       INITIAL AUTHENTICATION GATE (Start Login Protocol)
+       Connect via Google OR Email ID & Password
+       ========================================================= -->
+  <div id="app-auth-gate" class="auth-gate-overlay" style="display: none;">
+    <div class="auth-gate-card">
+      
+      <!-- Brand & Welcome Header -->
+      <div class="auth-gate-header">
+        <div class="auth-gate-badge">NAMMOORU • ನಮ್ಮೂರು</div>
+        <h1 class="auth-gate-title">Welcome to Nammooru</h1>
+        <p class="auth-gate-sub">Discover everyday Bengaluru through Kannada. Sign in to start your journey.</p>
+      </div>
+
+      <!-- Method 1: Continue with Google -->
+      <div class="auth-google-wrapper">
+        <button type="button" class="btn-auth-google" id="btn-google-login">
+          <svg class="google-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+      </div>
+
+      <!-- Divider -->
+      <div class="auth-gate-divider">
+        <span class="divider-line"></span>
+        <span class="divider-text">OR WITH EMAIL</span>
+        <span class="divider-line"></span>
+      </div>
+
+      <!-- Method 2: Email ID & Password Form -->
+      <form class="auth-email-form" id="form-gate-auth" novalidate>
+        <!-- Toggle Tabs: Sign In / Create Account -->
+        <div class="auth-tab-switch" role="tablist">
+          <button type="button" class="auth-tab-btn active" id="tab-auth-signin" role="tab" aria-selected="true">Sign In</button>
+          <button type="button" class="auth-tab-btn" id="tab-auth-signup" role="tab" aria-selected="false">Create Account</button>
+        </div>
+
+        <div class="auth-input-group">
+          <label for="gate-email" class="auth-field-label">Email ID</label>
+          <input type="email" id="gate-email" class="auth-gate-input" placeholder="name@example.com" required autocomplete="email">
+        </div>
+
+        <div class="auth-input-group">
+          <label for="gate-password" class="auth-field-label">Password</label>
+          <input type="password" id="gate-password" class="auth-gate-input" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+
+        <!-- Feedback Alert Banner -->
+        <div class="auth-gate-alert" id="auth-gate-alert" style="display: none;" role="alert"></div>
+
+        <button type="submit" class="btn-auth-submit" id="btn-gate-submit">
+          <span id="btn-gate-submit-text">Sign In →</span>
+        </button>
+      </form>
+
+      <!-- Option 3: Guest exploration bypass -->
+      <div class="auth-gate-footer">
+        <button type="button" class="btn-auth-guest" id="btn-gate-guest">
+          <span>Continue as Guest (Explore First) →</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Main Application Viewport -->
   <div class="app-viewport">
     
-    <!-- Top Header Bar: Clean Editorial Wordmark & City Indicator -->
+    <!-- Top Header Bar: Clean Editorial Wordmark Only -->
     <header class="app-header" role="banner">
       <div class="header-inner">
-        <!-- Pure Brand Wordmark: Exactly 'Nammooru', No logo/icon, No translations -->
+        <!-- Pure Brand Wordmark: Exactly 'Nammooru', No extra elements -->
         <div class="brand" aria-label="Nammooru">
           <span class="brand-name">Nammooru</span>
           <span class="brand-dot" aria-hidden="true"></span>
-        </div>
-        
-        <div class="header-right-group">
-          <!-- 2FA Auth Pill Button -->
-          <button type="button" class="btn-auth-pill" id="btn-auth-trigger" aria-haspopup="dialog" aria-expanded="false" aria-label="Open Two-Factor Authentication modal">
-            <svg class="auth-pill-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-            <span class="auth-pill-text" id="auth-pill-label">2FA Login</span>
-            <span class="auth-pill-dot" id="auth-pill-dot" hidden aria-hidden="true"></span>
-          </button>
-
-          <!-- City Indicator -->
-          <div class="header-badge" aria-label="Location: Bengaluru">
-            <span class="badge-accent-dot" aria-hidden="true"></span>
-            <span>Bengaluru</span>
-          </div>
         </div>
       </div>
     </header>
@@ -284,45 +336,42 @@
         hidden
         tabindex="0">
 
-        <!-- Learn Editorial Hero Header -->
-        <div class="learn-header">
-          <div class="editorial-kicker">
-            <span class="kicker-kn" lang="kn">ಕಲಿ</span>
-            <span class="kicker-bullet" aria-hidden="true">•</span>
-            <span class="kicker-en">Everyday Curriculum</span>
-          </div>
+        <!-- Sub-view A: Standard Learn Deck -->
+        <div id="learn-deck-view">
 
-          <h1 class="learn-headline">
-            Everyday Kannada<br>
-            <em>for Bengaluru life.</em>
-          </h1>
-
-          <p class="learn-subtext">
-            Explore authentic script, practical daily vocabulary, and real-life phrases with native audio pronunciation.
-          </p>
-
-          <!-- Audio Engine Status Indicator -->
-          <div class="audio-engine-badge" id="audio-engine-badge" aria-live="polite">
-            <span class="audio-status-dot" aria-hidden="true"></span>
-            <span id="audio-status-text">Kannada Audio Ready</span>
-          </div>
-        </div>
-
-        <!-- Word Garden Invitation Card in LEARN -->
-        <div class="garden-hero-card" id="garden-learn-card">
-          <div class="garden-hero-content">
-            <div class="garden-hero-header-row">
-              <span class="garden-leaf-icon" aria-hidden="true">🌿</span>
-              <span class="garden-kicker">Personal Collection</span>
+          <!-- Learn Editorial Hero Header -->
+          <div class="learn-header">
+            <div class="editorial-kicker">
+              <span class="kicker-kn" lang="kn">ಕಲಿ</span>
+              <span class="kicker-bullet" aria-hidden="true">•</span>
+              <span class="kicker-en">Everyday Curriculum</span>
             </div>
-            <h2 class="garden-hero-title">My Word Garden</h2>
-            <p class="garden-hero-desc">Your collection of words, growing one conversation at a time.</p>
+
+            <h1 class="learn-headline">
+              Everyday Kannada<br>
+              <em>for Bengaluru life.</em>
+            </h1>
+
+            <p class="learn-subtext">
+              Explore authentic script, practical daily vocabulary, and real-life phrases with native audio pronunciation.
+            </p>
+
+            <!-- Audio Engine Status Indicator -->
+            <div class="audio-engine-badge" id="audio-engine-badge" aria-live="polite">
+              <span class="audio-status-dot" aria-hidden="true"></span>
+              <span id="audio-status-text">Kannada Audio Ready</span>
+            </div>
           </div>
-          <button type="button" class="btn btn-garden-open" id="btn-open-garden-from-learn" aria-label="Open your Word Garden">
-            <span>View Garden</span>
-            <span class="garden-count-pill" id="learn-garden-count" hidden>0</span>
-          </button>
-        </div>
+
+          <!-- Launch Card: Word Garden Biome (Neo-Brutalist) -->
+          <div class="garden-entry-card" id="btn-open-word-garden" role="button" tabindex="0" aria-label="Open Word Garden Biome">
+            <div class="garden-entry-icon" aria-hidden="true">🌱</div>
+            <div class="garden-entry-meta">
+              <h3>Word Garden Biome</h3>
+              <p>Watch words captured from your photos bloom into 8-bit flowers.</p>
+            </div>
+            <span class="garden-entry-arrow" aria-hidden="true">➔</span>
+          </div>
 
         <!-- Mode Selector (Segmented Control: Script, Words, Phrases, My Word Garden) -->
         <nav class="learn-mode-nav" aria-label="Learning modes" role="tablist">
@@ -448,7 +497,44 @@
           <button type="button" class="btn btn-secondary" id="btn-empty-clear">Clear Search</button>
         </div>
 
-      </section>
+      </div> <!-- /#learn-deck-view -->
+
+      <!-- Sub-view B: Isolated Minecraft Pixel Garden -->
+      <div id="word-garden-container" class="minecraft-garden-view" style="display: none;">
+        <div class="mc-nav-row">
+          <button id="btn-back-to-deck" class="mc-btn-back" type="button">⬅ Back to Vocabulary</button>
+          <div id="mc-xp-badge" class="mc-badge-xp">LVL 0 • 0 BLOOMED</div>
+        </div>
+
+        <div class="mc-sky-banner">
+          <div class="mc-clouds-layer">
+            <span class="mc-cloud c1"></span>
+            <span class="mc-cloud c2"></span>
+          </div>
+          <div class="mc-banner-title">[ WORD GARDEN: BIOME 01 ]</div>
+          <div class="mc-banner-sub" id="mc-garden-status">Tilled Soil Ready</div>
+        </div>
+
+        <div class="mc-meadow-stage" id="mc-meadow-stage">
+          <!-- Ambient Grass Tufts & Meadow Decor -->
+          <div class="mc-meadow-ambience" aria-hidden="true">
+            <span class="mc-ambient-tuft t1"></span>
+            <span class="mc-ambient-tuft t2"></span>
+            <span class="mc-ambient-tuft t3"></span>
+            <span class="mc-ambient-tuft t4"></span>
+            <span class="mc-ambient-tuft t5"></span>
+            <span class="mc-ambient-pebble p1"></span>
+            <span class="mc-ambient-pebble p2"></span>
+          </div>
+
+          <!-- Dynamic Meadow Field where wildflowers bloom organically -->
+          <div id="mc-flower-grid" class="mc-meadow-field">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+    </section>
 
 
       <!-- =========================================================
@@ -832,9 +918,14 @@
               </div>
               <p class="profile-bio-text" id="profile-bio-text">Learning Kannada one conversation at a time.</p>
             </div>
-            <button type="button" class="btn-edit-profile" id="btn-edit-profile" aria-label="Edit Profile">
-              <span>Edit</span>
-            </button>
+            <div class="profile-hero-actions">
+              <button type="button" class="btn-edit-profile" id="btn-edit-profile" aria-label="Edit Profile">
+                <span>Edit</span>
+              </button>
+              <button type="button" class="btn-sign-out" id="btn-app-logout" aria-label="Sign out of account">
+                <span>Sign Out</span>
+              </button>
+            </div>
           </div>
 
           <!-- User Achievements Stats Strip -->
@@ -1009,11 +1100,36 @@
     </div>
   </div>
 
+  <!-- Word Garden Flower Inspection Modal Overlay -->
+  <div id="mc-inspect-backdrop" class="mc-modal-backdrop" style="display: none;">
+    <div id="mc-inspect-modal" class="mc-gui-dialog" role="dialog" aria-modal="true" aria-labelledby="mc-inspect-title">
+      <div class="mc-gui-header">
+        <span id="mc-inspect-title" class="mc-gui-title">FLOWER INSPECTION</span>
+        <button id="btn-close-inspect" class="mc-gui-close" type="button" aria-label="Close Flower Inspection">✕</button>
+      </div>
+      <div class="mc-gui-body">
+        <div class="mc-item-slot">
+          <span id="mc-inspect-icon" class="mc-slot-glyph">🌱</span>
+        </div>
+        <div class="mc-item-details">
+          <div id="mc-inspect-kannada" class="mc-kannada-text">--</div>
+          <div id="mc-inspect-roman" class="mc-roman-text">--</div>
+          <div id="mc-inspect-meaning" class="mc-meaning-text">--</div>
+        </div>
+      </div>
+      <div class="mc-gui-actions">
+        <button id="btn-mc-pronounce" class="mc-btn-action mc-btn-audio" type="button" aria-label="Listen to Kannada pronunciation">
+          <span>🔊 LISTEN PRONUNCIATION</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- =========================================================
        MODAL 2: RETRO MINECRAFT-INSPIRED WORD GARDEN MODAL
        ========================================================= -->
   <div class="modal-overlay" id="garden-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="garden-modal-title">
-    <div class="modal-window mc-garden-window" id="word-garden-container">
+    <div class="modal-window mc-garden-window" id="legacy-garden-window">
       
       <!-- Top Minecraft HUD Bar -->
       <div class="mc-hud-header">
@@ -1493,8 +1609,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="learn-data.js?v=9.1"></script>
-  <script src="script.js?v=9.1"></script>
-  <script src="app.js?v=9.1"></script>
+  <script src="learn-data.js?v=9.4"></script>
+  <script src="script.js?v=9.4"></script>
+  <script src="app.js?v=9.4"></script>
 </body>
 </html>
