@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=9.8">
+  <link rel="stylesheet" href="style.css?v=10.0">
 </head>
 <body>
   <!-- =========================================================
@@ -119,84 +119,122 @@
            ========================================================= -->
       <section 
         id="section-photo" 
-        class="view-section active photo-section-canvas" 
+        class="view-section active photo-section-canvas pokemon-ar-stage" 
         role="tabpanel" 
         aria-labelledby="tab-photo"
         tabindex="0">
 
-        <!-- Photo Canvas Minimal Editorial Header -->
-        <div class="photo-editorial-header">
-          <h1 class="photo-main-headline">Point. Identify. Discover.</h1>
-          <p class="editorial-tagline"><em>A quiet lens for discovering the sounds of Bengaluru.</em></p>
-        </div>
+        <!-- Hidden Native File Inputs & Canvas for Processing -->
+        <input 
+          type="file" 
+          id="camera-input" 
+          accept="image/*" 
+          capture="environment" 
+          class="visually-hidden" 
+          aria-label="Take a photo with camera">
 
-        <!-- Distinct Optical Viewfinder Studio Card -->
-        <div class="photo-optical-studio" id="photo-capture-card">
-          
-          <!-- Word Pet Companion Hero Card (Option B - Neo-Brutalist) -->
-          <div class="word-pet-hero-card" id="word-pet-hero-card">
-            
-            <!-- Top Badge: White rounded pill displaying current mascot stage -->
-            <div class="pet-header-row">
-              <div class="pet-stage-badge" id="pet-stage-badge">MASCOT • STAGE 1</div>
-              <div class="pet-status-dot-wrap" aria-hidden="true">
-                <span class="pet-live-dot"></span>
-                <span class="pet-live-label">COMPANION</span>
+        <input 
+          type="file" 
+          id="gallery-input" 
+          accept="image/*" 
+          class="visually-hidden" 
+          aria-label="Upload an image from gallery">
+
+        <canvas id="camera-canvas" class="visually-hidden" aria-hidden="true"></canvas>
+
+        <!-- Hidden compatibility hooks for existing script bindings -->
+        <button type="button" id="btn-upload-gallery" class="visually-hidden" aria-hidden="true"></button>
+        <button type="button" id="btn-history-log" class="visually-hidden" aria-hidden="true"></button>
+        <button type="button" id="btn-history-open" class="visually-hidden" aria-hidden="true"></button>
+        <button type="button" id="btn-take-photo" class="visually-hidden" aria-hidden="true"></button>
+        <button type="button" id="btn-gallery" class="visually-hidden" aria-hidden="true"></button>
+        <button type="button" id="btn-history" class="visually-hidden" aria-hidden="true"></button>
+
+        <!-- LAYER 1: Full-Bleed Viewfinder Background -->
+        <div class="ar-viewport-wrapper">
+          <video id="camera-stream" class="ar-camera-stream" autoplay playsinline muted></video>
+          <div class="ar-vignette-overlay" aria-hidden="true"></div>
+          <div class="ar-radar-grid" aria-hidden="true"></div>
+
+          <!-- Feedback & Validation Alert (Floats neatly inside AR stage) -->
+          <div class="feedback-banner ar-feedback-banner" id="photo-feedback" role="alert" aria-live="polite" hidden>
+            <span class="feedback-icon" id="feedback-icon" aria-hidden="true">ℹ️</span>
+            <span class="feedback-text" id="feedback-text"></span>
+          </div>
+
+          <!-- LAYER 2: Top AR Trainer HUD (z-index: 10) -->
+          <div class="ar-trainer-hud" id="ar-trainer-hud">
+            <!-- Left Trainer Pill: Avatar emoji 🧢, Title TRAINER ANNA, Dynamic Level -->
+            <div class="ar-hud-pill ar-trainer-pill" id="ar-trainer-pill" role="button" aria-label="Trainer Status" tabindex="0">
+              <span class="ar-trainer-avatar" aria-hidden="true">🧢</span>
+              <div class="ar-trainer-meta">
+                <span class="ar-trainer-name">TRAINER ANNA</span>
+                <span class="ar-trainer-level" id="ar-trainer-level">LVL 1 • 50 XP</span>
               </div>
             </div>
 
-            <!-- Inner Elements: Avatar Squircle + Persona Titles & Quote -->
-            <div class="pet-main-row">
-              <!-- Avatar Box: White squircle (90px × 90px, border: 2.5px solid #000; border-radius: 18px;) -->
-              <div class="pet-avatar-box" id="pet-avatar-box" role="button" aria-label="Word Pet Mascot Avatar. Click to wiggle." tabindex="0">
-                <div class="pet-avatar-visual" id="pet-mascot-visual">
-                  <!-- Dynamic Mascot SVG will be populated here -->
-                </div>
-              </div>
-
-              <!-- Persona Titles -->
-              <div class="pet-persona-info">
-                <div class="pet-titles">
-                  <!-- English Title (font-weight: 800; font-size: 20px; color: #111;) -->
-                  <h2 class="pet-title-en" id="pet-name-en">CHOTU-BOT</h2>
-                  <!-- Kannada Script (font-family: 'Noto Sans Kannada'; font-size: 15px; font-weight: 700; color: #111; line-height: 1.5;) -->
-                  <div class="pet-title-kn" id="pet-name-kn">ಚೋಟು ಬೋಟ್</div>
-                </div>
-                <!-- Encouragement speech quote (font-size: 13px; color: #262626; font-style: italic;) -->
-                <div class="pet-quote-bubble">
-                  <p class="pet-quote-text" id="pet-quote-text">Namaskara! Snap your first word.</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Bottom Stats Bar: White rounded card (border: 2px solid #000; border-radius: 12px; padding: 8px 14px; font-weight: 700; font-size: 12px; display: flex; justify-content: space-between;) -->
-            <div class="pet-stats-bar" id="pet-stats-bar">
-              <span class="pet-stat-bloomed" id="pet-stat-bloomed">🌱 0 Bloomed</span>
-              <span class="pet-stat-tries" id="pet-stat-tries">⚡ 0 Tries Logged</span>
+            <!-- Right Mode Pill: Glowing badge "AR+ LIVE" -->
+            <div class="ar-hud-pill ar-mode-pill" id="ar-mode-pill">
+              <span class="ar-live-pulsar" aria-hidden="true"></span>
+              <span class="ar-live-text">AR+ LIVE</span>
             </div>
           </div>
 
-          <!-- Hidden Native File Inputs -->
-          <input 
-            type="file" 
-            id="camera-input" 
-            accept="image/*" 
-            capture="environment" 
-            class="visually-hidden" 
-            aria-label="Take a photo with camera">
+          <!-- LAYER 4: Floating AR "Wild Encounter" Card (z-index: 15) -->
+          <div class="ar-wild-encounter-card" id="ar-wild-encounter-card">
+            <div class="ar-encounter-header">
+              <span class="ar-encounter-cp-badge" id="ar-encounter-cp">⚡ CP 450 • WILD ENCOUNTER</span>
+              <span class="ar-encounter-rarity">COMMON</span>
+            </div>
+            <div class="ar-encounter-main-row">
+              <div class="ar-encounter-info">
+                <div class="ar-encounter-kannada" id="ar-encounter-kannada">ಕಾಫಿ</div>
+                <div class="ar-encounter-sub" id="ar-encounter-sub">ಕಾಫಿ • Kaapi | Daily Food</div>
+              </div>
+              <button type="button" class="btn-ar-audio" id="btn-ar-pronounce" aria-label="Listen to pronunciation of wild encounter">
+                <span aria-hidden="true">🔊</span>
+              </button>
+            </div>
+          </div>
 
-          <input 
-            type="file" 
-            id="gallery-input" 
-            accept="image/*" 
-            class="visually-hidden" 
-            aria-label="Upload an image from gallery">
+          <!-- LAYER 3: Center Target Reticle & Dynamic Catch Rings (z-index: 10) -->
+          <div class="ar-reticle-container" id="ar-reticle-container" aria-hidden="true">
+            <div class="ar-outer-dashed-ring"></div>
+            <div class="ar-inner-catch-ring"></div>
+            <div class="ar-center-crosshair"></div>
+          </div>
 
-          <!-- Dedicated Photo Preview & Identification Container -->
-          <div class="photo-preview-container" id="photo-preview-container" hidden>
+          <!-- LAYER 5: Bottom Capture Action Row (z-index: 15) -->
+          <div class="ar-capture-dock" id="capture-actions">
+            <!-- Left Button: Backpack / Collection Bag linking to History & Word Garden -->
+            <button type="button" class="ar-action-btn ar-btn-bag" id="btn-open-bag" aria-label="Open Item Bag & History">
+              <span class="ar-btn-icon" aria-hidden="true">🎒</span>
+              <span class="ar-btn-label">BAG</span>
+              <span class="history-count-badge ar-bag-badge" id="history-count-badge" hidden>0</span>
+            </button>
+
+            <!-- Center Shutter: Authentic PokéBall Capture Button -->
+            <button type="button" class="shutter-pokeball-btn" id="btn-capture" aria-label="Catch Everyday Object with PokéBall">
+              <span class="pokeball-top-half" aria-hidden="true"></span>
+              <span class="pokeball-bottom-half" aria-hidden="true"></span>
+              <span class="pokeball-center-band" aria-hidden="true"></span>
+              <span class="pokeball-center-button" aria-hidden="true">
+                <span class="pokeball-core-led" aria-hidden="true"></span>
+              </span>
+            </button>
+
+            <!-- Right Button: Gallery Upload for manual photo selection -->
+            <button type="button" class="ar-action-btn ar-btn-gallery" id="btn-gallery-upload" aria-label="Upload photo from Gallery">
+              <span class="ar-btn-icon" aria-hidden="true">🖼️</span>
+              <span class="ar-btn-label">ITEMS</span>
+            </button>
+          </div>
+
+          <!-- Dedicated Photo Preview & Identification Overlay (Shown after capture) -->
+          <div class="photo-preview-container ar-preview-overlay" id="photo-preview-container" hidden>
             <div class="preview-header-bar">
-              <span class="preview-status-pill">📸 PHOTO CAPTURED</span>
-              <button type="button" class="btn-preview-clear" id="btn-remove-photo" aria-label="Clear photo">✕</button>
+              <span class="preview-status-pill">⚡ OBJECT ENCOUNTERED</span>
+              <button type="button" class="btn-preview-clear" id="btn-remove-photo" aria-label="Release photo">✕</button>
             </div>
             
             <div class="preview-image-wrapper">
@@ -217,46 +255,29 @@
 
             <!-- Prominent Primary Action: Identify Object in Kannada -->
             <div class="photo-identify-actions">
-              <button type="button" class="btn-hero-identify" id="btn-identify">
+              <button type="button" class="btn-hero-identify ar-btn-catch-action" id="btn-identify">
                 <span class="btn-identify-icon" aria-hidden="true">✨</span>
                 <span class="btn-identify-label" id="btn-identify-label">IDENTIFY IN KANNADA</span>
                 <span class="btn-identify-sub">(ಕನ್ನಡದಲ್ಲಿ ಗುರುತಿಸಿ)</span>
               </button>
               <button type="button" class="btn-retake-action" id="btn-retake-photo">
-                <span>↺ Retake / Choose Another</span>
+                <span>↺ Retake / Throw Another</span>
               </button>
             </div>
           </div>
 
-          <!-- Feedback & Validation Alert -->
-          <div class="feedback-banner" id="photo-feedback" role="alert" aria-live="polite" hidden>
-            <span class="feedback-icon" id="feedback-icon" aria-hidden="true">ℹ️</span>
-            <span class="feedback-text" id="feedback-text"></span>
-          </div>
+        </div>
 
-          <!-- Hero Camera Shutter (Centered) -->
-          <div class="camera-shutter-container" id="capture-actions">
-            <button type="button" class="shutter-hero-btn" id="btn-take-photo" aria-label="Capture photo with camera">
-              <span class="shutter-inner-ring" aria-hidden="true"></span>
-            </button>
-          </div>
-
-          <!-- Secondary Action Row (Directly Below Shutter) -->
-          <div class="secondary-actions-row" id="secondary-actions-row">
-            <button type="button" class="btn-secondary-action btn-gallery-action" id="btn-gallery" aria-label="Upload image from gallery">
-              <span>🖼 GALLERY</span>
-            </button>
-            <button type="button" class="btn-secondary-action btn-history-action" id="btn-history" aria-label="Open history log">
-              <span>◷ HISTORY</span>
-              <span class="history-count-badge" id="history-count-badge" hidden>0</span>
-            </button>
-          </div>
-
-          <!-- Hidden Elements for JS Compatibility -->
-          <button type="button" id="btn-upload-gallery" class="visually-hidden" aria-hidden="true"></button>
-          <button type="button" id="btn-history-log" class="visually-hidden" aria-hidden="true"></button>
-          <button type="button" id="btn-history-open" class="visually-hidden" aria-hidden="true"></button>
-
+        <!-- Hidden Pet Companion DOM elements so background mascot stats logic in app.js never breaks -->
+        <div id="word-pet-hero-card" class="visually-hidden" aria-hidden="true">
+          <div id="pet-stage-badge"></div>
+          <div id="pet-avatar-box"></div>
+          <div id="pet-mascot-visual"></div>
+          <div id="pet-name-en"></div>
+          <div id="pet-name-kn"></div>
+          <div id="pet-quote-text"></div>
+          <div id="pet-stat-bloomed"></div>
+          <div id="pet-stat-tries"></div>
         </div>
 
         <!-- Frosted Glass Bottom-Sheet Drawer for Results -->
@@ -1634,8 +1655,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="learn-data.js?v=9.8"></script>
-  <script src="script.js?v=9.8"></script>
-  <script src="app.js?v=9.8"></script>
+  <script src="learn-data.js?v=10.0"></script>
+  <script src="script.js?v=10.0"></script>
+  <script src="app.js?v=10.0"></script>
 </body>
 </html>
