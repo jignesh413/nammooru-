@@ -517,19 +517,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateArTrainerHud() {
     const levelEl = document.getElementById('ar-trainer-level');
+    const headerLevelEl = document.getElementById('header-profile-level');
     const bagBadgeEl = document.getElementById('history-count-badge');
     const records = typeof loadHistory === 'function' ? loadHistory() : [];
     const count = Array.isArray(records) ? records.length : 0;
     const level = Math.max(1, count);
     const xp = count * 50;
+    const statsText = `LVL ${level} • ${xp} XP`;
 
     if (levelEl) {
-      levelEl.textContent = `LVL ${level} • ${xp} XP`;
+      levelEl.textContent = statsText;
+    }
+    if (headerLevelEl) {
+      headerLevelEl.textContent = statsText;
     }
     if (bagBadgeEl) {
       bagBadgeEl.textContent = count;
       bagBadgeEl.hidden = (count === 0);
     }
+  }
+
+  // Header Profile Card click navigates to profile/stats
+  const headerProfileCard = document.getElementById('header-profile-card');
+  if (headerProfileCard) {
+    headerProfileCard.addEventListener('click', () => {
+      if (typeof switchSection === 'function') switchSection('transform');
+    });
   }
 
   function renderWildEncounter(index = 0) {
@@ -1021,6 +1034,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (state === 'success') {
       if (laser) laser.hidden = true;
+      document.body.classList.add('modal-scroll-locked');
+      document.documentElement.classList.add('modal-scroll-locked');
       resultPanel.hidden = false;
       // Smooth slide-up transition
       requestAnimationFrame(() => {
@@ -1037,6 +1052,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (state === 'error') {
       if (laser) laser.hidden = true;
+      document.body.classList.remove('modal-scroll-locked');
+      document.documentElement.classList.remove('modal-scroll-locked');
       const msg = errorMsg || (resultErrorMsg && resultErrorMsg.textContent) || 'Could not identify the object. Please try again.';
       showFeedback(msg, 'error', 5000);
     }
@@ -1044,6 +1061,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function hideResultPanel() {
     if (!resultPanel) return;
+    document.body.classList.remove('modal-scroll-locked');
+    document.documentElement.classList.remove('modal-scroll-locked');
     resultPanel.classList.remove('sheet-open');
     const scrim = document.getElementById('result-sheet-scrim');
     if (scrim) {
@@ -1070,6 +1089,227 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (resultSheetScrim) {
     resultSheetScrim.addEventListener('click', hideResultPanel);
+  }
+
+  /**
+   * Generates 3-5 unique, authentic, situation-specific conversation starters for any object.
+   */
+  function getIntelligentUniquePhrases(data) {
+    if (Array.isArray(data.conversation_starters) && data.conversation_starters.length >= 3) {
+      // Ensure they are not the generic repetitive template
+      const isGeneric = data.conversation_starters.some(s => 
+        s.kannada && (s.kannada.includes('ಎಲ್ಲಿ ಸಿಗುತ್ತದೆ') || s.kannada.includes('ದಯವಿಟ್ಟು ಒಂದು'))
+      );
+      if (!isGeneric) {
+        return data.conversation_starters;
+      }
+    }
+
+    const en = (data.english || '').toLowerCase();
+    const kn = data.kannada || '';
+    const pr = data.pronunciation || data.transliteration || '';
+
+    // 1. Spectacles / Glasses / Sunglasses
+    if (en.includes('spectacle') || en.includes('glass') || kn.includes('ಕನ್ನಡಕ')) {
+      return [
+        {
+          kannada: "ನನ್ನ ಕನ್ನಡಕ ಕಾಣಿಸುತ್ತಿಲ್ಲ, ಹುಡುಕಲು ಸಹಾಯ ಮಾಡಿ.",
+          pronunciation: "Nanna kannadaka kaanisuttilla, hudukalu sahaaya maadi.",
+          english: "I can't find my spectacles, please help me look."
+        },
+        {
+          kannada: "ಹೊಸ ಕನ್ನಡಕದ ಫ್ರೇಮ್ ನಿಮಗೆ ತುಂಬಾ ಚೆನ್ನಾಗಿ ಹೊಂದುತ್ತದೆ.",
+          pronunciation: "Hosa kannadakada frame nimage thumba chennaagi honduttade.",
+          english: "The new spectacle frame suits you very well."
+        },
+        {
+          kannada: "ಕನ್ನಡಕದ ಗಾಜು ಯಾವಾಗಲೂ ಸ್ವಚ್ಛವಾಗಿರಬೇಕು.",
+          pronunciation: "Kannadakada gaaju yaavaagalu swachhavaagirabeku.",
+          english: "Spectacle lenses should always be kept clean."
+        },
+        {
+          kannada: "ಕಣ್ಣಿನ ಪರೀಕ್ಷೆ ಮಾಡಿಸಿ ಹೊಸ ಪವರ್ ಚೆಕ್ ಮಾಡಿಸಬೇಕು.",
+          pronunciation: "Kannina pareekshe maadisi hosa power check maadisabeku.",
+          english: "I need to get an eye test to check my power."
+        }
+      ];
+    }
+
+    // 2. Speaker / Audio System
+    if (en.includes('speaker') || en.includes('audio') || kn.includes('ಸ್ಪೀಕರ್')) {
+      return [
+        {
+          kannada: "ಬ್ಲೂಟೂತ್ ಸ್ಪೀಕರ್ ಫೋನ್‌ಗೆ ತಕ್ಷಣ ಕನೆಕ್ಟ್ ಆಯಿತು.",
+          pronunciation: "Bluetooth speaker phone-ge thakshana connect aayitu.",
+          english: "The Bluetooth speaker connected to the phone immediately."
+        },
+        {
+          kannada: "ಹಾಡಿನ ಧ್ವನಿ ಮತ್ತು ಬಾಸ್ ತುಂಬಾ ಸ್ಪಷ್ಟವಾಗಿದೆ.",
+          pronunciation: "Haadina dhvani mattu bass thumba spashtavaagide.",
+          english: "The song's vocal and bass clarity is very good."
+        },
+        {
+          kannada: "ಸ್ಪೀಕರ್ ವಾಲ್ಯೂಮ್ ಸ್ವಲ್ಪ ಜಾಸ್ತಿ ಮಾಡಿ, ಹಾಡು ಕೇಳೋಣ.",
+          pronunciation: "Speaker volume swalpa jaasti maadi, haadu kelona.",
+          english: "Turn up the speaker volume a bit, let's listen to the song."
+        },
+        {
+          kannada: "ಈ ಸಣ್ಣ ಪೋರ್ಟಬಲ್ ಸ್ಪೀಕರ್ ಪ್ರಯಾಣಕ್ಕೆ ತುಂಬಾ ಅನುಕೂಲ.",
+          pronunciation: "Ee sanna portable speaker prayaanake thumba anukoola.",
+          english: "This compact portable speaker is great for travelling."
+        }
+      ];
+    }
+
+    // 3. Laptop / Computer / Keyboard / Monitor
+    if (en.includes('laptop') || en.includes('computer') || en.includes('keyboard') || kn.includes('ಲ್ಯಾಪ್ಟಾಪ್')) {
+      return [
+        {
+          kannada: "ಲ್ಯಾಪ್ಟಾಪ್ ಚಾರ್ಜರ್ ಕನೆಕ್ಟ್ ಮಾಡಿದ್ದೀರಾ?",
+          pronunciation: "Laptop charger connect maadiddeera?",
+          english: "Have you connected the laptop charger?"
+        },
+        {
+          kannada: "ಇವತ್ತಿನ ಎಲ್ಲಾ ಆಫೀಸ್ ಕೆಲಸ ಲ್ಯಾಪ್ಟಾಪ್‌ನಲ್ಲೇ ಮುಗಿಯಿತು.",
+          pronunciation: "Ivattina ellaa office kelasa laptop-nalle mugiyitu.",
+          english: "All of today's office work was finished on the laptop."
+        },
+        {
+          kannada: "ಬ್ಯಾಟರಿ ಲೈಫ್ ತುಂಬಾ ಹೊತ್ತು ಬರುತ್ತಿದೆ.",
+          pronunciation: "Battery life thumba hottu baruttide.",
+          english: "The battery life is lasting a really long time."
+        },
+        {
+          kannada: "ಸ್ಕ್ರೀನ್ ಬ್ರೈಟ್‌ನೆಸ್ ಕಣ್ಣಿಗೆ ಆರಾಮವಾಗಿರಲಿ.",
+          pronunciation: "Screen brightness kannige aaraamavaagirali.",
+          english: "Keep the screen brightness comfortable for the eyes."
+        }
+      ];
+    }
+
+    // 4. Mobile Phone / Smartphone
+    if (en.includes('phone') || en.includes('mobile') || kn.includes('ಫೋನ್') || kn.includes('ಮೊಬೈಲ್')) {
+      return [
+        {
+          kannada: "ನಿಮ್ಮ ಮೊಬೈಲ್ ನಂಬರ್ ಹೇಳಿ, ಮಿಸ್ಡ್ ಕಾಲ್ ಕೊಡುತ್ತೇನೆ.",
+          pronunciation: "Nimma mobile number heli, missed call koduttene.",
+          english: "Tell me your mobile number, I will give you a missed call."
+        },
+        {
+          kannada: "ಫೋನ್‌ನಲ್ಲಿ ಬ್ಯಾಟರಿ ಕಮ್ಮಿಯಾಗಿದೆ, ಚಾರ್ಜ್ ಹಾಕಬೇಕು.",
+          pronunciation: "Phone-nalli battery kammiyaagide, charge haakabeku.",
+          english: "The phone battery is low, I need to put it on charge."
+        },
+        {
+          kannada: "ಈ ಫೋನ್‌ನಲ್ಲಿ ತೆಗೆದ ಫೋಟೋ ಕ್ಲಾರಿಟಿ ಸೂಪರ್ ಆಗಿದೆ.",
+          pronunciation: "Ee phone-nalli tegeda photo clarity super aagide.",
+          english: "The clarity of the photo taken on this phone is superb."
+        }
+      ];
+    }
+
+    // 5. Coffee / Tea / Mug / Tumbler
+    if (en.includes('coffee') || en.includes('tea') || en.includes('tumbler') || kn.includes('ಕಾಫಿ') || kn.includes('ಚಹಾ')) {
+      return [
+        {
+          kannada: "ಬೆಂಗಳೂರು ಫಿಲ್ಟರ್ ಕಾಫಿಯ ಘಮವೇ ಅದ್ಭುತ.",
+          pronunciation: "Bengaluru filter kaapiya ghamave adbhuta.",
+          english: "The aroma of Bengaluru filter coffee is simply wonderful."
+        },
+        {
+          kannada: "ಒಂದು ಲೋಟ ಬಿಸಿ ಕಾಫಿ ಕುಡಿದರೆ ಎಲ್ಲಾ ಆಯಾಸ ದೂರ.",
+          pronunciation: "Ondu lota bisi kaapi kudidare ellaa aayaasa doora.",
+          english: "Drinking a cup of hot coffee drives all fatigue away."
+        },
+        {
+          kannada: "ಸಕ್ಕರೆ ಕಮ್ಮಿ, ಸ್ವಲ್ಪ ಸ್ಟ್ರಾಂಗ್ ಆಗಿ ಮಾಡಿ ಕೊಡಿ.",
+          pronunciation: "Sakkare kammi, swalpa strong aagi maadi kodi.",
+          english: "Make it with less sugar and slightly strong."
+        }
+      ];
+    }
+
+    // 6. Water Bottle / Water
+    if (en.includes('water') || en.includes('bottle') || kn.includes('ನೀರು') || kn.includes('ಬಾಟಲ್')) {
+      return [
+        {
+          kannada: "ಹೊರಗೆ ಹೋಗುವಾಗ ಕುಡಿಯುವ ನೀರಿನ ಬಾಟಲ್ ಜೊತೆಗೆ ಇರಲಿ.",
+          pronunciation: "Horage hoguvaaga kudiyuva neerina bottle jothege irali.",
+          english: "Keep a drinking water bottle with you when going out."
+        },
+        {
+          kannada: "ಈ ಬಾಟಲಿಗೆ ಶುದ್ಧ ತಣ್ಣೀರು ತುಂಬಿಸಿಕೊಡಿ.",
+          pronunciation: "Ee bottle-ge shuddha tanneeru tumbisikodi.",
+          english: "Please fill this bottle with fresh cold water."
+        },
+        {
+          kannada: "ಆರೋಗ್ಯಕ್ಕೆ ದಿನವೂ ಸಾಕಷ್ಟು ನೀರು ಕುಡಿಯಬೇಕು.",
+          pronunciation: "Aarogyakke dinavoo saakashtu neeru kudiyabeku.",
+          english: "One should drink plenty of water daily for good health."
+        }
+      ];
+    }
+
+    // 7. Book / Notebook / Pen
+    if (en.includes('book') || en.includes('pen') || kn.includes('ಪುಸ್ತಕ')) {
+      return [
+        {
+          kannada: "ಪ್ರತಿದಿನ ಹೊಸ ವಿಷಯ ಕಲಿಯಲು ಪುಸ್ತಕ ಓದಿ.",
+          pronunciation: "Pratidina hosa vishaya kaliyalu pusthaka odi.",
+          english: "Read books every day to learn new things."
+        },
+        {
+          kannada: "ಪ್ರಮುಖ ಅಂಶಗಳನ್ನು ನೋಟ್‌ಬುಕ್‌ನಲ್ಲಿ ಬರೆದಿಟ್ಟುಕೊಳ್ಳಿ.",
+          pronunciation: "Pramukha amshagalannu notebook-nalli baredittukolli.",
+          english: "Note down the key points in the notebook."
+        },
+        {
+          kannada: "ಕನ್ನಡ ಕಲಿಯಲು ಇದು ಅತ್ಯುತ್ತಮ ಪುಸ್ತಕ.",
+          pronunciation: "Kannada kaliyalu idu atyuttama pusthaka.",
+          english: "This is an excellent book for learning Kannada."
+        }
+      ];
+    }
+
+    // 8. Auto Rickshaw / Transport
+    if (en.includes('auto') || en.includes('rickshaw') || kn.includes('ಆಟೋ')) {
+      return [
+        {
+          kannada: "ಮೆಟ್ರೋ ಸ್ಟೇಷನ್‌ಗೆ ಮೀಟರ್ ಹಾಕಿ ಬನ್ನಿ ಸರ್.",
+          pronunciation: "Metro station-ge meter haaki banni sir.",
+          english: "Please put the meter to go to the metro station, sir."
+        },
+        {
+          kannada: "ಬೆಂಗಳೂರು ಟ್ರಾಫಿಕ್‌ನಲ್ಲಿ ಆಟೋ ಪ್ರಯಾಣವೇ ವೇಗ.",
+          pronunciation: "Bengaluru traffic-nalli auto prayaanave vega.",
+          english: "In Bengaluru traffic, auto travel is the fastest."
+        },
+        {
+          kannada: "ಇಲ್ಲಿ ಯು-ಟರ್ನ್ ತಗೊಂಡು ಎಡಕ್ಕೆ ಹೋಗಿ.",
+          pronunciation: "Illi U-turn tagondu edakke hogi.",
+          english: "Take a U-turn here and go to the left."
+        }
+      ];
+    }
+
+    // General object fallback
+    return [
+      {
+        kannada: `${kn || 'ಈ ವಸ್ತು'} ನಮ್ಮ ದಿನನಿತ್ಯದ ಬಳಕೆಗೆ ತುಂಬಾ ಅಗತ್ಯ.`,
+        pronunciation: `${pr || 'Ee vastu'} namma dinanityada balakege thumba agatyavaagide.`,
+        english: `${data.english || 'This item'} is essential in our daily routine.`
+      },
+      {
+        kannada: `ಇದನ್ನು ಸೂಕ್ತವಾದ ಜಾಗದಲ್ಲಿ ಜೋಪಾನವಾಗಿ ಇರಿಸಿಕೊಳ್ಳಿ.`,
+        pronunciation: `Idannu sooktavaada jaagadalli jopaanavaagi irisikolli.`,
+        english: `Keep this carefully stored in a proper place.`
+      },
+      {
+        kannada: `ಬೆಂಗಳೂರಿನ ಜೀವನಶೈಲಿಯಲ್ಲಿ ಇದರ ಉಪಯೋಗ ಹೆಚ್ಚು.`,
+        pronunciation: `Bengalurina jeevanashailiyalli idara upayogavu hecchu.`,
+        english: `Its usefulness is very high in Bengaluru's daily lifestyle.`
+      }
+    ];
   }
 
   // -------------------------------------------------------------------------
@@ -1101,28 +1341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const convList = document.getElementById('conversation-starters-list');
     if (convList) {
       convList.innerHTML = '';
-      let starters = data.conversation_starters || data.conversationStarters || [];
-      if (!Array.isArray(starters) || starters.length === 0) {
-        const knWord = data.kannada || 'ಇದು';
-        const enWord = (data.english || 'this').toLowerCase();
-        starters = [
-          {
-            kannada: `${knWord} ಎಲ್ಲಿ ಸಿಗುತ್ತದೆ?`,
-            pronunciation: `${data.pronunciation || 'Idu'} elli siguttade?`,
-            english: `Where can I get ${enWord}?`
-          },
-          {
-            kannada: `ದಯವಿಟ್ಟು ಒಂದು ${knWord} ಕೊಡಿ.`,
-            pronunciation: `Dayavittu ondu ${data.pronunciation || 'idu'} kodi.`,
-            english: `Please give me one ${enWord}.`
-          },
-          {
-            kannada: `ಈ ${knWord} ಬೆಲೆ ಎಷ್ಟು?`,
-            pronunciation: `Ee ${data.pronunciation || 'idu'} bele eshtu?`,
-            english: `How much does this ${enWord} cost?`
-          }
-        ];
-      }
+      const starters = getIntelligentUniquePhrases(data);
 
       starters.forEach((item) => {
         const card = document.createElement('div');
@@ -1992,13 +2211,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. Reset Button State
     if (currentlyPlayingBtn) {
       currentlyPlayingBtn.classList.remove('is-playing', 'is-loading');
-      currentlyPlayingBtn.innerHTML = `
-        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-        <span>Listen</span>
-      `;
+      if (currentlyPlayingBtn.dataset.iconOnly === 'true' || 
+          currentlyPlayingBtn.classList.contains('btn-round-speaker') || 
+          currentlyPlayingBtn.classList.contains('btn-ar-audio')) {
+        currentlyPlayingBtn.innerHTML = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
+      } else {
+        currentlyPlayingBtn.innerHTML = `
+          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <span>Listen</span>
+        `;
+      }
       currentlyPlayingBtn = null;
     }
 
@@ -2032,13 +2257,19 @@ document.addEventListener('DOMContentLoaded', () => {
     currentlyPlayingBtn = btn;
     if (btn) {
       btn.classList.add('is-playing');
-      btn.innerHTML = `
-        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <rect x="6" y="4" width="4" height="16"/>
-          <rect x="14" y="4" width="4" height="16"/>
-        </svg>
-        <span>Stop</span>
-      `;
+      if (btn.dataset.iconOnly === 'true' || 
+          btn.classList.contains('btn-round-speaker') || 
+          btn.classList.contains('btn-ar-audio')) {
+        btn.innerHTML = '<span class="speaker-icon" aria-hidden="true">⏹️</span>';
+      } else {
+        btn.innerHTML = `
+          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
+          </svg>
+          <span>Stop</span>
+        `;
+      }
     }
 
     if (audioPlayerPill) {

@@ -69,28 +69,45 @@ export default async function handler(req, res) {
   }
   imageBase64 = imageBase64.trim();
 
-  // Grounding prompt with few-shot Bengaluru cultural examples
+  // Grounding prompt with 3 to 5 realistic, natural, situation-specific conversation starters
   const prompt = `
 You are the visual recognition and Kannada linguistic engine for the Nammooru app in Bengaluru.
-Identify the primary object in the center reticle of this image.
+Analyze this image frame and accurately identify the primary real-world object.
 
-KNOWLEDGE BASE & FEW-SHOT TARGET EXAMPLES:
-- Cup / mug / steel tumbler -> english: "Filter Coffee", kannada: "ಕಾಫಿ", transliteration: "Kaapi", category: "Daily Food"
-- Three-wheeler auto -> english: "Auto Rickshaw", kannada: "ಆಟೋ", transliteration: "Auto", category: "Transport"
-- Tree / foliage -> english: "Tree", kannada: "ಮರ", transliteration: "Mara", category: "Nature"
-- Water bottle / glass -> english: "Water Bottle", kannada: "ನೀರು", transliteration: "Neeru", category: "Daily Object"
-- Footwear -> english: "Chappal / Shoes", kannada: "ಚಪ್ಪಲಿ", transliteration: "Chappali", category: "Daily Object"
-- Book / notebook -> english: "Book", kannada: "ಪುಸ್ತಕ", transliteration: "Pusthaka", category: "Daily Object"
-
-STRICT OUTPUT RULES:
-1. Identify the most prominent item in the frame. Even if lighting is dim or blurred, infer the closest real-world object. Never return "unknown" or decline to answer.
-2. Return ONLY a valid JSON object matching this exact schema with NO markdown fences, NO backticks, and NO conversational filler:
+RULES:
+1. Identify the most prominent real-world object in the frame (e.g. Spectacles, Laptop, Mobile Phone, Water Bottle, Filter Coffee Tumbler, Auto Rickshaw, Watch, Book, Pen, Key, Bag, Cup, Plant, Chair, Shoes). Even if lighting is dim or tilted, deduce the exact object. Never return "unknown".
+2. Generate 3 to 5 UNIQUE, REALISTIC, natural conversational phrases specifically tailored to how this exact item is used or talked about in daily life in Bengaluru.
+   - Do NOT use repetitive formulas like "Where can I get {item}?" or "Give me one {item}" for every object.
+   - For Spectacles (ಕನ್ನಡಕ): talk about finding glasses, spectacle frames, eye test, keeping glass clean.
+   - For Speaker (ಸ್ಪೀಕರ್): talk about sound volume, bluetooth connection, favourite song.
+   - For Laptop / Computer (ಲ್ಯಾಪ್ಟಾಪ್): talk about charger, battery, working on project.
+   - For Water Bottle (ನೀರಿನ ಬಾಟಲ್): talk about cold water, refill, carrying water.
+   - For Coffee / Tea (ಕಾಫಿ / ಚಹಾ): talk about hot filter coffee, less sugar, morning freshness.
+   - For Auto / Bus: talk about meter, destination, traffic, fare.
+3. Return ONLY a valid JSON object matching this schema with NO markdown fences, NO backticks:
 {
-  "english": "Concise English name",
-  "kannada": "Authentic Kannada script (Unicode)",
-  "transliteration": "Phonetic Roman pronunciation",
-  "category": "Daily Food | Transport | Nature | Daily Object | City Life",
-  "cp": 450
+  "english": "Concise English name (e.g. Spectacles, Filter Coffee, Laptop)",
+  "kannada": "Authentic Kannada script Unicode (e.g. ಕನ್ನಡಕ, ಫಿಲ್ಟರ್ ಕಾಫಿ, ಲ್ಯಾಪ್ಟಾಪ್)",
+  "transliteration": "Phonetic Roman pronunciation (e.g. Kannadaka, Filter Kaapi, Laptop)",
+  "category": "Daily Object | Daily Food | Transport | Nature | City Life",
+  "cp": 450,
+  "conversation_starters": [
+    {
+      "kannada": "First authentic natural Kannada sentence specific to this item",
+      "pronunciation": "Phonetic Roman transliteration",
+      "english": "Natural English translation"
+    },
+    {
+      "kannada": "Second natural phrase specific to this item",
+      "pronunciation": "Phonetic Roman transliteration",
+      "english": "Natural English translation"
+    },
+    {
+      "kannada": "Third natural phrase specific to this item",
+      "pronunciation": "Phonetic Roman transliteration",
+      "english": "Natural English translation"
+    }
+  ]
 }
 `;
 
@@ -114,24 +131,29 @@ STRICT OUTPUT RULES:
     }
   };
 
-  // Primary model as specified: gemini-1.5-flash with fallback to gemini-flash-latest
-  const candidateModels = ['gemini-1.5-flash', 'gemini-flash-latest'];
+  // Primary model fallback chain: gemini-1.5-flash -> gemini-flash-latest -> gemini-2.5-flash
+  const candidateModels = ['gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
   let lastError = null;
 
   for (const model of candidateModels) {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (!response.ok) {
-        console.error(`Google Gemini API [${model}] Error:`, JSON.stringify(data));
+        console.warn(`Gemini [${model}] responded with HTTP ${response.status}:`, data.error?.message);
         lastError = data.error?.message || `Upstream status ${response.status}`;
         continue;
       }
@@ -142,7 +164,6 @@ STRICT OUTPUT RULES:
         continue;
       }
 
-      // Sanitize any stray backticks or whitespace
       const cleanJson = candidateText.replace(/```json/gi, '').replace(/```/g, '').trim();
       const parsed = JSON.parse(cleanJson);
 
@@ -162,12 +183,12 @@ STRICT OUTPUT RULES:
 
       return res.status(200).json(parsed);
     } catch (err) {
-      console.error(`API Handler [${model}] Exception:`, err);
+      console.warn(`API Handler [${model}] Exception:`, err.message);
       lastError = err.message;
     }
   }
 
-  // Graceful fallback to prevent user blockage
+  // Graceful fallback with authentic context
   return res.status(200).json({
     english: "Bengaluru Discovery",
     kannada: "ನಮ್ಮೂರು ಅನ್ವೇಷಣೆ",
@@ -175,6 +196,23 @@ STRICT OUTPUT RULES:
     pronunciation: "Nammooru Anveshane",
     category: "City Life",
     cp: 450,
-    note: lastError ? `AI fallback: ${lastError}` : undefined
+    conversation_starters: [
+      {
+        kannada: "ಇದು ನಮ್ಮ ಬೆಂಗಳೂರಿನ ವಿಶೇಷ ವಸ್ತು.",
+        pronunciation: "Idu namma Bengalurina vishesha vastu.",
+        english: "This is a special everyday item in our Bengaluru."
+      },
+      {
+        kannada: "ಇದನ್ನು ಪ್ರತಿದಿನ ನಾವು ಬಳಸುತ್ತೇವೆ.",
+        pronunciation: "Idannu pratidina naavu balasutteve.",
+        english: "We use this item every single day."
+      },
+      {
+        kannada: "ನನಗೆ ಈ ವಸ್ತು ತುಂಬಾ ಇಷ್ಟವಾಯಿತು.",
+        pronunciation: "Nanage ee vastu thumba ishtavaayitu.",
+        english: "I really like this item."
+      }
+    ],
+    note: lastError ? `AI status note: ${lastError}` : undefined
   });
 }

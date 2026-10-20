@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=10.3">
+  <link rel="stylesheet" href="style.css?v=10.4">
 </head>
 <body>
   <!-- =========================================================
@@ -97,13 +97,22 @@
   <!-- Main Application Viewport -->
   <div class="app-viewport">
     
-    <!-- Top Header Bar: Clean Editorial Wordmark Only -->
+    <!-- Top Header Bar: Clean Editorial Wordmark + Profile Card Preview -->
     <header class="app-header" role="banner">
       <div class="header-inner">
-        <!-- Pure Brand Wordmark: Exactly 'Nammooru', No extra elements -->
+        <!-- Pure Brand Wordmark -->
         <div class="brand" aria-label="Nammooru">
           <span class="brand-name">Nammooru</span>
           <span class="brand-dot" aria-hidden="true"></span>
+        </div>
+
+        <!-- Right Corner: Profile Card Preview -->
+        <div class="header-profile-card" id="header-profile-card" role="button" aria-label="Trainer Profile & Stats" tabindex="0">
+          <span class="header-profile-avatar" aria-hidden="true">🧢</span>
+          <div class="header-profile-meta">
+            <span class="header-profile-name">TRAINER ANNA</span>
+            <span class="header-profile-stats" id="header-profile-level">LVL 1 • 50 XP</span>
+          </div>
         </div>
       </div>
     </header>
@@ -191,7 +200,7 @@
                 <div class="ar-encounter-kannada" id="ar-encounter-kannada">ಕಾಫಿ</div>
                 <div class="ar-encounter-sub" id="ar-encounter-sub">ಕಾಫಿ • Kaapi | Daily Food</div>
               </div>
-              <button type="button" class="btn-ar-audio" id="btn-ar-pronounce" aria-label="Listen to pronunciation of wild encounter">
+              <button type="button" class="btn-ar-audio" id="btn-ar-pronounce" data-icon-only="true" aria-label="Listen to pronunciation of wild encounter">
                 <span aria-hidden="true">🔊</span>
               </button>
             </div>
@@ -304,14 +313,18 @@
           <div class="result-content-body">
             <div class="result-main-words">
               <div class="result-kannada" id="result-kannada" lang="kn">ಕಾಫಿ</div>
-              <div class="result-translit" id="result-pronunciation">Kaafi</div>
               <div class="result-english" id="result-english">Coffee / Filter Coffee</div>
+              <div class="result-translit-row">
+                <div class="result-translit" id="result-pronunciation">Kaafi</div>
+                <button type="button" class="btn-round-speaker" id="btn-listen-result" data-icon-only="true" aria-label="Listen to Kannada pronunciation">
+                  <span class="speaker-icon" aria-hidden="true">🔊</span>
+                </button>
+              </div>
             </div>
 
-            <div class="result-description-box" id="result-description-box">
-              <p class="result-desc-text" id="result-description">
-                A steaming tumbler and dabarah of traditional South Indian filter coffee.
-              </p>
+            <!-- Hidden compatibility hook for description -->
+            <div id="result-description-box" class="visually-hidden" aria-hidden="true">
+              <p id="result-description"></p>
             </div>
 
             <!-- Everyday Bengaluru Conversation Starters -->
@@ -321,50 +334,32 @@
                 <span class="conv-badge-text">Everyday Conversation Starters (ದೈನಂದಿನ ಸಂಭಾಷಣೆ)</span>
               </div>
               <div class="conversation-starters-list" id="conversation-starters-list">
-                <!-- Dynamically populated conversation starter cards with audio buttons -->
+                <!-- Dynamically populated unique conversation starter cards with audio buttons -->
               </div>
             </div>
 
-            <!-- Primary Result Actions Bar: Audio Listen (No sliders) & Plant in Word Garden -->
-            <div class="result-actions-row">
-              <button type="button" class="btn btn-listen-result" id="btn-listen-result" aria-label="Listen to Kannada pronunciation">
-                <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                </svg>
-                <span>Listen</span>
-              </button>
-
-              <button type="button" class="btn btn-save-garden" id="btn-result-save-garden" aria-label="Plant in Word Garden">
-                <svg class="btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 4v12m-6-6h12"/>
-                </svg>
-                <span id="btn-result-save-garden-text">Plant in Word Garden</span>
-              </button>
-            </div>
-
-            <!-- Secondary Actions -->
-            <div class="result-secondary-row">
-              <button type="button" class="btn btn-save-history" id="btn-save-history" aria-label="Save to History Log Book">
-                <svg class="btn-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <!-- Action Buttons: ONLY Save in History and Plant in Garden -->
+            <div class="result-actions-dual">
+              <button type="button" class="btn btn-save-history" id="btn-save-history" aria-label="Save to History">
+                <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                   <polyline points="17 21 17 13 7 13 7 21"/>
                   <polyline points="7 3 7 8 15 8"/>
                 </svg>
-                <span>Save to History</span>
+                <span id="btn-save-history-text">Save to History</span>
               </button>
 
-              <button type="button" class="btn btn-learn-cta" id="btn-learn-word">
-                <span>Learn Related Phrases →</span>
+              <button type="button" class="btn btn-save-garden" id="btn-result-save-garden" aria-label="Plant in Word Garden">
+                <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2zm0 4v12m-6-6h12"/>
+                </svg>
+                <span id="btn-result-save-garden-text">Plant in Garden</span>
               </button>
             </div>
 
-            <div class="result-footer-row">
-              <button type="button" class="btn btn-ghost btn-sm" id="btn-scan-another" aria-label="Scan another item">
-                <span>Scan Another</span>
-              </button>
-            </div>
+            <!-- Hidden compatibility hooks -->
+            <button type="button" id="btn-learn-word" class="visually-hidden" aria-hidden="true"></button>
+            <button type="button" id="btn-scan-another" class="visually-hidden" aria-hidden="true"></button>
           </div>
         </div>
 
@@ -1655,8 +1650,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="learn-data.js?v=10.3"></script>
-  <script src="script.js?v=10.3"></script>
-  <script src="app.js?v=10.3"></script>
+  <script src="learn-data.js?v=10.4"></script>
+  <script src="script.js?v=10.4"></script>
+  <script src="app.js?v=10.4"></script>
 </body>
 </html>
