@@ -235,17 +235,38 @@ CRITICAL RULES:
 
 
 def load_api_config():
-    if not CONFIG_FILE.exists():
-        return {}
-    try:
-        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError) as e:
-        print(f"[Config] Warning: Could not read api-config.json -- {e}")
-        return {}
+    config = {}
+    if CONFIG_FILE.exists():
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                config = json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[Config] Warning: Could not read api-config.json -- {e}")
+    if not config.get("geminiApiKey"):
+        env_key = os.environ.get("GEMINI_API_KEY", "").strip()
+        if env_key:
+            config["geminiApiKey"] = env_key
+        else:
+            env_local = BASE_DIR / ".env.local"
+            if env_local.exists():
+                try:
+                    with open(env_local, "r", encoding="utf-8") as f:
+                        for line in f:
+                            if line.startswith("GEMINI_API_KEY="):
+                                config["geminiApiKey"] = line.split("=", 1)[1].strip()
+                                break
+                except OSError:
+                    pass
+    return config
 
 
-GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.5-flash"]
+GEMINI_MODELS = [
+    "gemini-3.1-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-flash-latest"
+]
 
 def call_gemini(image_base64, mime_type, api_key):
     payload = {

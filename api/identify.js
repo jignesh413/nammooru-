@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  let apiKey = process.env.GEMINI_API_KEY || process.env.geminiApiKey;
+  let apiKey = process.env.GEMINI_API_KEY || process.env.geminiApiKey || process.env.GEMINI_KEY;
 
   // Local development fallback to .env.local or api-config.json
   if (!apiKey) {
@@ -44,9 +44,13 @@ export default async function handler(req, res) {
     }
   }
 
+  if (apiKey) {
+    apiKey = apiKey.trim().replace(/^["']|["']$/g, '');
+  }
+
   if (!apiKey) {
     console.error('FATAL: GEMINI_API_KEY is not defined in environment variables.');
-    return res.status(500).json({ error: 'Server misconfiguration: GEMINI_API_KEY is missing.' });
+    return res.status(500).json({ error: 'no_api_key', message: 'Server misconfiguration: GEMINI_API_KEY environment variable is missing.' });
   }
 
   let body = req.body;
@@ -131,8 +135,14 @@ RULES:
     }
   };
 
-  // Primary model fallback chain: gemini-1.5-flash -> gemini-flash-latest -> gemini-2.5-flash
-  const candidateModels = ['gemini-1.5-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+  // Primary model fallback chain with active Google AI Studio models
+  const candidateModels = [
+    'gemini-3.1-flash-lite',
+    'gemini-flash-lite-latest',
+    'gemini-3.5-flash-lite',
+    'gemini-3.8-flash',
+    'gemini-flash-latest'
+  ];
   let lastError = null;
 
   for (const model of candidateModels) {
@@ -140,7 +150,7 @@ RULES:
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
+      const timeoutId = setTimeout(() => controller.abort(), 16000);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -164,8 +174,25 @@ RULES:
         continue;
       }
 
+      let parsed = null;
       const cleanJson = candidateText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      const parsed = JSON.parse(cleanJson);
+      try {
+        parsed = JSON.parse(cleanJson);
+      } catch (parseErr) {
+        const jsonMatch = cleanJson.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            parsed = JSON.parse(jsonMatch[0]);
+          } catch (innerErr) {
+            // failed
+          }
+        }
+      }
+
+      if (!parsed || typeof parsed !== 'object') {
+        console.warn(`[${model}] Could not parse JSON from output:`, candidateText.slice(0, 100));
+        continue;
+      }
 
       // Normalize fields
       if (!parsed.transliteration && parsed.pronunciation) {
