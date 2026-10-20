@@ -743,9 +743,21 @@ document.addEventListener('DOMContentLoaded', () => {
   updateArTrainerHud();
 
   if (cameraInput) {
-    cameraInput.addEventListener('change', (event) => {
+    cameraInput.addEventListener('change', async (event) => {
       const file = event.target.files && event.target.files[0];
-      handleFileSelection(file);
+      if (file) {
+        await handleFileSelection(file);
+        const cpBadgeEl = document.getElementById('ar-encounter-cp');
+        const knTextEl = document.getElementById('ar-encounter-kannada');
+        const subTextEl = document.getElementById('ar-encounter-sub');
+        if (cpBadgeEl) cpBadgeEl.textContent = '⚡ CATCHING... • POKÉBALL THROWN';
+        if (knTextEl) knTextEl.textContent = 'ಗುರುತಿಸಲಾಗುತ್ತಿದೆ...';
+        if (subTextEl) subTextEl.textContent = 'Analyzing cultural object in Bengaluru...';
+
+        if (typeof identifyObject === 'function') {
+          identifyObject();
+        }
+      }
     });
 
     // Listen for cancel event if supported by browser
@@ -757,9 +769,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (galleryInput) {
-    galleryInput.addEventListener('change', (event) => {
+    galleryInput.addEventListener('change', async (event) => {
       const file = event.target.files && event.target.files[0];
-      handleFileSelection(file);
+      if (file) {
+        await handleFileSelection(file);
+        const cpBadgeEl = document.getElementById('ar-encounter-cp');
+        const knTextEl = document.getElementById('ar-encounter-kannada');
+        const subTextEl = document.getElementById('ar-encounter-sub');
+        if (cpBadgeEl) cpBadgeEl.textContent = '⚡ CATCHING... • POKÉBALL THROWN';
+        if (knTextEl) knTextEl.textContent = 'ಗುರುತಿಸಲಾಗುತ್ತಿದೆ...';
+        if (subTextEl) subTextEl.textContent = 'Analyzing cultural item from gallery...';
+
+        if (typeof identifyObject === 'function') {
+          identifyObject();
+        }
+      }
     });
 
     galleryInput.addEventListener('cancel', () => {
