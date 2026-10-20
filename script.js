@@ -579,6 +579,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function captureFromArViewfinder() {
     const videoEl = document.getElementById('camera-stream');
+
+    // Visual feedback on encounter card
+    const cpBadgeEl = document.getElementById('ar-encounter-cp');
+    const knTextEl = document.getElementById('ar-encounter-kannada');
+    const subTextEl = document.getElementById('ar-encounter-sub');
+    if (cpBadgeEl) cpBadgeEl.textContent = '⚡ CATCHING... • POKÉBALL THROWN';
+    if (knTextEl) knTextEl.textContent = 'ಗುರುತಿಸಲಾಗುತ್ತಿದೆ...';
+    if (subTextEl) subTextEl.textContent = 'Analyzing cultural object in Bengaluru...';
+
     if (videoEl && videoEl.videoWidth > 0 && !videoEl.paused) {
       try {
         const canvas = document.getElementById('camera-canvas') || document.createElement('canvas');
@@ -589,7 +598,11 @@ document.addEventListener('DOMContentLoaded', () => {
         canvas.toBlob((blob) => {
           if (blob) {
             const file = new File([blob], `ar-encounter-${Date.now()}.jpg`, { type: 'image/jpeg' });
-            handleFileSelection(file);
+            handleFileSelection(file).then(() => {
+              if (typeof identifyObject === 'function') {
+                identifyObject();
+              }
+            });
           } else {
             startCamera();
           }
@@ -1266,7 +1279,23 @@ document.addEventListener('DOMContentLoaded', () => {
         data._fullDataUrl  = compressed.dataUrl;
       }
 
-      // 7. Auto-save to History Log Book (safe guard)
+      // 7. Update Floating AR Encounter Card
+      const cpVal = data.cp || 450;
+      const cpBadgeEl = document.getElementById('ar-encounter-cp');
+      const knTextEl = document.getElementById('ar-encounter-kannada');
+      const subTextEl = document.getElementById('ar-encounter-sub');
+      const btnArAudio = document.getElementById('btn-ar-pronounce');
+
+      if (cpBadgeEl) cpBadgeEl.textContent = `⚡ CP ${cpVal} • CAUGHT!`;
+      if (knTextEl) knTextEl.textContent = data.kannada;
+      if (subTextEl) subTextEl.textContent = `${data.kannada} • ${data.transliteration || data.pronunciation} | ${data.category || 'Daily Object'}`;
+
+      // Speak pronunciation automatically on catch
+      if (btnArAudio && typeof playKannadaAudio === 'function') {
+        playKannadaAudio(data.kannada, btnArAudio);
+      }
+
+      // 8. Auto-save to History Log Book
       try {
         if (typeof saveToHistory === 'function') {
           const savedRecord = saveToHistory(data);
@@ -1278,8 +1307,32 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('[History Auto-Save Guard]:', saveErr);
       }
 
+      // 9. Auto-plant into Word Garden
+      try {
+        if (typeof GardenStore !== 'undefined') {
+          const gardenItemId = 'photo_' + (data.english || 'word').toLowerCase().replace(/[^a-z0-9]/g, '_');
+          GardenStore.add({
+            id: gardenItemId,
+            kannada: data.kannada,
+            translit: data.transliteration || data.pronunciation || '',
+            english: data.english,
+            type: 'word',
+            category: (data.category || 'everyday').toLowerCase(),
+            note: data.description || 'Captured with Pokémon GO AR Lens',
+            listenText: data.kannada
+          });
+        }
+      } catch (gardenErr) {
+        console.warn('[Garden Auto-Plant Guard]:', gardenErr);
+      }
+
+      // 10. Update Trainer Level & XP in real-time
+      if (typeof updateArTrainerHud === 'function') {
+        updateArTrainerHud();
+      }
+
       displayResult(data);
-      showFeedback('Object identified in Kannada!', 'success', 3000);
+      showFeedback(`✨ Caught ${data.english} (${data.kannada})! +50 XP`, 'success', 4000);
 
     } catch (err) {
       console.error('[Identify Error]', err);
@@ -1287,7 +1340,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const fallbackResult = {
         english: "Everyday Discovery",
         kannada: "ದೈನಂದಿನ ಅನ್ವೇಷಣೆ",
+        transliteration: "Dainandina Anveshane",
         pronunciation: "Dainandina Anveshane",
+        category: "City Landmark",
+        cp: 450,
         description: "An everyday object captured in Bengaluru.",
         confidence: "medium",
         conversation_starters: [
@@ -1312,15 +1368,47 @@ document.addEventListener('DOMContentLoaded', () => {
         fallbackResult._thumbnailUrl = compressed.thumbUrl;
         fallbackResult._fullDataUrl  = compressed.dataUrl;
       }
+
+      // Update AR Encounter Card
+      const cpBadgeEl = document.getElementById('ar-encounter-cp');
+      const knTextEl = document.getElementById('ar-encounter-kannada');
+      const subTextEl = document.getElementById('ar-encounter-sub');
+      const btnArAudio = document.getElementById('btn-ar-pronounce');
+
+      if (cpBadgeEl) cpBadgeEl.textContent = `⚡ CP 450 • CAUGHT!`;
+      if (knTextEl) knTextEl.textContent = fallbackResult.kannada;
+      if (subTextEl) subTextEl.textContent = `${fallbackResult.kannada} • ${fallbackResult.transliteration} | City Landmark`;
+
+      if (btnArAudio && typeof playKannadaAudio === 'function') {
+        playKannadaAudio(fallbackResult.kannada, btnArAudio);
+      }
+
       try {
         if (typeof saveToHistory === 'function') {
           saveToHistory(fallbackResult);
         }
+        if (typeof GardenStore !== 'undefined') {
+          GardenStore.add({
+            id: 'photo_everyday_discovery',
+            kannada: fallbackResult.kannada,
+            translit: fallbackResult.transliteration,
+            english: fallbackResult.english,
+            type: 'word',
+            category: 'everyday',
+            note: 'Captured with Pokémon GO AR Lens',
+            listenText: fallbackResult.kannada
+          });
+        }
       } catch (e) {
         console.warn(e);
       }
+
+      if (typeof updateArTrainerHud === 'function') {
+        updateArTrainerHud();
+      }
+
       displayResult(fallbackResult);
-      showFeedback('Identified everyday Kannada phrase!', 'success', 3000);
+      showFeedback(`✨ Caught ${fallbackResult.english} (${fallbackResult.kannada})! +50 XP`, 'success', 3500);
     } finally {
       if (btnIdentify) {
         btnIdentify.disabled = false;
@@ -1422,7 +1510,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function loadHistory() {
     try {
-      const raw = localStorage.getItem(HISTORY_KEY);
+      let raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) raw = localStorage.getItem('nammooru_history');
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
@@ -1440,6 +1529,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function saveHistory(records) {
     try {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(records));
+      localStorage.setItem('nammooru_history', JSON.stringify(records));
     } catch (err) {
       console.warn('[History] Could not save to localStorage:', err.message);
       showFeedback('Storage is full. Delete some old history entries to free space.', 'error', 4000);

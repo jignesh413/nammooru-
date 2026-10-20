@@ -714,6 +714,15 @@ class NammooruHandler(http.server.BaseHTTPRequestHandler):
 
         try:
             result = call_gemini(image_b64, mime_type, api_key)
+            if isinstance(result, dict):
+                if "transliteration" not in result and "pronunciation" in result:
+                    result["transliteration"] = result["pronunciation"]
+                if "pronunciation" not in result and "transliteration" in result:
+                    result["pronunciation"] = result["transliteration"]
+                if "category" not in result:
+                    result["category"] = "Daily Object"
+                if "cp" not in result:
+                    result["cp"] = 450
             self.send_json(result)
         except Exception as e:
             print(f"  [Error handled gracefully]: {e}")

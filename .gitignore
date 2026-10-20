@@ -3,6 +3,9 @@
 # API keys and secrets — NEVER commit these
 api-config.json
 auth-store.json
+.env
+.env.local
+.env*.local
 
 # Python bytecode
 __pycache__/
