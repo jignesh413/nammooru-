@@ -2762,6 +2762,11 @@ html.modal-scroll-locked {
 /* =========================================================================
    Global Floating Audio Dynamic Capsule (Fixed at Top, Non-disruptive)
    ========================================================================= */
+.audio-player-pill[hidden],
+.audio-player-pill.is-hidden {
+  display: none !important;
+}
+
 .audio-player-pill {
   position: fixed !important;
   top: 14px;
@@ -2775,7 +2780,7 @@ html.modal-scroll-locked {
   border-radius: 9999px !important;
   height: 50px !important;
   padding: 0 12px 0 16px !important;
-  display: flex !important;
+  display: flex;
   align-items: center !important;
   justify-content: space-between !important;
   gap: 14px !important;

@@ -1,5 +1,14 @@
-module.exports = async function handler(req, res) {
-  const text = req.query.text || '';
+export default async function handler(req, res) {
+  // CORS Headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  const text = (req.query && req.query.text) || '';
   if (!text) {
     return res.status(400).json({ error: 'Text query parameter is required.' });
   }
@@ -23,7 +32,6 @@ module.exports = async function handler(req, res) {
 
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400');
-    res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(200).send(buffer);
   } catch (err) {
     return res.status(502).json({ error: 'TTS service unavailable', details: err.message });

@@ -2228,7 +2228,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 4. Hide Global Pill
-    if (audioPlayerPill) audioPlayerPill.hidden = true;
+    if (audioPlayerPill) {
+      audioPlayerPill.hidden = true;
+      audioPlayerPill.classList.add('is-hidden');
+      audioPlayerPill.style.display = 'none';
+    }
   }
 
   if (btnStopAudio) {
@@ -2237,7 +2241,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Speaks the provided Kannada text with visual feedback.
-   * Prioritizes browser's kn-IN voice when available; falls back to /api/tts.
+   * Prioritizes native /api/tts audio stream; falls back to browser SpeechSynthesis.
    * 
    * @param {string} text - Authentic Kannada text to speak
    * @param {HTMLElement} btn - The trigger button for visual feedback
@@ -2274,7 +2278,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (audioPlayerPill) {
       audioPlayerPill.hidden = false;
-      if (audioPillLabel) audioPillLabel.textContent = `Speaking: ${text}`;
+      audioPlayerPill.classList.remove('is-hidden');
+      audioPlayerPill.style.display = 'flex';
+      if (audioPillLabel) audioPillLabel.textContent = text;
     }
 
     const cleanText = (text || '').replace(/\(.*?\)/g, '').split('/')[0].trim();
@@ -2304,18 +2310,20 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             u.lang = 'kn-IN';
           }
-          u.rate = 0.75;
+          u.rate = 0.80;
           u.pitch = 1.0;
           u.volume = 1.0;
           u.onend = () => {
             if (currentlyPlayingBtn === btn) stopAllAudio();
           };
-          u.onerror = () => {
+          u.onerror = (speechErr) => {
+            console.warn('[SpeechSynthesis Error]:', speechErr);
             if (currentlyPlayingBtn === btn) stopAllAudio();
           };
           activeUtterance = u;
           window.speechSynthesis.speak(u);
-        } catch {
+        } catch (synthErr) {
+          console.warn('[SpeechSynthesis Exception]:', synthErr);
           if (currentlyPlayingBtn === btn) stopAllAudio();
         }
       } else {
@@ -2331,9 +2339,9 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function playViaServerTts(text, btn, onFail) {
     const audioUrl = `/api/tts?text=${encodeURIComponent(text)}`;
-    const audio = new Audio(audioUrl);
+    const audio = new Audio();
     activeAudio = audio;
-    audio.playbackRate = 0.85; // Natural, clear, slow local pace
+    audio.preload = 'auto';
 
     let hasStarted = false;
 
@@ -2341,8 +2349,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentlyPlayingBtn === btn) stopAllAudio();
     };
 
-    audio.onerror = () => {
-      console.warn('[Audio Playback Error] Could not stream audio from /api/tts');
+    audio.onerror = (err) => {
+      console.warn('[Audio Playback Error] /api/tts error:', err);
       if (!hasStarted && typeof onFail === 'function') {
         onFail();
       } else {
@@ -2350,18 +2358,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    audio.play()
-      .then(() => {
-        hasStarted = true;
-      })
-      .catch(err => {
-        console.warn('[Audio play failed, triggering fallback]', err);
-        if (typeof onFail === 'function') {
-          onFail();
-        } else {
-          stopAllAudio();
-        }
-      });
+    audio.oncanplay = () => {
+      try {
+        audio.playbackRate = 0.9;
+      } catch (rateErr) {
+        // ignore
+      }
+    };
+
+    audio.src = audioUrl;
+
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          hasStarted = true;
+        })
+        .catch(err => {
+          console.warn('[Audio play failed, triggering fallback]', err);
+          if (typeof onFail === 'function') {
+            onFail();
+          } else {
+            stopAllAudio();
+          }
+        });
+    }
   }
 
   // ==========================================================================
