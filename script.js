@@ -77,9 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isTarget = section.id === `section-${targetId}`;
       if (isTarget) {
         section.hidden = false;
-        requestAnimationFrame(() => {
-          section.classList.add('active');
-        });
+        section.classList.add('active');
       } else {
         section.classList.remove('active');
         section.hidden = true;
@@ -105,9 +103,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof renderCommunityFeed === 'function') renderCommunityFeed();
     }
 
-    // 3. Smooth scroll reset to top of content area (scrolling is isolated inside .app-content)
+    // 4. Smooth scroll reset to top of content area & sync photo-mode-active class
     const contentEl = document.querySelector('.app-content');
-    if (contentEl) contentEl.scrollTop = 0;
+    if (contentEl) {
+      contentEl.scrollTop = 0;
+      if (targetId === 'photo') {
+        contentEl.classList.add('photo-mode-active');
+      } else {
+        contentEl.classList.remove('photo-mode-active');
+      }
+    }
 
     // 4. Update URL hash without breaking browser history
     if (shouldUpdateHash) {
@@ -540,8 +545,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Header Profile Card click navigates to profile/stats
   const headerProfileCard = document.getElementById('header-profile-card');
   if (headerProfileCard) {
-    headerProfileCard.addEventListener('click', () => {
-      if (typeof switchSection === 'function') switchSection('transform');
+    const handleProfileOpen = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (typeof switchSection === 'function') {
+        switchSection('transform');
+      }
+      const card = document.getElementById('community-profile-card');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    headerProfileCard.addEventListener('click', handleProfileOpen);
+    headerProfileCard.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleProfileOpen(e);
+      }
     });
   }
 
@@ -745,8 +766,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Trainer Pill tap navigates to profile/stats
   const trainerPill = document.getElementById('ar-trainer-pill');
   if (trainerPill) {
-    trainerPill.addEventListener('click', () => {
-      if (typeof switchSection === 'function') switchSection('transform');
+    const handleTrainerPillClick = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (typeof switchSection === 'function') {
+        switchSection('transform');
+      }
+      const card = document.getElementById('community-profile-card');
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    };
+    trainerPill.addEventListener('click', handleTrainerPillClick);
+    trainerPill.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleTrainerPillClick(e);
+      }
     });
   }
 
