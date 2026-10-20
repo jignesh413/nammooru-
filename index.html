@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Kannada:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="style.css?v=10.5">
+  <link rel="stylesheet" href="style.css?v=10.6">
 </head>
 <body>
   <!-- =========================================================
@@ -116,6 +116,23 @@
         </div>
       </div>
     </header>
+
+    <!-- Global Floating Dynamic Audio Capsule (Fixed at top across entire website) -->
+    <div class="audio-player-pill" id="audio-player-pill" hidden aria-live="polite">
+      <div class="audio-pill-left">
+        <div class="audio-waves" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <div class="audio-pill-info">
+          <span class="audio-pill-status">PRONOUNCING</span>
+          <span class="audio-pill-label" id="audio-pill-label">Speaking...</span>
+        </div>
+      </div>
+      <button type="button" class="btn-stop-audio" id="btn-stop-audio" aria-label="Stop audio">
+        <span class="stop-icon" aria-hidden="true">⏹</span>
+        <span>Stop</span>
+      </button>
+    </div>
 
     <!-- Main Content Area: 3 Primary Destinations (Photo, Learn, Transform) -->
     <main class="app-content" id="main-content" role="region" aria-live="polite">
@@ -414,7 +431,7 @@
             <span class="garden-entry-arrow" aria-hidden="true">➔</span>
           </div>
 
-        <!-- Mode Selector (Segmented Control: Script, Words, Phrases, My Word Garden) -->
+        <!-- Mode Selector (Segmented Control: 3 Core Modes — Script, Words, Phrases) -->
         <nav class="learn-mode-nav" aria-label="Learning modes" role="tablist">
           <button type="button" class="learn-mode-btn active" data-mode="script" id="btn-mode-script" role="tab" aria-selected="true">
             <span class="mode-icon" aria-hidden="true">ಅ</span>
@@ -427,11 +444,6 @@
           <button type="button" class="learn-mode-btn" data-mode="phrases" id="btn-mode-phrases" role="tab" aria-selected="false">
             <span class="mode-icon" aria-hidden="true">✨</span>
             <span>Phrases</span>
-          </button>
-          <button type="button" class="learn-mode-btn btn-mode-garden" data-mode="garden" id="btn-mode-garden" role="tab" aria-selected="false" aria-label="My Word Garden">
-            <span class="mode-icon" aria-hidden="true">🌿</span>
-            <span>My Word Garden</span>
-            <span class="garden-badge-count" id="learn-garden-tab-badge" hidden>0</span>
           </button>
         </nav>
 
@@ -453,20 +465,6 @@
           </div>
         </div>
 
-        <!-- Global Floating Audio Controller (Active when speaking) -->
-        <div class="audio-player-pill" id="audio-player-pill" hidden aria-live="polite">
-          <div class="audio-waves" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </div>
-          <span class="audio-pill-label" id="audio-pill-label">Speaking...</span>
-          <button type="button" class="btn-stop-audio" id="btn-stop-audio" aria-label="Stop audio">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <rect x="5" y="5" width="14" height="14" rx="2"/>
-            </svg>
-            <span>Stop</span>
-          </button>
-        </div>
-
         <!-- =======================================================
              MODE 1: SCRIPT (ವರ್ಣಮಾಲೆ)
              ======================================================= -->
@@ -483,9 +481,6 @@
 
           <div class="script-section-header">
             <h2 class="script-section-title" id="script-section-title">Kannada Vowels (ಸ್ವರಗಳು)</h2>
-            <p class="script-section-desc" id="script-section-desc">
-              Tap any Listen button to hear authentic pronunciation. Vowels are the foundation of spoken Kannada.
-            </p>
           </div>
 
           <!-- Letters Grid (Populated dynamically from learn-data.js) -->
@@ -1650,8 +1645,8 @@
   </div>
 
   <!-- Scripts -->
-  <script src="learn-data.js?v=10.5"></script>
-  <script src="script.js?v=10.5"></script>
-  <script src="app.js?v=10.5"></script>
+  <script src="learn-data.js?v=10.6"></script>
+  <script src="script.js?v=10.6"></script>
+  <script src="app.js?v=10.6"></script>
 </body>
 </html>

@@ -2751,9 +2751,8 @@ document.addEventListener('DOMContentLoaded', () => {
         : 'Kannada Consonants • ವ್ಯಂಜನಗಳು (34)';
     }
     if (scriptSectionDesc) {
-      scriptSectionDesc.textContent = isVowels
-        ? 'Tap any Listen button to hear authentic pronunciation. Vowels are the melodious base of spoken Kannada.'
-        : 'Organized into structured sound families (Velar, Palatal, Retroflex, Dental, Labial) and independent consonants.';
+      scriptSectionDesc.textContent = '';
+      scriptSectionDesc.style.display = 'none';
     }
 
     const items = isVowels ? learnData.script.vowels : learnData.script.consonants;
@@ -2777,33 +2776,68 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'script-card';
 
+      // 1. Group / Sound Family Pill
+      if (item.group) {
+        const groupBadge = document.createElement('div');
+        groupBadge.className = 'script-group-tag';
+        groupBadge.textContent = item.group;
+        card.appendChild(groupBadge);
+      }
+
+      // 2. Clear Kannada Glyph
       const glyph = document.createElement('div');
       glyph.className = 'script-glyph';
       glyph.setAttribute('lang', 'kn');
       glyph.textContent = item.char;
+      card.appendChild(glyph);
 
+      // 3. Structured Metadata Block
       const meta = document.createElement('div');
       meta.className = 'script-meta';
+
+      const titleRow = document.createElement('div');
+      titleRow.className = 'script-title-row';
 
       const name = document.createElement('span');
       name.className = 'script-name';
       name.textContent = item.name;
 
       const sound = document.createElement('span');
-      sound.className = 'script-sound';
-      sound.textContent = item.translit;
+      sound.className = 'script-translit-chip';
+      sound.textContent = `/${item.translit}/`;
 
-      meta.appendChild(name);
-      meta.appendChild(sound);
+      titleRow.appendChild(name);
+      titleRow.appendChild(sound);
+      meta.appendChild(titleRow);
 
-      if (item.exampleKn) {
-        const eg = document.createElement('span');
-        eg.className = 'script-example';
-        eg.textContent = `${item.exampleKn} — ${item.exampleEn || ''}`;
-        meta.appendChild(eg);
+      if (item.soundLike) {
+        const clue = document.createElement('div');
+        clue.className = 'script-sound-clue';
+        clue.textContent = item.soundLike;
+        meta.appendChild(clue);
       }
 
-      // Listen Button
+      if (item.exampleKn) {
+        const egBox = document.createElement('div');
+        egBox.className = 'script-example-box';
+
+        const egKn = document.createElement('span');
+        egKn.className = 'script-eg-kn';
+        egKn.setAttribute('lang', 'kn');
+        egKn.textContent = item.exampleKn;
+
+        const egEn = document.createElement('span');
+        egEn.className = 'script-eg-en';
+        egEn.textContent = item.exampleEn ? ` • ${item.exampleEn}` : '';
+
+        egBox.appendChild(egKn);
+        egBox.appendChild(egEn);
+        meta.appendChild(egBox);
+      }
+
+      card.appendChild(meta);
+
+      // 4. Listen Button
       const listenBtn = document.createElement('button');
       listenBtn.type = 'button';
       listenBtn.className = 'btn-listen';
@@ -2819,8 +2853,6 @@ document.addEventListener('DOMContentLoaded', () => {
         playKannadaAudio(item.listenText || item.char, listenBtn);
       });
 
-      card.appendChild(glyph);
-      card.appendChild(meta);
       card.appendChild(listenBtn);
       scriptGrid.appendChild(card);
     });
