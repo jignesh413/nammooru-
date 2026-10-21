@@ -542,28 +542,39 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Header Profile Card click navigates to profile/stats
+  // Header Profile Card & Account Button click opens Account Profile Modal
   const headerProfileCard = document.getElementById('header-profile-card');
+  const btnHeaderProfile = document.getElementById('btn-header-profile');
+
+  const handleProfileOpen = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (window.NammooruAuth && typeof window.NammooruAuth.openModal === 'function') {
+      window.NammooruAuth.openModal();
+    } else {
+      const backdrop = document.getElementById('auth-modal-backdrop');
+      if (backdrop) {
+        backdrop.hidden = false;
+        backdrop.removeAttribute('hidden');
+        backdrop.classList.add('is-open');
+        backdrop.style.display = 'flex';
+      }
+    }
+  };
+
   if (headerProfileCard) {
-    const handleProfileOpen = (e) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      if (typeof switchSection === 'function') {
-        switchSection('transform');
-      }
-      const card = document.getElementById('community-profile-card');
-      if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    };
     headerProfileCard.addEventListener('click', handleProfileOpen);
     headerProfileCard.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         handleProfileOpen(e);
       }
     });
+  }
+
+  if (btnHeaderProfile) {
+    btnHeaderProfile.addEventListener('click', handleProfileOpen);
   }
 
   function renderWildEncounter(index = 0) {
@@ -5513,7 +5524,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const sessionUserId       = document.getElementById('session-user-id');
   const sessionVerifiedTime = document.getElementById('session-verified-time');
   const btnReconfigure2fa   = document.getElementById('btn-reconfigure-2fa');
-  const btnAuthLogout       = document.getElementById('btn-auth-logout');
+  const btnTotpLogout       = document.getElementById('btn-totp-logout');
 
   // Bypass Element
   const btnAuthBypass       = document.getElementById('btn-auth-bypass');
@@ -5966,8 +5977,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (btnAuthLogout) {
-    btnAuthLogout.addEventListener('click', () => {
+  if (btnTotpLogout) {
+    btnTotpLogout.addEventListener('click', () => {
       logoutAuth();
     });
   }

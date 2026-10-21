@@ -4408,6 +4408,19 @@ html.modal-scroll-locked {
   display: none !important;
 }
 
+.auth-modal-backdrop.is-open {
+  display: flex !important;
+}
+
+/* Auth Sub-Views */
+.auth-view {
+  width: 100%;
+}
+
+.auth-view[hidden] {
+  display: none !important;
+}
+
 /* Neo-Brutalist Modal Window */
 .auth-profile-modal {
   position: relative;

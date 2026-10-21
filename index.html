@@ -108,7 +108,7 @@
 
         <!-- Right Corner: Profile Card & Account Profile Button -->
         <div class="header-right-group">
-          <div class="header-profile-card" id="header-profile-card" role="button" aria-label="Trainer Profile & Stats" tabindex="0">
+          <div class="header-profile-card" id="header-profile-card" role="button" aria-label="Trainer Profile & Stats" tabindex="0" onclick="if(window.NammooruAuth){window.NammooruAuth.openModal();}">
             <span class="header-profile-avatar" aria-hidden="true">🧢</span>
             <div class="header-profile-meta">
               <span class="header-profile-name">TRAINER ANNA</span>
@@ -116,7 +116,7 @@
             </div>
           </div>
           <!-- Circular Neo-Brutalist Profile Button with Online Status Pip -->
-          <button type="button" class="btn-header-profile" id="btn-header-profile" aria-label="Account Profile & Sign In">
+          <button type="button" class="btn-header-profile" id="btn-header-profile" aria-label="Account Profile & Sign In" onclick="if(window.NammooruAuth){window.NammooruAuth.openModal();}">
             <span class="header-user-avatar" id="header-user-avatar">👤</span>
             <span class="header-user-status" id="header-user-status" aria-hidden="true"></span>
           </button>
@@ -1462,12 +1462,12 @@
   <!-- =========================================================
        MODAL 8: TWO-FACTOR AUTHENTICATION (TOTP) MODAL
        ========================================================= -->
-  <div class="modal-overlay" id="auth-modal" hidden role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+  <div class="modal-overlay" id="auth-modal" hidden role="dialog" aria-modal="true" aria-labelledby="totp-modal-title">
     <div class="modal-window auth-modal-window">
       <div class="modal-header">
         <div class="modal-header-meta">
           <span class="modal-kicker">Account Security</span>
-          <h2 class="modal-title" id="auth-modal-title">Two-Factor Authentication</h2>
+          <h2 class="modal-title" id="totp-modal-title">Two-Factor Authentication</h2>
         </div>
         <button type="button" class="modal-close-btn" id="btn-close-auth-modal" aria-label="Close authentication modal">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1625,7 +1625,7 @@
             <button type="button" class="btn btn-secondary btn-full" id="btn-reconfigure-2fa">
               <span>View QR Code / Reconfigure</span>
             </button>
-            <button type="button" class="btn btn-danger-glass btn-full" id="btn-auth-logout">
+            <button type="button" class="btn btn-danger-glass btn-full" id="btn-totp-logout">
               <span>Sign Out / Disconnect 2FA</span>
             </button>
           </div>
@@ -1647,10 +1647,10 @@
        ACCOUNT PROFILE & AUTHENTICATION MODAL
        Strictly Google OAuth & Email with access link / code
        ========================================================= -->
-  <div class="auth-modal-backdrop" id="auth-modal-backdrop" hidden>
+  <div class="auth-modal-backdrop" id="auth-modal-backdrop" hidden onclick="if(event.target===this && window.NammooruAuth){window.NammooruAuth.closeModal();}">
     <div class="auth-profile-modal" id="auth-profile-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
       <!-- Modal Close Button -->
-      <button type="button" class="auth-modal-close" id="btn-auth-modal-close" aria-label="Close authentication modal">
+      <button type="button" class="auth-modal-close" id="btn-auth-modal-close" aria-label="Close authentication modal" onclick="if(window.NammooruAuth){window.NammooruAuth.closeModal();}">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="18" y1="6" x2="6" y2="18"/>
           <line x1="6" y1="6" x2="18" y2="18"/>
@@ -1728,7 +1728,7 @@
         </div>
 
         <div class="profile-footer-actions">
-          <button type="button" class="btn btn-danger-brutal btn-full" id="btn-auth-logout">
+          <button type="button" class="btn btn-danger-brutal btn-full" id="btn-auth-logout" onclick="if(window.NammooruAuth){window.NammooruAuth.logout();}">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>

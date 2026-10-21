@@ -896,10 +896,19 @@
         historyCountBadge.textContent = `${capturesCount} Captured`;
       }
 
-      // 5. Header Profile Level Text
+      // 5. Header Profile Level Text & Trainer Name
       const headerLevel = document.getElementById('header-profile-level');
       if (headerLevel) {
         headerLevel.textContent = `LVL ${level} • ${capturesCount * 50} XP`;
+      }
+      const headerProfileName = document.querySelector('.header-profile-name');
+      if (headerProfileName) {
+        if (isAuth) {
+          const namePart = email.split('@')[0].toUpperCase();
+          headerProfileName.textContent = namePart.length > 12 ? namePart.slice(0, 10) + '…' : namePart;
+        } else {
+          headerProfileName.textContent = 'TRAINER ANNA';
+        }
       }
     },
 
@@ -915,7 +924,9 @@
         this.showLoginView();
       }
 
+      backdrop.hidden = false;
       backdrop.removeAttribute('hidden');
+      backdrop.classList.add('is-open');
       backdrop.style.display = 'flex';
       document.body.style.overflow = 'hidden';
     },
@@ -924,7 +935,9 @@
       const backdrop = document.getElementById('auth-modal-backdrop');
       if (!backdrop) return;
 
+      backdrop.hidden = true;
       backdrop.setAttribute('hidden', 'true');
+      backdrop.classList.remove('is-open');
       backdrop.style.display = 'none';
       document.body.style.overflow = '';
       this.clearStatusMessage();
@@ -1123,6 +1136,13 @@
 
   // Expose NammooruAuth globally
   window.NammooruAuth = NammooruAuth;
+
+  // Initialize NammooruAuth immediately or on DOM ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initNammooruAuth);
+  } else {
+    initNammooruAuth();
+  }
 
   // Expose Globally
   window.openWordGardenBiome = openWordGardenBiome;
