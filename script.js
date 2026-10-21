@@ -2621,6 +2621,7 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.classList.remove('visible');
     }, duration);
   }
+  window.showGardenToast = showGardenToast;
 
   /**
    * GardenStore: Documented storage module for Word Garden.

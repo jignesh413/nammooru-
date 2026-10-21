@@ -372,7 +372,7 @@
                   if (currentUserEmail) {
                     if (item.user_email && item.user_email.toLowerCase() === currentUserEmail) {
                       matches = true;
-                    } else if (!item.user_email && (!item.userId || item.userId === currentUserId)) {
+                    } else if (!item.user_email) {
                       // Session capture before signing in - claim for signed-in user
                       item.user_email = currentUserEmail;
                       matches = true;

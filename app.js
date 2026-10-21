@@ -783,6 +783,34 @@
       return Boolean(this.getUserEmail());
     },
 
+    async loginWithGoogle() {
+      const defaultEmail = this.getUserEmail() || 'bengaluru.explorer@gmail.com';
+      let chosenEmail = defaultEmail;
+      try {
+        const input = prompt('Sign in with Google Account:\nEnter your Google Email address:', defaultEmail);
+        if (input === null) return; // User clicked cancel
+        if (input && input.trim().includes('@')) {
+          chosenEmail = input.trim().toLowerCase();
+        }
+      } catch (_) {
+        chosenEmail = defaultEmail;
+      }
+
+      const btnGoogle = document.getElementById('btn-auth-google');
+      if (btnGoogle) {
+        btnGoogle.disabled = true;
+        btnGoogle.style.opacity = '0.7';
+      }
+      this.setStatusMessage(`Signing in with Google as ${chosenEmail}...`, 'info');
+      setTimeout(async () => {
+        if (btnGoogle) {
+          btnGoogle.disabled = false;
+          btnGoogle.style.opacity = '1';
+        }
+        await this.login(chosenEmail, 'google');
+      }, 350);
+    },
+
     async login(email, method = 'email') {
       const cleanEmail = (email || '').trim().toLowerCase();
       if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
@@ -813,7 +841,16 @@
       // Synchronize UI
       this.updateUIState();
       this.showProfileView();
-      this.setStatusMessage(`Signed in as ${cleanEmail}. Captures & Word Garden synced!`, 'success');
+      this.setStatusMessage(`Signed in as ${cleanEmail}! Word Garden & captures synced.`, 'success');
+
+      if (typeof window.showGardenToast === 'function') {
+        window.showGardenToast(`Welcome! Signed in as ${cleanEmail} ✨`, 'success', 3500);
+      }
+
+      // Automatically close modal after brief confirmation so user returns to live active app
+      setTimeout(() => {
+        this.closeModal();
+      }, 450);
 
       return true;
     },
@@ -842,6 +879,15 @@
       this.updateUIState();
       this.showLoginView();
       this.setStatusMessage('Signed out. Local captures are now in guest mode.', 'info');
+
+      if (typeof window.showGardenToast === 'function') {
+        window.showGardenToast('Signed out. Switched to Guest mode.', 'info', 3000);
+      }
+
+      // Close modal on logout so user is back in app
+      setTimeout(() => {
+        this.closeModal();
+      }, 400);
     },
 
     updateUIState() {
@@ -1057,25 +1103,13 @@
     if (btnGoogle) {
       btnGoogle.addEventListener('click', async (e) => {
         e.preventDefault();
-        const origContent = btnGoogle.innerHTML;
-        btnGoogle.innerHTML = '<span>Connecting to Google...</span>';
-        btnGoogle.disabled = true;
-
-        setTimeout(async () => {
-          btnGoogle.innerHTML = origContent;
-          btnGoogle.disabled = false;
-          // Sign in user with verified Google account email
-          const googleEmail = 'bengaluru.explorer@gmail.com';
-          await NammooruAuth.login(googleEmail, 'google');
-        }, 450);
+        await NammooruAuth.loginWithGoogle();
       });
     }
 
-    // 7. Email Form (#form-email-auth) with Access Link / Code
+    // 7. Email Form (#form-email-auth) with Access Link / Instant Sign-In
     const formEmail = document.getElementById('form-email-auth');
     const inputEmail = document.getElementById('input-auth-email');
-    const groupCode = document.getElementById('group-auth-code');
-    const inputCode = document.getElementById('input-auth-code');
     const btnSendText = document.getElementById('btn-send-email-text');
 
     if (formEmail) {
@@ -1089,36 +1123,24 @@
           return;
         }
 
-        // If code field is not yet revealed, send simulated access link/code
-        const isCodeVisible = groupCode && !groupCode.hasAttribute('hidden') && groupCode.style.display !== 'none';
-        if (!isCodeVisible) {
-          if (groupCode) {
-            groupCode.removeAttribute('hidden');
-            groupCode.style.display = 'block';
+        const submitBtn = document.getElementById('btn-send-email-auth');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.style.opacity = '0.7';
+        }
+        if (btnSendText) {
+          btnSendText.textContent = 'Signing in...';
+        }
+        NammooruAuth.setStatusMessage(`Signing in as ${email}...`, 'info');
+
+        setTimeout(async () => {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = '1';
           }
           if (btnSendText) {
-            btnSendText.textContent = 'Verify & Sign In →';
+            btnSendText.textContent = 'Sign In with Email →';
           }
-          // Provide instant access code for smooth verification
-          const accessCode = '842190';
-          if (inputCode) {
-            inputCode.value = accessCode;
-            inputCode.focus();
-          }
-          NammooruAuth.setStatusMessage(`Access code sent to ${email}! Enter code ${accessCode} or click Verify.`, 'info');
-          return;
-        }
-
-        // Verification step
-        const enteredCode = (inputCode ? inputCode.value : '').trim();
-        if (!enteredCode || enteredCode.length < 4) {
-          NammooruAuth.setStatusMessage('Please enter the 6-digit access code sent to your email.', 'error');
-          if (inputCode) inputCode.focus();
-          return;
-        }
-
-        NammooruAuth.setStatusMessage('Verifying access code...', 'info');
-        setTimeout(async () => {
           await NammooruAuth.login(email, 'email');
         }, 300);
       });
