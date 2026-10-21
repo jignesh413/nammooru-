@@ -1457,12 +1457,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   /**
-   * Saves identified recognition record to local History Log Book.
-   * Never stores massive full-resolution data URLs to avoid localStorage quota exhaustion.
+   * Saves identified recognition record to local History Log Book via NammooruStorage.
+   * Leverages IndexedDB for persistent storage with small 120px thumbnails,
+   * avoiding localStorage quota exhaustion.
    */
-  function saveToHistory(data) {
+  async function saveToHistory(data) {
     if (!data || !data.english || !data.kannada) return null;
     try {
+      if (typeof NammooruStorage !== 'undefined') {
+        const record = await NammooruStorage.saveEntry({
+          english: data.english,
+          kannada: data.kannada,
+          pronunciation: data.transliteration || data.pronunciation || '',
+          transliteration: data.transliteration || data.pronunciation || '',
+          description: data.description || '',
+          confidence: data.confidence || 'high',
+          category: data.category || 'everyday',
+          thumbnailUrl: data._thumbnailUrl || data.thumbnailUrl || null,
+          imageSource: data._fullDataUrl || data.fullImageUrl || null
+        });
+        if (typeof updateHistoryBadge === 'function') await updateHistoryBadge();
+        if (typeof renderGarden === 'function') await renderGarden();
+        return record;
+      }
+
       const records = typeof loadHistory === 'function' ? loadHistory() : [];
       const record = {
         id:            typeof generateId === 'function' ? generateId() : Date.now().toString(36),
@@ -1473,9 +1491,8 @@ document.addEventListener('DOMContentLoaded', () => {
         description:   data.description    || '',
         confidence:    data.confidence     || 'high',
         thumbnailUrl:  data._thumbnailUrl  || null,
-        fullImageUrl:  null, // Keep storage ultra-lightweight
+        fullImageUrl:  null,
       };
-      // Prevent duplicates of the same word in top 3
       const existingIdx = records.findIndex(r => r.english.toLowerCase() === record.english.toLowerCase());
       if (existingIdx !== -1) {
         records.splice(existingIdx, 1);
@@ -1484,7 +1501,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (records.length > MAX_HISTORY) records.splice(MAX_HISTORY);
       if (typeof saveHistory === 'function') saveHistory(records);
       if (typeof updateHistoryBadge === 'function') updateHistoryBadge();
-      if (typeof updateGardenBadges === 'function') updateGardenBadges();
+      if (typeof renderGarden === 'function') renderGarden();
       return record;
     } catch (err) {
       console.warn('[History Auto-Save Error]:', err);
@@ -1588,14 +1605,26 @@ document.addEventListener('DOMContentLoaded', () => {
         playKannadaAudio(data.kannada, btnArAudio);
       }
 
-      // 8. Auto-save to History Log Book
+      // 8. Auto-save to History Log Book via NammooruStorage
       let savedRecord = null;
       try {
-        if (typeof saveToHistory === 'function') {
-          savedRecord = saveToHistory(data);
-          if (savedRecord) {
-            currentResultSaved = true;
-          }
+        if (typeof NammooruStorage !== 'undefined') {
+          savedRecord = await NammooruStorage.saveEntry({
+            english: data.english,
+            kannada: data.kannada,
+            pronunciation: data.transliteration || data.pronunciation || '',
+            transliteration: data.transliteration || data.pronunciation || '',
+            description: data.description || '',
+            confidence: data.confidence || 'high',
+            category: data.category || 'everyday',
+            thumbnailUrl: data._thumbnailUrl || (compressed ? compressed.thumbUrl : null),
+            imageSource: compressed ? compressed.dataUrl : (data._fullDataUrl || null)
+          });
+        } else if (typeof saveToHistory === 'function') {
+          savedRecord = await saveToHistory(data);
+        }
+        if (savedRecord) {
+          currentResultSaved = true;
         }
       } catch (saveErr) {
         console.warn('[History Auto-Save Guard]:', saveErr);
@@ -1620,15 +1649,13 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn('[Garden Auto-Plant Guard]:', gardenErr);
       }
 
-      // 10. Update Trainer Level, Garden Badges, and Stats in real-time
-      if (typeof updateArTrainerHud === 'function') {
-        updateArTrainerHud();
-      }
-      if (typeof updateGardenBadges === 'function') {
-        updateGardenBadges();
-      }
-      if (typeof updateInnovateStats === 'function') {
-        updateInnovateStats();
+      // 10. Immediately trigger renderGarden() and open history views so updates reflect without refreshing
+      if (typeof renderGarden === 'function') {
+        await renderGarden();
+      } else {
+        if (typeof updateArTrainerHud === 'function') updateArTrainerHud();
+        if (typeof updateGardenBadges === 'function') updateGardenBadges();
+        if (typeof updateInnovateStats === 'function') updateInnovateStats();
       }
 
       displayResult(data, Boolean(savedRecord));
@@ -1684,8 +1711,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
-        if (typeof saveToHistory === 'function') {
-          saveToHistory(fallbackResult);
+        if (typeof NammooruStorage !== 'undefined') {
+          await NammooruStorage.saveEntry({
+            english: fallbackResult.english,
+            kannada: fallbackResult.kannada,
+            pronunciation: fallbackResult.transliteration,
+            transliteration: fallbackResult.transliteration,
+            category: 'City Landmark',
+            description: fallbackResult.description,
+            confidence: 'medium',
+            thumbnailUrl: fallbackResult._thumbnailUrl || (compressed ? compressed.thumbUrl : null),
+            imageSource: compressed ? compressed.dataUrl : null
+          });
+        } else if (typeof saveToHistory === 'function') {
+          await saveToHistory(fallbackResult);
         }
         if (typeof GardenStore !== 'undefined') {
           GardenStore.add({
@@ -1699,12 +1738,13 @@ document.addEventListener('DOMContentLoaded', () => {
             listenText: fallbackResult.kannada
           });
         }
+        if (typeof renderGarden === 'function') {
+          await renderGarden();
+        } else if (typeof updateArTrainerHud === 'function') {
+          updateArTrainerHud();
+        }
       } catch (e) {
         console.warn(e);
-      }
-
-      if (typeof updateArTrainerHud === 'function') {
-        updateArTrainerHud();
       }
 
       displayResult(fallbackResult);
@@ -1814,73 +1854,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // -------------------------------------------------------------------------
-  // G. History Log Book — localStorage persistence layer
-  //    Structured so records can be migrated to a backend later.
+  // G. History Log Book — Enterprise Persistence Layer (NammooruStorage)
+  //    IndexedDB primary storage with small 120px thumbnails, quota-safe local mirror
   // -------------------------------------------------------------------------
 
   function loadHistory() {
     try {
+      if (typeof NammooruStorage !== 'undefined') {
+        const cached = NammooruStorage.getCachedHistory();
+        if (cached && cached.length > 0) return cached;
+      }
       let raw = localStorage.getItem(HISTORY_KEY);
       if (!raw) raw = localStorage.getItem('nammooru_history');
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       if (!Array.isArray(parsed)) return [];
-      // Validate and clean up any oversized full base64 images that bloat storage
-      let needsCleanup = false;
-      const valid = parsed.filter(r =>
+      return parsed.filter(r =>
         r && typeof r.english === 'string' && typeof r.kannada === 'string'
-      ).map(r => {
-        if (r.fullImageUrl) {
-          needsCleanup = true;
-          return { ...r, fullImageUrl: null };
-        }
-        return r;
-      });
-      if (needsCleanup) {
-        try {
-          localStorage.setItem(HISTORY_KEY, JSON.stringify(valid));
-          localStorage.setItem('nammooru_history', JSON.stringify(valid));
-        } catch { /* ignore */ }
-      }
-      return valid;
+      );
     } catch {
-      console.warn('[History] Could not load history — localStorage data may be corrupted. Resetting.');
-      try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
+      console.warn('[History] Could not load history from localStorage.');
       return [];
     }
   }
 
   function saveHistory(records) {
     try {
-      const lightweight = records.map(r => ({
-        ...r,
+      if (typeof NammooruStorage !== 'undefined') {
+        // NammooruStorage manages synchronization automatically
+      }
+      const textOnly = (records || []).map(r => ({
+        id: r.id,
+        timestamp: r.timestamp,
+        english: r.english,
+        kannada: r.kannada,
+        pronunciation: r.pronunciation,
+        description: r.description,
+        confidence: r.confidence,
+        category: r.category || 'everyday',
+        thumbnailUrl: null,
         fullImageUrl: null
       }));
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(lightweight));
-      localStorage.setItem('nammooru_history', JSON.stringify(lightweight));
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(textOnly));
+      localStorage.setItem('nammooru_history', JSON.stringify(textOnly));
       if (typeof updateArTrainerHud === 'function') updateArTrainerHud();
-      if (typeof updateGardenBadges === 'function') updateGardenBadges();
-      if (typeof updateInnovateStats === 'function') updateInnovateStats();
+      if (typeof renderGarden === 'function') renderGarden();
     } catch (err) {
-      console.warn('[History] Could not save to localStorage:', err.message);
-      try {
-        const textOnly = records.map(r => ({
-          id: r.id,
-          timestamp: r.timestamp,
-          english: r.english,
-          kannada: r.kannada,
-          pronunciation: r.pronunciation,
-          description: r.description,
-          confidence: r.confidence
-        }));
-        localStorage.setItem(HISTORY_KEY, JSON.stringify(textOnly));
-        localStorage.setItem('nammooru_history', JSON.stringify(textOnly));
-        if (typeof updateArTrainerHud === 'function') updateArTrainerHud();
-        if (typeof updateGardenBadges === 'function') updateGardenBadges();
-        if (typeof updateInnovateStats === 'function') updateInnovateStats();
-      } catch (innerErr) {
-        showFeedback('Storage is full. Please clear some history.', 'error', 3000);
-      }
+      console.warn('[History] Safe fallback save failed:', err);
     }
   }
 
@@ -1897,15 +1917,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function updateHistoryBadge() {
-    const records = loadHistory();
-    const count = records.length;
-    if (historyCountBadge) {
-      historyCountBadge.textContent = count;
-      historyCountBadge.hidden = (count === 0);
-    }
-    if (typeof updateArTrainerHud === 'function') {
-      updateArTrainerHud();
+  async function updateHistoryBadge() {
+    try {
+      const records = typeof NammooruStorage !== 'undefined'
+        ? await NammooruStorage.getAllHistory()
+        : (typeof loadHistory === 'function' ? loadHistory() : []);
+      const count = Array.isArray(records) ? records.length : 0;
+      if (historyCountBadge) {
+        historyCountBadge.textContent = count;
+        historyCountBadge.hidden = (count === 0);
+      }
+      if (typeof updateArTrainerHud === 'function') {
+        updateArTrainerHud();
+      }
+    } catch (err) {
+      console.warn('[updateHistoryBadge Warning]:', err);
     }
   }
 
@@ -1914,39 +1940,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Save to History ---
   if (btnSaveHistory) {
-    btnSaveHistory.addEventListener('click', () => {
+    btnSaveHistory.addEventListener('click', async () => {
       if (!currentResult || currentResultSaved) return;
 
-      const records = loadHistory();
+      try {
+        let record = null;
+        if (typeof NammooruStorage !== 'undefined') {
+          record = await NammooruStorage.saveEntry({
+            english: currentResult.english || '',
+            kannada: currentResult.kannada || '',
+            pronunciation: currentResult.transliteration || currentResult.pronunciation || '',
+            transliteration: currentResult.transliteration || currentResult.pronunciation || '',
+            description: currentResult.description || '',
+            confidence: currentResult.confidence || 'medium',
+            category: currentResult.category || 'everyday',
+            thumbnailUrl: currentResult._thumbnailUrl || null,
+            imageSource: currentResult._fullDataUrl || null
+          });
+        } else {
+          const records = loadHistory();
+          record = {
+            id:            generateId(),
+            timestamp:     new Date().toISOString(),
+            english:       currentResult.english       || '',
+            kannada:       currentResult.kannada        || '',
+            pronunciation: currentResult.transliteration || currentResult.pronunciation  || '',
+            description:   currentResult.description    || '',
+            confidence:    currentResult.confidence     || 'medium',
+            thumbnailUrl:  null,
+            fullImageUrl:  null,
+          };
+          records.unshift(record);
+          if (records.length > MAX_HISTORY) records.splice(MAX_HISTORY);
+          saveHistory(records);
+        }
 
-      const record = {
-        id:            generateId(),
-        timestamp:     new Date().toISOString(),
-        english:       currentResult.english       || '',
-        kannada:       currentResult.kannada        || '',
-        pronunciation: currentResult.transliteration || currentResult.pronunciation  || '',
-        description:   currentResult.description    || '',
-        confidence:    currentResult.confidence     || 'medium',
-        thumbnailUrl:  currentResult._thumbnailUrl  || null,
-        fullImageUrl:  null,
-      };
+        currentResultSaved = true;
 
-      // Prepend newest first; cap at MAX_HISTORY
-      records.unshift(record);
-      if (records.length > MAX_HISTORY) records.splice(MAX_HISTORY);
+        // Update button to "Saved" state
+        btnSaveHistory.innerHTML = '<span>✓ Saved</span>';
+        btnSaveHistory.classList.add('saved');
+        btnSaveHistory.disabled = true;
 
-      saveHistory(records);
-      currentResultSaved = true;
-
-      // Update button to "Saved" state
-      btnSaveHistory.innerHTML = '<span>✓ Saved</span>';
-      btnSaveHistory.classList.add('saved');
-      btnSaveHistory.disabled = true;
-
-      updateHistoryBadge();
-      if (typeof updateGardenBadges === 'function') updateGardenBadges();
-      if (typeof updateInnovateStats === 'function') updateInnovateStats();
-      showFeedback(`"${record.english}" saved to your History Log Book.`, 'success', 3000);
+        await updateHistoryBadge();
+        if (typeof renderGarden === 'function') {
+          await renderGarden();
+        }
+        showFeedback(`"${(record && record.english) || currentResult.english}" saved to your History Log Book.`, 'success', 3000);
+      } catch (err) {
+        console.warn('[Save History Click Error]:', err);
+        showFeedback('Could not save to history.', 'error', 3000);
+      }
     });
   }
 
@@ -1967,7 +2011,6 @@ document.addEventListener('DOMContentLoaded', () => {
       img.alt = record.english;
       img.className = 'history-thumbnail';
       img.onerror = () => {
-        // Replace broken image with placeholder
         const ph = document.createElement('div');
         ph.className = 'history-thumbnail-placeholder';
         ph.textContent = '📷';
@@ -2032,53 +2075,79 @@ document.addEventListener('DOMContentLoaded', () => {
     return li;
   }
 
-  function renderHistoryList() {
-    const records = loadHistory();
-    historyList.innerHTML = '';
+  async function renderHistoryList() {
+    try {
+      const records = typeof NammooruStorage !== 'undefined'
+        ? await NammooruStorage.getAllHistory()
+        : (typeof loadHistory === 'function' ? loadHistory() : []);
 
-    if (records.length === 0) {
-      historyEmpty.hidden = false;
-      historyList.hidden  = true;
-    } else {
-      historyEmpty.hidden = true;
-      historyList.hidden  = false;
-      records.forEach(r => historyList.appendChild(buildHistoryEntry(r)));
+      if (!historyList) return;
+      historyList.innerHTML = '';
+
+      if (!records || records.length === 0) {
+        if (historyEmpty) historyEmpty.hidden = false;
+        historyList.hidden  = true;
+      } else {
+        if (historyEmpty) historyEmpty.hidden = true;
+        historyList.hidden  = false;
+        records.forEach(r => historyList.appendChild(buildHistoryEntry(r)));
+      }
+    } catch (err) {
+      console.warn('[renderHistoryList Error]:', err);
     }
   }
 
-  function openHistoryModal() {
-    renderHistoryList();
+  async function openHistoryModal() {
+    if (!historyOverlay) return;
+    await renderHistoryList();
     historyOverlay.hidden = false;
     document.body.style.overflow = 'hidden';
-    // Focus the close button for accessibility
     setTimeout(() => btnHistoryClose && btnHistoryClose.focus(), 50);
   }
 
   function closeHistoryModal() {
+    if (!historyOverlay) return;
     historyOverlay.hidden = true;
     document.body.style.overflow = '';
     btnHistoryOpen && btnHistoryOpen.focus();
   }
 
-  function deleteHistoryRecord(id) {
-    let records = loadHistory();
-    records = records.filter(r => r.id !== id);
-    saveHistory(records);
-    updateHistoryBadge();
-    if (typeof updateGardenBadges === 'function') updateGardenBadges();
-    renderHistoryList();
-    // Sync saved state if the deleted record is the currently displayed one
-    if (currentResult && currentResultSaved) {
-      // Can't verify easily, but that's acceptable
+  async function deleteHistoryRecord(id) {
+    try {
+      if (typeof NammooruStorage !== 'undefined') {
+        await NammooruStorage.deleteEntry(id);
+      } else {
+        let records = loadHistory();
+        records = records.filter(r => r.id !== id);
+        saveHistory(records);
+      }
+      await updateHistoryBadge();
+      await renderHistoryList();
+      if (typeof renderGarden === 'function') {
+        await renderGarden();
+      }
+    } catch (err) {
+      console.warn('[deleteHistoryRecord Error]:', err);
     }
   }
 
-  function clearAllHistory() {
+  async function clearAllHistory() {
     if (!confirm('Delete all history entries? This cannot be undone.')) return;
-    try { localStorage.removeItem(HISTORY_KEY); } catch { /* ignore */ }
-    updateHistoryBadge();
-    if (typeof updateGardenBadges === 'function') updateGardenBadges();
-    renderHistoryList();
+    try {
+      if (typeof NammooruStorage !== 'undefined') {
+        await NammooruStorage.clearAllHistory();
+      } else {
+        localStorage.removeItem(HISTORY_KEY);
+        localStorage.removeItem('nammooru_history');
+      }
+      await updateHistoryBadge();
+      await renderHistoryList();
+      if (typeof renderGarden === 'function') {
+        await renderGarden();
+      }
+    } catch (err) {
+      console.warn('[clearAllHistory Error]:', err);
+    }
   }
 
   if (btnHistoryOpen)  btnHistoryOpen.addEventListener('click',  openHistoryModal);
@@ -2839,6 +2908,39 @@ document.addEventListener('DOMContentLoaded', () => {
       if (btnSearchClear) btnSearchClear.hidden = (currentSearchQuery.length === 0);
       renderCurrentMode();
     });
+
+    // Search completion handler: Persists searched result to NammooruStorage and Word Garden
+    learnSearchInput.addEventListener('keydown', async (e) => {
+      if (e.key === 'Enter') {
+        const query = (e.target.value || '').trim();
+        if (query.length >= 2) {
+          const allWords = (typeof learnData !== 'undefined' && learnData.words) ? learnData.words : [];
+          const match = allWords.find(w =>
+            w.english.toLowerCase() === query.toLowerCase() ||
+            w.kannada.includes(query) ||
+            (w.translit && w.translit.toLowerCase().includes(query.toLowerCase()))
+          );
+          if (match && typeof NammooruStorage !== 'undefined') {
+            try {
+              await NammooruStorage.saveEntry({
+                english: match.english,
+                kannada: match.kannada,
+                pronunciation: match.translit || '',
+                transliteration: match.translit || '',
+                category: match.category || 'search',
+                description: match.note || `Searched: "${query}"`,
+                confidence: 'high'
+              });
+              if (typeof renderGarden === 'function') {
+                await renderGarden();
+              }
+            } catch (err) {
+              console.warn('[Search Completion Save Warning]:', err);
+            }
+          }
+        }
+      }
+    });
   }
 
   function clearSearch() {
@@ -3349,18 +3451,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * CRITICAL DATA SOURCE UNIFICATION:
-   * Merges words discovered in Photo History with words planted in Word Garden (GardenStore).
+   * Merges words discovered in Photo History (via NammooruStorage) with words planted in Word Garden (GardenStore).
    * Ensures Word Garden Biome reflects all everyday items discovered and saved.
    */
-  function getPhotoGardenWords() {
-    const historyRecords = typeof loadHistory === 'function' ? loadHistory() : [];
+  function getPhotoGardenWords(optionalRecords) {
+    let historyRecords = optionalRecords;
+    if (!historyRecords) {
+      historyRecords = typeof NammooruStorage !== 'undefined'
+        ? NammooruStorage.getCachedHistory()
+        : (typeof loadHistory === 'function' ? loadHistory() : []);
+    }
     const gardenItems = typeof GardenStore !== 'undefined' ? GardenStore.getAll() : [];
     
     const combined = [];
     const seen = new Set();
 
     // 1. Photo history discoveries
-    historyRecords.forEach(r => {
+    (historyRecords || []).forEach(r => {
       if (!r || !r.kannada || !r.english) return;
       const key = `${r.kannada.trim()}_${r.english.trim().toLowerCase()}`;
       if (!seen.has(key)) {
@@ -3400,8 +3507,16 @@ document.addEventListener('DOMContentLoaded', () => {
     return combined;
   }
 
-  function updateGardenBadges() {
-    const photoWords = getPhotoGardenWords();
+  async function updateGardenBadges(optionalRecords) {
+    let records = optionalRecords;
+    if (!records && typeof NammooruStorage !== 'undefined') {
+      try {
+        records = await NammooruStorage.getAllHistory();
+      } catch (e) {
+        records = NammooruStorage.getCachedHistory();
+      }
+    }
+    const photoWords = getPhotoGardenWords(records);
     const count = photoWords.length;
 
     // 1. Header quick pill (if present)
@@ -3429,12 +3544,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function openGardenModal() {
+  async function openGardenModal() {
     if (!gardenOverlay) return;
     gardenOverlay.hidden = false;
     document.body.style.overflow = 'hidden';
-    updateGardenBadges();
-    renderMinecraftWordGarden();
+    await updateGardenBadges();
+    await renderMinecraftWordGarden();
     if (btnGardenClose) btnGardenClose.focus();
   }
 
@@ -3478,13 +3593,60 @@ document.addEventListener('DOMContentLoaded', () => {
     activeDialoguePlant = null;
   }
 
+  // Unified renderGarden that synchronizes all garden views and history representations immediately
+  async function renderGarden(optionalRecords) {
+    try {
+      let records = optionalRecords;
+      if (!records && typeof NammooruStorage !== 'undefined') {
+        records = await NammooruStorage.getAllHistory();
+      }
+      if (typeof updateGardenBadges === 'function') {
+        await updateGardenBadges(records);
+      }
+      if (typeof renderMinecraftWordGarden === 'function') {
+        await renderMinecraftWordGarden(records);
+      }
+      if (typeof renderGardenSubpage === 'function') {
+        renderGardenSubpage();
+      }
+      if (typeof window.renderMinecraftGarden === 'function') {
+        window.renderMinecraftGarden();
+      }
+      if (typeof window.updateWordPetCompanion === 'function') {
+        window.updateWordPetCompanion();
+      }
+      if (typeof updateArTrainerHud === 'function') {
+        updateArTrainerHud();
+      }
+      if (typeof updateInnovateStats === 'function') {
+        updateInnovateStats();
+      }
+      const historyOverlay = document.getElementById('history-overlay') || document.getElementById('modal-history');
+      if (historyOverlay && !historyOverlay.hidden && typeof renderHistoryList === 'function') {
+        await renderHistoryList();
+      }
+    } catch (err) {
+      console.warn('[renderGarden Error]:', err);
+    }
+  }
+  window.renderGarden = renderGarden;
+
   // Render Minecraft-Inspired Pixel Biome based strictly on Photo History
-  function renderMinecraftWordGarden() {
+  async function renderMinecraftWordGarden(optionalRecords) {
     const gardenGround = document.getElementById('mc-garden-ground');
     if (!gardenGround) return;
     hidePlantDialogue();
 
-    const photoWords = getPhotoGardenWords();
+    let records = optionalRecords;
+    if (!records && typeof NammooruStorage !== 'undefined') {
+      try {
+        records = await NammooruStorage.getAllHistory();
+      } catch (e) {
+        records = NammooruStorage.getCachedHistory();
+      }
+    }
+
+    const photoWords = getPhotoGardenWords(records);
     const count = photoWords.length;
 
     // Visual Progression Badges & Counts

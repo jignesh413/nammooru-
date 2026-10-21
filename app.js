@@ -117,16 +117,25 @@
    * updates stats counters, and applies the dynamic progression state.
    */
   function updateWordPetCompanion() {
-    // 1. Read nammooru_garden and nammooru_tries from localStorage
+    // 1. Read nammooru_garden and nammooru_tries from localStorage & NammooruStorage
     const garden = safeGetArray('nammooru_garden', 'nammooru_garden_v1');
+    const historyGarden = (typeof window.NammooruStorage !== 'undefined')
+      ? window.NammooruStorage.getCachedHistory()
+      : safeGetArray('nammooru_history', 'nammooru_history_v1');
     const tries = safeGetArray('nammooru_tries', 'nammooru_attempts_v1');
 
+    // Combine distinct bloomed words
+    const uniqueWords = new Set();
+    garden.forEach(g => { if (g && g.kannada) uniqueWords.add(g.kannada.trim().toLowerCase()); });
+    historyGarden.forEach(h => { if (h && h.kannada) uniqueWords.add(h.kannada.trim().toLowerCase()); });
+    const bloomedCount = Math.max(garden.length, uniqueWords.size);
+
     // 2. Set Stats:
-    // - "🌱 [garden.length] Bloomed"
+    // - "🌱 [bloomedCount] Bloomed"
     // - "⚡ [tries.length] Tries Logged"
     const bloomedEl = document.getElementById('pet-stat-bloomed');
     const triesEl = document.getElementById('pet-stat-tries');
-    if (bloomedEl) bloomedEl.textContent = `🌱 ${garden.length} Bloomed`;
+    if (bloomedEl) bloomedEl.textContent = `🌱 ${bloomedCount} Bloomed`;
     if (triesEl) triesEl.textContent = `⚡ ${tries.length} Tries Logged`;
 
     // 3. Dynamic Progression:
@@ -139,13 +148,13 @@
     let kannada = 'ಚೋಟು ಬೋಟ್';
     let quote = 'Namaskara! Snap your first word.';
 
-    if (garden.length >= 15) {
+    if (bloomedCount >= 15) {
       stage = 3;
       badge = 'MASCOT • STAGE 3';
       title = 'NAMMOORU GURU';
       kannada = 'ಗುರು ಬೋಟ್';
       quote = 'Bari mass! Bengaluru belongs to you.';
-    } else if (garden.length >= 5) {
+    } else if (bloomedCount >= 5) {
       stage = 2;
       badge = 'MASCOT • STAGE 2';
       title = 'ROBO-ANNA';
@@ -182,9 +191,12 @@
       e.key === 'nammooru_garden' ||
       e.key === 'nammooru_garden_v1' ||
       e.key === 'nammooru_tries' ||
-      e.key === 'nammooru_attempts_v1'
+      e.key === 'nammooru_attempts_v1' ||
+      e.key === 'nammooru_history' ||
+      e.key === 'nammooru_history_v1'
     ) {
       updateWordPetCompanion();
+      if (typeof renderMinecraftGarden === 'function') renderMinecraftGarden();
     }
   });
 
@@ -567,8 +579,32 @@
     const statusEl = document.getElementById('mc-garden-status');
     if (!field) return;
 
-    // Load words from GardenStore / localStorage
-    const items = safeGetArray('nammooru_garden', 'nammooru_garden_v1');
+    // Load words from GardenStore & NammooruStorage
+    const baseItems = safeGetArray('nammooru_garden', 'nammooru_garden_v1');
+    const historyItems = (typeof window.NammooruStorage !== 'undefined')
+      ? window.NammooruStorage.getCachedHistory()
+      : safeGetArray('nammooru_history', 'nammooru_history_v1');
+    
+    const combinedMap = new Map();
+    baseItems.forEach(item => {
+      if (item && item.kannada) combinedMap.set((item.kannada + '_' + (item.english || '')).toLowerCase(), item);
+    });
+    historyItems.forEach(item => {
+      if (item && item.kannada) {
+        const key = (item.kannada + '_' + (item.english || '')).toLowerCase();
+        if (!combinedMap.has(key)) {
+          combinedMap.set(key, {
+            id: item.id || key,
+            kannada: item.kannada,
+            english: item.english,
+            translit: item.transliteration || item.pronunciation || '',
+            category: item.category || 'everyday',
+            thumbnailUrl: item.thumbnailUrl || null
+          });
+        }
+      }
+    });
+    const items = Array.from(combinedMap.values());
     const count = items.length;
     const level = Math.floor(count / 2);
 
