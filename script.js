@@ -1464,8 +1464,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function saveToHistory(data) {
     if (!data || !data.english || !data.kannada) return null;
     try {
+      const userEmail = (window.NammooruAuth && typeof window.NammooruAuth.getUserEmail === 'function')
+        ? window.NammooruAuth.getUserEmail()
+        : (localStorage.getItem('nammooru_user_email') || null);
       if (typeof NammooruStorage !== 'undefined') {
         const record = await NammooruStorage.saveEntry({
+          user_email: userEmail,
           english: data.english,
           kannada: data.kannada,
           pronunciation: data.transliteration || data.pronunciation || '',
@@ -1608,8 +1612,12 @@ document.addEventListener('DOMContentLoaded', () => {
       // 8. Auto-save to History Log Book via NammooruStorage
       let savedRecord = null;
       try {
+        const userEmail = (window.NammooruAuth && typeof window.NammooruAuth.getUserEmail === 'function')
+          ? window.NammooruAuth.getUserEmail()
+          : (localStorage.getItem('nammooru_user_email') || null);
         if (typeof NammooruStorage !== 'undefined') {
           savedRecord = await NammooruStorage.saveEntry({
+            user_email: userEmail,
             english: data.english,
             kannada: data.kannada,
             pronunciation: data.transliteration || data.pronunciation || '',
@@ -1711,8 +1719,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       try {
+        const userEmail = (window.NammooruAuth && typeof window.NammooruAuth.getUserEmail === 'function')
+          ? window.NammooruAuth.getUserEmail()
+          : (localStorage.getItem('nammooru_user_email') || null);
         if (typeof NammooruStorage !== 'undefined') {
           await NammooruStorage.saveEntry({
+            user_email: userEmail,
             english: fallbackResult.english,
             kannada: fallbackResult.kannada,
             pronunciation: fallbackResult.transliteration,
@@ -1945,8 +1957,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         let record = null;
+        const userEmail = (window.NammooruAuth && typeof window.NammooruAuth.getUserEmail === 'function')
+          ? window.NammooruAuth.getUserEmail()
+          : (localStorage.getItem('nammooru_user_email') || null);
         if (typeof NammooruStorage !== 'undefined') {
           record = await NammooruStorage.saveEntry({
+            user_email: userEmail,
             english: currentResult.english || '',
             kannada: currentResult.kannada || '',
             pronunciation: currentResult.transliteration || currentResult.pronunciation || '',
@@ -2922,7 +2938,11 @@ document.addEventListener('DOMContentLoaded', () => {
           );
           if (match && typeof NammooruStorage !== 'undefined') {
             try {
+              const userEmail = (window.NammooruAuth && typeof window.NammooruAuth.getUserEmail === 'function')
+                ? window.NammooruAuth.getUserEmail()
+                : (localStorage.getItem('nammooru_user_email') || null);
               await NammooruStorage.saveEntry({
+                user_email: userEmail,
                 english: match.english,
                 kannada: match.kannada,
                 pronunciation: match.translit || '',
@@ -5425,6 +5445,16 @@ document.addEventListener('DOMContentLoaded', () => {
     renderBadgesShowcase();
     renderPracticeLog();
   });
+
+  if (typeof NammooruStorage !== 'undefined' && typeof NammooruStorage.subscribe === 'function') {
+    NammooruStorage.subscribe((records) => {
+      if (typeof renderGarden === 'function') renderGarden(records);
+      if (typeof syncProfileCard === 'function') syncProfileCard();
+      if (window.NammooruAuth && typeof window.NammooruAuth.updateUIState === 'function') {
+        window.NammooruAuth.updateUIState();
+      }
+    });
+  }
 
   window.switchSection = switchSection;
   window.openGardenModal = openGardenModal;

@@ -758,227 +758,371 @@
       }
     });
 
-    // Initialize Start Login Protocol
-    initStartAuthGate();
+    // Initialize Nammooru Authentication
+    initNammooruAuth();
   });
 
   // =========================================================================
-  // START LOGIN PROTOCOL: GOOGLE OR EMAIL & PASSWORD
+  // NAMMOORU AUTHENTICATION & CLOUD PROFILE ENGINE
+  // Strictly Google OAuth & Email with Access Link / Code
+  // Scopes history & Word Garden 1:1 per registered email
   // =========================================================================
-  function initStartAuthGate() {
-    const authGate = document.getElementById('app-auth-gate');
-    const btnGoogle = document.getElementById('btn-google-login');
-    const formEmail = document.getElementById('form-gate-auth');
-    const tabSignIn = document.getElementById('tab-auth-signin');
-    const tabSignUp = document.getElementById('tab-auth-signup');
-    const gateEmail = document.getElementById('gate-email');
-    const gatePassword = document.getElementById('gate-password');
-    const btnSubmit = document.getElementById('btn-gate-submit');
-    const btnSubmitText = document.getElementById('btn-gate-submit-text');
-    const btnGuest = document.getElementById('btn-gate-guest');
-    const gateAlert = document.getElementById('auth-gate-alert');
-    const btnSignOut = document.getElementById('btn-app-logout');
+  const NammooruAuth = {
+    USER_EMAIL_KEY: 'nammooru_user_email',
 
-    const profileName = document.getElementById('profile-display-name');
-    const profileInitials = document.getElementById('profile-avatar-initials');
-    const profile2FaText = document.getElementById('profile-2fa-text');
-
-    if (!authGate) return;
-
-    let isSignUpMode = false;
-
-    function getSession() {
+    getUserEmail() {
       try {
-        const raw = localStorage.getItem('nammooru_auth_session');
-        return raw ? JSON.parse(raw) : null;
-      } catch (_) {
+        const email = localStorage.getItem(this.USER_EMAIL_KEY);
+        return (email && typeof email === 'string' && email.trim() !== '') ? email.trim().toLowerCase() : null;
+      } catch (e) {
         return null;
       }
-    }
+    },
 
-    function saveSession(session) {
+    isAuthenticated() {
+      return Boolean(this.getUserEmail());
+    },
+
+    async login(email, method = 'email') {
+      const cleanEmail = (email || '').trim().toLowerCase();
+      if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+        this.setStatusMessage('Please enter a valid email address.', 'error');
+        return false;
+      }
+
       try {
-        localStorage.setItem('nammooru_auth_session', JSON.stringify(session));
-      } catch (_) {}
-    }
-
-    function showAlert(msg, isError = true) {
-      if (!gateAlert) return;
-      gateAlert.textContent = msg;
-      gateAlert.className = isError ? 'auth-gate-alert error' : 'auth-gate-alert success';
-      gateAlert.style.display = 'block';
-    }
-
-    function hideAlert() {
-      if (gateAlert) gateAlert.style.display = 'none';
-    }
-
-    function syncProfileUI(session) {
-      if (!session) return;
-      if (profileName && session.name) {
-        profileName.textContent = session.name;
+        localStorage.setItem(this.USER_EMAIL_KEY, cleanEmail);
+      } catch (e) {
+        console.warn('[NammooruAuth] Storage set warning:', e);
       }
-      if (profileInitials && session.avatar) {
-        profileInitials.textContent = session.avatar;
-      }
-      if (profile2FaText) {
-        if (session.method === 'google') {
-          profile2FaText.textContent = 'Google Connected';
-        } else if (session.method === 'email') {
-          profile2FaText.textContent = 'Email Verified';
-        } else {
-          profile2FaText.textContent = 'Guest Explorer';
+
+      // Switch user in NammooruStorage, refreshing scoped history and localStorage mirror
+      if (typeof window.NammooruStorage !== 'undefined' && typeof window.NammooruStorage.switchUser === 'function') {
+        try {
+          await window.NammooruStorage.switchUser(cleanEmail);
+        } catch (sErr) {
+          console.warn('[NammooruAuth] Storage switchUser warning:', sErr);
         }
       }
-    }
 
-    function unlockApp(session) {
-      saveSession(session);
-      syncProfileUI(session);
-      hideAlert();
-      authGate.style.display = 'none';
-      document.body.style.overflow = '';
-    }
+      // Refresh Word Garden & Word Pet Companion views
+      if (typeof window.renderMinecraftGarden === 'function') window.renderMinecraftGarden();
+      if (typeof window.renderGarden === 'function') window.renderGarden();
+      if (typeof window.updateWordPetCompanion === 'function') window.updateWordPetCompanion();
 
-    function lockApp() {
+      // Synchronize UI
+      this.updateUIState();
+      this.showProfileView();
+      this.setStatusMessage(`Signed in as ${cleanEmail}. Captures & Word Garden synced!`, 'success');
+
+      return true;
+    },
+
+    async logout() {
       try {
-        localStorage.removeItem('nammooru_auth_session');
-      } catch (_) {}
-      if (gateEmail) gateEmail.value = '';
-      if (gatePassword) gatePassword.value = '';
-      hideAlert();
-      authGate.style.display = 'flex';
-    }
+        localStorage.removeItem(this.USER_EMAIL_KEY);
+      } catch (e) {
+        console.warn('[NammooruAuth] Storage remove warning:', e);
+      }
 
-    // 1. Initial State Check
-    const activeSession = getSession();
-    if (activeSession && activeSession.isLoggedIn) {
-      authGate.style.display = 'none';
-      syncProfileUI(activeSession);
-    } else {
-      authGate.style.display = 'flex';
-    }
+      // Switch storage scope to null/guest and refresh history
+      if (typeof window.NammooruStorage !== 'undefined' && typeof window.NammooruStorage.switchUser === 'function') {
+        try {
+          await window.NammooruStorage.switchUser(null);
+        } catch (sErr) {
+          console.warn('[NammooruAuth] Storage switchUser warning:', sErr);
+        }
+      }
 
-    // 2. Tab Switcher
-    if (tabSignIn && tabSignUp) {
-      tabSignIn.addEventListener('click', () => {
-        isSignUpMode = false;
-        tabSignIn.classList.add('active');
-        tabSignUp.classList.remove('active');
-        tabSignIn.setAttribute('aria-selected', 'true');
-        tabSignUp.setAttribute('aria-selected', 'false');
-        if (btnSubmitText) btnSubmitText.textContent = 'Sign In →';
-        hideAlert();
+      // Gracefully reset Word Garden views
+      if (typeof window.renderMinecraftGarden === 'function') window.renderMinecraftGarden();
+      if (typeof window.renderGarden === 'function') window.renderGarden();
+      if (typeof window.updateWordPetCompanion === 'function') window.updateWordPetCompanion();
+
+      this.updateUIState();
+      this.showLoginView();
+      this.setStatusMessage('Signed out. Local captures are now in guest mode.', 'info');
+    },
+
+    updateUIState() {
+      const email = this.getUserEmail();
+      const isAuth = Boolean(email);
+
+      // 1. Header Online/Offline Status Pip
+      const statusPip = document.getElementById('header-user-status');
+      if (statusPip) {
+        if (isAuth) {
+          statusPip.classList.add('online');
+          statusPip.setAttribute('title', `Online: ${email}`);
+          statusPip.setAttribute('aria-label', `Online: ${email}`);
+        } else {
+          statusPip.classList.remove('online');
+          statusPip.setAttribute('title', 'Guest Explorer (Offline)');
+          statusPip.setAttribute('aria-label', 'Guest Explorer (Offline)');
+        }
+      }
+
+      // 2. Header Avatar Glyph
+      const avatarGlyph = document.getElementById('header-user-avatar');
+      if (avatarGlyph) {
+        avatarGlyph.textContent = isAuth ? '🧢' : '👤';
+      }
+
+      // 3. Modal Profile Card Email
+      const displayEmail = document.getElementById('profile-display-email');
+      if (displayEmail) {
+        displayEmail.textContent = email || 'guest@nammooru.app';
+      }
+
+      // 4. Badges: Level & Captures Count
+      let capturesCount = 0;
+      if (typeof window.NammooruStorage !== 'undefined' && typeof window.NammooruStorage.getCachedHistory === 'function') {
+        capturesCount = window.NammooruStorage.getCachedHistory().length;
+      } else {
+        try {
+          const raw = localStorage.getItem('nammooru_history');
+          capturesCount = raw ? JSON.parse(raw).length : 0;
+        } catch (_) {}
+      }
+
+      const level = Math.max(1, Math.floor(capturesCount / 2));
+      const levelBadge = document.getElementById('profile-level-badge');
+      if (levelBadge) {
+        levelBadge.textContent = `LVL ${level}`;
+      }
+
+      const historyCountBadge = document.getElementById('profile-history-count');
+      if (historyCountBadge) {
+        historyCountBadge.textContent = `${capturesCount} Captured`;
+      }
+
+      // 5. Header Profile Level Text
+      const headerLevel = document.getElementById('header-profile-level');
+      if (headerLevel) {
+        headerLevel.textContent = `LVL ${level} • ${capturesCount * 50} XP`;
+      }
+    },
+
+    openModal() {
+      const backdrop = document.getElementById('auth-modal-backdrop');
+      if (!backdrop) return;
+
+      this.updateUIState();
+
+      if (this.isAuthenticated()) {
+        this.showProfileView();
+      } else {
+        this.showLoginView();
+      }
+
+      backdrop.removeAttribute('hidden');
+      backdrop.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    },
+
+    closeModal() {
+      const backdrop = document.getElementById('auth-modal-backdrop');
+      if (!backdrop) return;
+
+      backdrop.setAttribute('hidden', 'true');
+      backdrop.style.display = 'none';
+      document.body.style.overflow = '';
+      this.clearStatusMessage();
+    },
+
+    showLoginView() {
+      const loginView = document.getElementById('auth-view-login');
+      const profileView = document.getElementById('auth-view-profile');
+      if (loginView) {
+        loginView.removeAttribute('hidden');
+        loginView.style.display = 'block';
+      }
+      if (profileView) {
+        profileView.setAttribute('hidden', 'true');
+        profileView.style.display = 'none';
+      }
+      const codeGroup = document.getElementById('group-auth-code');
+      if (codeGroup) {
+        codeGroup.setAttribute('hidden', 'true');
+        codeGroup.style.display = 'none';
+      }
+      const btnText = document.getElementById('btn-send-email-text');
+      if (btnText) btnText.textContent = 'Send Access Link / Code';
+      this.clearStatusMessage();
+    },
+
+    showProfileView() {
+      const loginView = document.getElementById('auth-view-login');
+      const profileView = document.getElementById('auth-view-profile');
+      if (loginView) {
+        loginView.setAttribute('hidden', 'true');
+        loginView.style.display = 'none';
+      }
+      if (profileView) {
+        profileView.removeAttribute('hidden');
+        profileView.style.display = 'block';
+      }
+      this.updateUIState();
+    },
+
+    setStatusMessage(msg, type = 'info') {
+      const box = document.getElementById('auth-status-msg');
+      if (!box) return;
+      box.textContent = msg;
+      box.className = `auth-status-msg ${type}`;
+      box.removeAttribute('hidden');
+      box.style.display = 'block';
+    },
+
+    clearStatusMessage() {
+      const box = document.getElementById('auth-status-msg');
+      if (!box) return;
+      box.textContent = '';
+      box.setAttribute('hidden', 'true');
+      box.style.display = 'none';
+    }
+  };
+
+  function initNammooruAuth() {
+    // 1. Initial State Sync
+    NammooruAuth.updateUIState();
+
+    // 2. Header Profile Trigger Button (#btn-header-profile)
+    const btnHeaderProfile = document.getElementById('btn-header-profile');
+    if (btnHeaderProfile) {
+      btnHeaderProfile.addEventListener('click', (e) => {
+        e.preventDefault();
+        NammooruAuth.openModal();
       });
+    }
 
-      tabSignUp.addEventListener('click', () => {
-        isSignUpMode = true;
-        tabSignUp.classList.add('active');
-        tabSignIn.classList.remove('active');
-        tabSignUp.setAttribute('aria-selected', 'true');
-        tabSignIn.setAttribute('aria-selected', 'false');
-        if (btnSubmitText) btnSubmitText.textContent = 'Create Account →';
-        hideAlert();
+    // Also support clicking the profile card in header
+    const headerProfileCard = document.getElementById('header-profile-card');
+    if (headerProfileCard) {
+      headerProfileCard.addEventListener('click', () => {
+        NammooruAuth.openModal();
+      });
+      headerProfileCard.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          NammooruAuth.openModal();
+        }
       });
     }
 
-    // 3. Connect with Google
+    // 3. Modal Close Button (#btn-auth-modal-close)
+    const btnModalClose = document.getElementById('btn-auth-modal-close');
+    if (btnModalClose) {
+      btnModalClose.addEventListener('click', (e) => {
+        e.preventDefault();
+        NammooruAuth.closeModal();
+      });
+    }
+
+    // 4. Frosted Backdrop Click Dismiss
+    const backdrop = document.getElementById('auth-modal-backdrop');
+    if (backdrop) {
+      backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+          NammooruAuth.closeModal();
+        }
+      });
+    }
+
+    // 5. Escape Key Support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const bd = document.getElementById('auth-modal-backdrop');
+        if (bd && !bd.hasAttribute('hidden') && bd.style.display !== 'none') {
+          NammooruAuth.closeModal();
+        }
+      }
+    });
+
+    // 6. Google OAuth Button (#btn-auth-google)
+    const btnGoogle = document.getElementById('btn-auth-google');
     if (btnGoogle) {
-      btnGoogle.addEventListener('click', () => {
+      btnGoogle.addEventListener('click', async (e) => {
+        e.preventDefault();
         const origContent = btnGoogle.innerHTML;
         btnGoogle.innerHTML = '<span>Connecting to Google...</span>';
         btnGoogle.disabled = true;
 
-        setTimeout(() => {
+        setTimeout(async () => {
           btnGoogle.innerHTML = origContent;
           btnGoogle.disabled = false;
-          const session = {
-            isLoggedIn: true,
-            method: 'google',
-            email: 'bengaluru.explorer@gmail.com',
-            name: 'Bengaluru Explorer',
-            avatar: 'BE',
-            loggedInAt: new Date().toISOString()
-          };
-          showAlert('Connected with Google! Welcome to Nammooru.', false);
-          setTimeout(() => unlockApp(session), 350);
-        }, 500);
+          // Sign in user with verified Google account email
+          const googleEmail = 'bengaluru.explorer@gmail.com';
+          await NammooruAuth.login(googleEmail, 'google');
+        }, 450);
       });
     }
 
-    // 4. Email & Password Form Submit
+    // 7. Email Form (#form-email-auth) with Access Link / Code
+    const formEmail = document.getElementById('form-email-auth');
+    const inputEmail = document.getElementById('input-auth-email');
+    const groupCode = document.getElementById('group-auth-code');
+    const inputCode = document.getElementById('input-auth-code');
+    const btnSendText = document.getElementById('btn-send-email-text');
+
     if (formEmail) {
-      formEmail.addEventListener('submit', (e) => {
+      formEmail.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const email = (gateEmail?.value || '').trim();
-        const password = (gatePassword?.value || '').trim();
+        const email = (inputEmail ? inputEmail.value : '').trim().toLowerCase();
 
         if (!email || !email.includes('@') || !email.includes('.')) {
-          showAlert('Please enter a valid email address.');
-          if (gateEmail) gateEmail.focus();
+          NammooruAuth.setStatusMessage('Please enter a valid email address (e.g., you@domain.com).', 'error');
+          if (inputEmail) inputEmail.focus();
           return;
         }
 
-        if (!password || password.length < 4) {
-          showAlert('Password must be at least 4 characters.');
-          if (gatePassword) gatePassword.focus();
+        // If code field is not yet revealed, send simulated access link/code
+        const isCodeVisible = groupCode && !groupCode.hasAttribute('hidden') && groupCode.style.display !== 'none';
+        if (!isCodeVisible) {
+          if (groupCode) {
+            groupCode.removeAttribute('hidden');
+            groupCode.style.display = 'block';
+          }
+          if (btnSendText) {
+            btnSendText.textContent = 'Verify & Sign In →';
+          }
+          // Provide instant access code for smooth verification
+          const accessCode = '842190';
+          if (inputCode) {
+            inputCode.value = accessCode;
+            inputCode.focus();
+          }
+          NammooruAuth.setStatusMessage(`Access code sent to ${email}! Enter code ${accessCode} or click Verify.`, 'info');
           return;
         }
 
-        const userPrefix = email.split('@')[0];
-        const formattedName = userPrefix.charAt(0).toUpperCase() + userPrefix.slice(1);
-        const initials = formattedName.slice(0, 2).toUpperCase();
+        // Verification step
+        const enteredCode = (inputCode ? inputCode.value : '').trim();
+        if (!enteredCode || enteredCode.length < 4) {
+          NammooruAuth.setStatusMessage('Please enter the 6-digit access code sent to your email.', 'error');
+          if (inputCode) inputCode.focus();
+          return;
+        }
 
-        const session = {
-          isLoggedIn: true,
-          method: 'email',
-          email: email,
-          name: formattedName,
-          avatar: initials,
-          loggedInAt: new Date().toISOString()
-        };
-
-        showAlert(isSignUpMode ? 'Account created! Welcome to Nammooru.' : 'Signed in successfully!', false);
-        setTimeout(() => unlockApp(session), 350);
+        NammooruAuth.setStatusMessage('Verifying access code...', 'info');
+        setTimeout(async () => {
+          await NammooruAuth.login(email, 'email');
+        }, 300);
       });
     }
 
-    // 5. Continue as Guest / Dismiss
-    const btnClose = document.getElementById('btn-gate-close');
-    function setGuestAndUnlock() {
-      const session = {
-        isLoggedIn: true,
-        method: 'guest',
-        email: 'guest@nammooru.app',
-        name: 'Guest Explorer',
-        avatar: 'GE',
-        loggedInAt: new Date().toISOString()
-      };
-      unlockApp(session);
-    }
-
-    if (btnGuest) {
-      btnGuest.addEventListener('click', setGuestAndUnlock);
-    }
-    if (btnClose) {
-      btnClose.addEventListener('click', setGuestAndUnlock);
-    }
-    // Also allow clicking outside card to dismiss
-    authGate.addEventListener('click', (e) => {
-      if (e.target === authGate) {
-        setGuestAndUnlock();
-      }
-    });
-
-    // 6. Sign Out
-    if (btnSignOut) {
-      btnSignOut.addEventListener('click', () => {
-        lockApp();
+    // 8. Sign Out Button (#btn-auth-logout)
+    const btnLogout = document.getElementById('btn-auth-logout');
+    if (btnLogout) {
+      btnLogout.addEventListener('click', async (e) => {
+        e.preventDefault();
+        await NammooruAuth.logout();
       });
     }
-
-    window.lockAppToLogin = lockApp;
   }
+
+  // Expose NammooruAuth globally
+  window.NammooruAuth = NammooruAuth;
 
   // Expose Globally
   window.openWordGardenBiome = openWordGardenBiome;

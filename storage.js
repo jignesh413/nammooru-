@@ -46,6 +46,19 @@
   }
 
   /**
+   * Retrieves current authenticated user email if signed in.
+   * @returns {string|null}
+   */
+  function getUserEmail() {
+    try {
+      const email = localStorage.getItem('nammooru_user_email');
+      return (email && typeof email === 'string' && email.trim() !== '') ? email.trim().toLowerCase() : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /**
    * Opens or initializes the IndexedDB store.
    * @returns {Promise<IDBDatabase>}
    */
@@ -222,6 +235,7 @@
       const stripped = records.slice(0, MAX_HISTORY).map(r => ({
         id: r.id,
         userId: r.userId || getUserId(),
+        user_email: r.user_email || getUserEmail() || null,
         timestamp: r.timestamp || new Date().toISOString(),
         english: r.english || '',
         kannada: r.kannada || '',
@@ -333,6 +347,7 @@
      */
     async getAllHistory() {
       const currentUserId = getUserId();
+      const currentUserEmail = getUserEmail();
       try {
         const db = await initDB();
         const records = await new Promise((resolve, reject) => {
@@ -352,8 +367,26 @@
               const cursor = e.target.result;
               if (cursor) {
                 const item = cursor.value;
-                if (item && (!item.userId || item.userId === currentUserId)) {
-                  results.push(item);
+                if (item) {
+                  let matches = false;
+                  if (currentUserEmail) {
+                    if (item.user_email && item.user_email.toLowerCase() === currentUserEmail) {
+                      matches = true;
+                    } else if (!item.user_email && (!item.userId || item.userId === currentUserId)) {
+                      // Session capture before signing in - claim for signed-in user
+                      item.user_email = currentUserEmail;
+                      matches = true;
+                      try { putIndexedDBRecord(item); } catch { /* ignore */ }
+                    }
+                  } else {
+                    // Guest / anonymous mode: match entries without user_email or from this device
+                    if (!item.user_email || !item.userId || item.userId === currentUserId) {
+                      matches = true;
+                    }
+                  }
+                  if (matches) {
+                    results.push(item);
+                  }
                 }
                 cursor.continue();
               } else {
@@ -381,6 +414,7 @@
         if (legacy && legacy.length > 0) {
           for (const item of legacy) {
             if (!item.userId) item.userId = currentUserId;
+            if (currentUserEmail && !item.user_email) item.user_email = currentUserEmail;
             try {
               await putIndexedDBRecord(item);
             } catch (seedErr) {
@@ -415,6 +449,7 @@
 
       try {
         const currentUserId = getUserId();
+        const currentUserEmail = entryData.user_email || getUserEmail() || null;
         const id = entryData.id || ('rec_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7));
         const timestamp = entryData.timestamp || new Date().toISOString();
 
@@ -433,6 +468,7 @@
         const record = {
           id: id,
           userId: currentUserId,
+          user_email: currentUserEmail,
           timestamp: timestamp,
           english: String(entryData.english || '').trim(),
           kannada: String(entryData.kannada || '').trim(),
@@ -540,6 +576,31 @@
 
       notifyListeners(inMemoryCache);
       return true;
+    },
+
+    /**
+     * Get current user email
+     */
+    getUserEmail,
+
+    /**
+     * Switch user profile by email and refresh scoped history
+     * @param {string|null} email
+     * @returns {Promise<Array<Object>>}
+     */
+    async switchUser(email) {
+      try {
+        if (email && typeof email === 'string' && email.trim() !== '') {
+          localStorage.setItem('nammooru_user_email', email.trim().toLowerCase());
+        } else {
+          localStorage.removeItem('nammooru_user_email');
+        }
+      } catch (e) {
+        console.warn('[NammooruStorage] switchUser localStorage warning:', e);
+      }
+      const records = await this.getAllHistory();
+      notifyListeners(records);
+      return records;
     },
 
     /**

@@ -106,13 +106,20 @@
           <span class="brand-dot" aria-hidden="true"></span>
         </div>
 
-        <!-- Right Corner: Profile Card Preview -->
-        <div class="header-profile-card" id="header-profile-card" role="button" aria-label="Trainer Profile & Stats" tabindex="0">
-          <span class="header-profile-avatar" aria-hidden="true">🧢</span>
-          <div class="header-profile-meta">
-            <span class="header-profile-name">TRAINER ANNA</span>
-            <span class="header-profile-stats" id="header-profile-level">LVL 1 • 50 XP</span>
+        <!-- Right Corner: Profile Card & Account Profile Button -->
+        <div class="header-right-group">
+          <div class="header-profile-card" id="header-profile-card" role="button" aria-label="Trainer Profile & Stats" tabindex="0">
+            <span class="header-profile-avatar" aria-hidden="true">🧢</span>
+            <div class="header-profile-meta">
+              <span class="header-profile-name">TRAINER ANNA</span>
+              <span class="header-profile-stats" id="header-profile-level">LVL 1 • 50 XP</span>
+            </div>
           </div>
+          <!-- Circular Neo-Brutalist Profile Button with Online Status Pip -->
+          <button type="button" class="btn-header-profile" id="btn-header-profile" aria-label="Account Profile & Sign In">
+            <span class="header-user-avatar" id="header-user-avatar">👤</span>
+            <span class="header-user-status" id="header-user-status" aria-hidden="true"></span>
+          </button>
         </div>
       </div>
     </header>
@@ -1634,6 +1641,102 @@
           </p>
         </div>
 
+      </div>
+    </div>
+  <!-- =========================================================
+       ACCOUNT PROFILE & AUTHENTICATION MODAL
+       Strictly Google OAuth & Email with access link / code
+       ========================================================= -->
+  <div class="auth-modal-backdrop" id="auth-modal-backdrop" hidden>
+    <div class="auth-profile-modal" id="auth-profile-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+      <!-- Modal Close Button -->
+      <button type="button" class="auth-modal-close" id="btn-auth-modal-close" aria-label="Close authentication modal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+
+      <!-- VIEW 1: SIGN IN / LOGIN VIEW -->
+      <div class="auth-view" id="auth-view-login">
+        <div class="auth-modal-head">
+          <div class="auth-kicker-pill">⚡ ACCOUNT SYNC</div>
+          <h2 class="auth-title" id="auth-modal-title">Sign In to Nammooru</h2>
+          <p class="auth-subtitle">Sync your captured photos, Word Garden, and learning progress permanently across devices.</p>
+        </div>
+
+        <!-- 1. Google OAuth Button -->
+        <button type="button" class="btn-auth-google" id="btn-auth-google" aria-label="Sign in with Google">
+          <svg class="google-svg" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.03 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+          </svg>
+          <span>Continue with Google</span>
+        </button>
+
+        <!-- Divider -->
+        <div class="auth-brutal-divider">
+          <span class="divider-line"></span>
+          <span class="divider-text">OR EMAIL ACCESS</span>
+          <span class="divider-line"></span>
+        </div>
+
+        <!-- 2. Email Form with access link / code -->
+        <form class="form-email-auth" id="form-email-auth" novalidate>
+          <div class="form-group">
+            <label for="input-auth-email" class="form-label">Email Address</label>
+            <input type="email" id="input-auth-email" class="form-input" placeholder="you@domain.com" required autocomplete="email">
+          </div>
+
+          <!-- Code verification section (toggled when code is generated / sent) -->
+          <div class="form-group" id="group-auth-code" hidden>
+            <label for="input-auth-code" class="form-label">6-Digit Access Code</label>
+            <input type="text" id="input-auth-code" class="form-input" placeholder="Enter 6-digit code" maxlength="6" inputmode="numeric">
+            <span class="form-hint">Enter the access code sent to your email to confirm sign-in.</span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" id="btn-send-email-auth">
+            <span id="btn-send-email-text">Send Access Link / Code</span>
+          </button>
+        </form>
+
+        <!-- Status message box -->
+        <div class="auth-status-msg" id="auth-status-msg" role="status" aria-live="polite" hidden></div>
+      </div>
+
+      <!-- VIEW 2: PROFILE VIEW -->
+      <div class="auth-view" id="auth-view-profile" hidden>
+        <div class="profile-hero-card">
+          <div class="profile-avatar-emoji" id="profile-avatar-large">🧢</div>
+          <div class="profile-details">
+            <span class="profile-auth-status">● SIGNED IN</span>
+            <h3 class="profile-display-email" id="profile-display-email">user@domain.com</h3>
+          </div>
+        </div>
+
+        <div class="profile-badges-row">
+          <div class="profile-badge-card">
+            <span class="badge-label">TRAINER LEVEL</span>
+            <span class="badge-value" id="profile-level-badge">LVL 1</span>
+          </div>
+          <div class="profile-badge-card">
+            <span class="badge-label">CAPTURES COUNT</span>
+            <span class="badge-value" id="profile-history-count">0 Captured</span>
+          </div>
+        </div>
+
+        <div class="profile-footer-actions">
+          <button type="button" class="btn btn-danger-brutal btn-full" id="btn-auth-logout">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
