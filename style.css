@@ -873,6 +873,76 @@ h2.week-title {
   z-index: 11;
 }
 
+/* Camera Permission Trigger Callout (Visible before camera stream is allowed) */
+.ar-camera-permission-btn {
+  position: absolute;
+  top: 53%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: rgba(11, 15, 25, 0.90);
+  backdrop-filter: blur(10px);
+  border: 2px solid #00E676;
+  box-shadow: 0 0 20px rgba(0, 230, 118, 0.4), 3px 3px 0px #000000;
+  border-radius: 20px;
+  padding: 10px 18px;
+  color: #FFFFFF;
+  cursor: pointer;
+  user-select: none;
+  text-align: center;
+  animation: ar-perm-pulse 2s ease-in-out infinite alternate;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+  pointer-events: auto;
+}
+
+.ar-camera-permission-btn:hover {
+  transform: translate(-50%, -52%) scale(1.03);
+  background: rgba(11, 15, 25, 0.96);
+  box-shadow: 0 0 28px rgba(0, 230, 118, 0.6), 4px 4px 0px #000000;
+}
+
+.ar-camera-permission-btn:active {
+  transform: translate(-50%, -48%) scale(0.97);
+}
+
+.ar-camera-permission-btn[hidden] {
+  display: none !important;
+}
+
+.ar-camera-permission-btn .ar-perm-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.ar-camera-permission-btn .ar-perm-text {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #00E676;
+  letter-spacing: -0.2px;
+}
+
+.ar-camera-permission-btn .ar-perm-sub {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #94A3B8;
+}
+
+@keyframes ar-perm-pulse {
+  0% {
+    box-shadow: 0 0 12px rgba(0, 230, 118, 0.25), 3px 3px 0px #000000;
+  }
+  100% {
+    box-shadow: 0 0 24px rgba(0, 230, 118, 0.55), 3px 3px 0px #000000;
+  }
+}
+
 /* Layer 5: Bottom Capture Action Row (z-index: 15) */
 .ar-capture-dock {
   position: absolute;

@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Valid section identifiers for the project shell (Exactly 4 primary destinations)
   const VALID_SECTIONS = ['photo', 'learn', 'innovate', 'transform'];
   const DEFAULT_SECTION = 'photo';
+  let currentActiveSection = 'photo';
   let currentInnovatePanel = 'record';
 
   /**
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const targetId = VALID_SECTIONS.includes(sectionId) ? sectionId : DEFAULT_SECTION;
+    currentActiveSection = targetId;
 
     // 1. Update Tab Buttons (ARIA & visual active class)
     tabButtons.forEach(tab => {
@@ -600,9 +602,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function startArCameraStream() {
     const videoEl = document.getElementById('camera-stream');
-    if (!videoEl || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+    const permBtn = document.getElementById('ar-camera-permission-btn');
+    const modePill = document.getElementById('ar-mode-pill');
+    if (!videoEl || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (permBtn) permBtn.hidden = true;
+      return;
+    }
     try {
-      if (arMediaStream && arMediaStream.active) return;
+      if (arMediaStream && arMediaStream.active) {
+        if (permBtn) permBtn.hidden = true;
+        if (modePill) modePill.classList.add('is-live');
+        return;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: 'environment' },
@@ -614,8 +625,17 @@ document.addEventListener('DOMContentLoaded', () => {
       arMediaStream = stream;
       videoEl.srcObject = stream;
       await videoEl.play();
+      if (permBtn) permBtn.hidden = true;
+      if (modePill) modePill.classList.add('is-live');
     } catch (err) {
       console.info('[AR Camera Stream Notice]: Using ambient AR grid viewfinder fallback.', err.message);
+      if (permBtn && (!arMediaStream || !arMediaStream.active)) {
+        permBtn.hidden = false;
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          const textEl = permBtn.querySelector('.ar-perm-text');
+          if (textEl) textEl.textContent = 'Camera Denied • Tap to Retry';
+        }
+      }
     }
   }
 
@@ -626,6 +646,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const videoEl = document.getElementById('camera-stream');
     if (videoEl) videoEl.srcObject = null;
+    const modePill = document.getElementById('ar-mode-pill');
+    if (modePill) modePill.classList.remove('is-live');
   }
 
   function captureFromArViewfinder() {
@@ -723,6 +745,37 @@ document.addEventListener('DOMContentLoaded', () => {
       triggerPokeballCapture();
     });
   }
+
+  // Camera Permission Trigger Button (#ar-camera-permission-btn)
+  const btnCameraPerm = document.getElementById('ar-camera-permission-btn');
+  if (btnCameraPerm) {
+    btnCameraPerm.addEventListener('click', (e) => {
+      e.stopPropagation();
+      startArCameraStream();
+    });
+  }
+
+  // Direct tap anywhere on AR Viewfinder stage requests camera if not active
+  const arViewport = document.querySelector('.ar-viewport-wrapper');
+  if (arViewport) {
+    arViewport.addEventListener('click', (e) => {
+      if (!e.target.closest('button, [role="button"], .ar-wild-encounter-card')) {
+        if (!arMediaStream || !arMediaStream.active) {
+          startArCameraStream();
+        }
+      }
+    });
+  }
+
+  // On very first user interaction anywhere on screen, if on Photo tab, trigger camera request
+  const handleInitialUserGestureForCamera = () => {
+    if (currentActiveSection === 'photo' && (!arMediaStream || !arMediaStream.active)) {
+      startArCameraStream();
+    }
+  };
+  window.addEventListener('touchstart', handleInitialUserGestureForCamera, { once: true, passive: true });
+  window.addEventListener('pointerdown', handleInitialUserGestureForCamera, { once: true, passive: true });
+  window.addEventListener('click', handleInitialUserGestureForCamera, { once: true });
 
   // 2. Left Bag Button (#btn-open-bag) -> History / Word Garden collection
   const btnOpenBag = document.getElementById('btn-open-bag');
