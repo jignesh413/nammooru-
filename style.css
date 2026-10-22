@@ -1925,6 +1925,30 @@ h2.week-title {
   margin-bottom: 20px;
 }
 
+.innovate-subtext em {
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emphasis-not-winning {
+  font-style: italic;
+  font-weight: 800;
+  color: #000000;
+  background: var(--accent-yellow);
+  border: 1.5px solid #000000;
+  border-radius: var(--radius-pill);
+  box-shadow: 2px 2px 0px #000000;
+  padding: 1px 10px;
+  display: inline-block;
+  letter-spacing: -0.01em;
+}
+
 .reassurance-banner {
   background: #E8F5E9;
   border: var(--border-main);
