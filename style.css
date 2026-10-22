@@ -4017,84 +4017,190 @@ html.modal-scroll-locked {
 
 /* =============================================================================
    WORD GARDEN BIOME: NEO-BRUTALIST LAUNCH CARD (Standard Design System)
+   WORD GARDEN BIOME: MINECRAFT-INSPIRED LAUNCH BOX
+   Differentiates the retro 8-bit voxel world from standard app UI
    ============================================================================= */
-.garden-entry-card {
+.garden-entry-card,
+.garden-entry-card.mc-entry-block {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  background: var(--accent-primary, #FFD027);
-  border: var(--border-main);
-  border-radius: var(--radius-card);
-  box-shadow: var(--shadow-hard);
-  padding: 16px 18px;
-  margin-bottom: 20px;
+  gap: 12px;
+  background-color: #563920;
+  /* Authentic pixelated Minecraft dirt block texture */
+  background-image:
+    linear-gradient(45deg, #462c16 25%, transparent 25%),
+    linear-gradient(-45deg, #462c16 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #462c16 75%),
+    linear-gradient(-45deg, transparent 75%, #462c16 75%);
+  background-size: 8px 8px;
+  background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+  border: 2.5px solid #000000;
+  border-radius: 6px; /* Pixel-block blocky aesthetic */
+  box-shadow: 4px 4px 0px #000000;
+  padding: 16px 14px 14px 14px;
+  margin-bottom: 22px;
   cursor: pointer;
   user-select: none;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
+  image-rendering: pixelated;
 }
 
+.garden-entry-card.mc-entry-block:hover,
 .garden-entry-card:hover {
   transform: translate(-1px, -1px);
   box-shadow: 5px 5px 0px #000000;
 }
 
+.garden-entry-card.mc-entry-block:active,
 .garden-entry-card:active {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0px #000000;
 }
 
-.garden-entry-icon {
-  font-size: 26px;
-  line-height: 1;
-  width: 48px;
-  height: 48px;
-  background: var(--bg-surface-white);
+/* 1. Minecraft Grass Top Fringe Layer */
+.mc-block-grass-rim {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 10px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.mc-grass-banner-svg {
+  display: block;
+  width: 100%;
+  height: 10px;
+}
+
+/* 2. Minecraft Inventory Slot with Swaying 8-bit Flower */
+.mc-entry-slot {
+  width: 44px;
+  height: 44px;
+  background: #8b8b8b;
   border: 2px solid #000000;
-  border-radius: 12px;
+  /* Authentic Minecraft GUI slot inset shadows */
+  box-shadow: inset -2px -2px 0px #ffffff, inset 2px 2px 0px #373737;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 2px 2px 0px #000000;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
-.garden-entry-meta {
+.mc-slot-flower {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  transform-origin: bottom center;
+  animation: mc-slot-flower-sway 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes mc-slot-flower-sway {
+  0% { transform: rotate(-5deg) scale(1); }
+  100% { transform: rotate(5deg) scale(1.06); }
+}
+
+/* 3. Minecraft Meta & Purpose Copy */
+.mc-entry-meta {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
 }
 
-.garden-entry-meta h3 {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 16px;
-  font-weight: 800;
-  color: #111111;
-  margin: 0 0 3px 0;
+.mc-entry-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mc-entry-pixel-title {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffff55; /* Iconic Minecraft Yellow Title */
+  text-shadow: 1.5px 1.5px 0px #000000;
   letter-spacing: -0.2px;
+  line-height: 1.3;
 }
 
-.garden-entry-meta p {
-  font-size: 13px;
-  font-weight: 500;
-  color: #222222;
+.mc-entry-pixel-pill {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7.5px;
+  color: #55ff55; /* Minecraft Green XP */
+  background: #1e3a10;
+  border: 1px solid #3d7220;
+  box-shadow: inset 1px 1px 0px #589c27, inset -1px -1px 0px #0e2006;
+  padding: 2px 5px;
+  text-shadow: 1px 1px 0px #000000;
+  line-height: 1;
+  letter-spacing: 0;
+  display: inline-block;
+}
+
+.mc-entry-pixel-desc {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #f1f5f9;
   line-height: 1.35;
   margin: 0;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
 }
 
-.garden-entry-arrow {
-  font-size: 16px;
-  font-weight: 800;
-  color: #000000;
-  width: 32px;
-  height: 32px;
-  background: var(--bg-surface-white);
+/* 4. Minecraft Stone Button Action */
+.mc-entry-stone-btn {
+  width: 34px;
+  height: 34px;
+  background: #737373;
+  color: #ffffff;
   border: 2px solid #000000;
-  border-radius: var(--radius-pill);
+  box-shadow: inset -2px -2px 0px #373737, inset 2px 2px 0px #ffffff;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 2px 2px 0px #000000;
+  cursor: pointer;
+  transition: background 0.1s ease, box-shadow 0.1s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.garden-entry-card:hover .mc-entry-stone-btn {
+  background: #858585;
+}
+
+.garden-entry-card:active .mc-entry-stone-btn {
+  background: #5a5a5a;
+  box-shadow: inset 2px 2px 0px #373737, inset -2px -2px 0px #ffffff;
+}
+
+@media (max-width: 360px) {
+  .mc-entry-pixel-title {
+    font-size: 10px;
+  }
+  .mc-entry-pixel-desc {
+    font-size: 11.5px;
+  }
+  .mc-entry-slot {
+    width: 38px;
+    height: 38px;
+  }
+  .mc-entry-stone-btn {
+    width: 30px;
+    height: 30px;
+  }
 }
 
 /* =============================================================================
