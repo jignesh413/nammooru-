@@ -421,6 +421,11 @@
         window.speechSynthesis.cancel();
       } catch (_) {}
     }
+    document.querySelectorAll('[data-audio-btn], .btn-listen, .btn-conv-listen, .btn-round-speaker, .btn-ar-audio, .mc-btn-audio').forEach(btn => {
+      btn.innerHTML = '🔊';
+      btn.dataset.playing = 'false';
+      btn.classList.remove('mc-btn-speaking', 'is-playing');
+    });
   }
 
   function fallbackToBrowserVoice(cleanKannada, resetBtn) {
@@ -456,6 +461,7 @@
 
       u.onend = () => { if (resetBtn) resetBtn(); };
       u.onerror = () => { if (resetBtn) resetBtn(); };
+      u.onpause = () => { if (resetBtn) resetBtn(); };
       window.speechSynthesis.speak(u);
     } catch (e) {
       if (resetBtn) resetBtn();
@@ -463,35 +469,131 @@
   }
 
   /**
+   * Pure icon-only audio toggle adhering strictly to project UI/UX standards:
+   * - Idle / Finished: 🔊
+   * - Playing / Active: ⏹️
+   * - Re-tapping active button cancels speech and restores 🔊
+   * - Never injects text like 'Listen' or 'Stop' into buttons
+   */
+  function playAudioWithIconToggle(buttonElement, textToSpeak, lang = 'kn-IN') {
+    if (!buttonElement || !('speechSynthesis' in window)) return;
+
+    const ICON_IDLE = '🔊';
+    const ICON_STOP = '⏹️';
+
+    // If already playing this button, stop and reset
+    if (buttonElement.dataset.playing === 'true') {
+      window.speechSynthesis.cancel();
+      if (activeAudioPlayer) {
+        try { activeAudioPlayer.pause(); activeAudioPlayer.currentTime = 0; } catch (_) {}
+        activeAudioPlayer = null;
+      }
+      buttonElement.innerHTML = ICON_IDLE;
+      buttonElement.dataset.playing = 'false';
+      buttonElement.classList.remove('is-playing', 'mc-btn-speaking');
+      return;
+    }
+
+    // Cancel any prior speaking utterance and reset all audio buttons
+    window.speechSynthesis.cancel();
+    if (activeAudioPlayer) {
+      try { activeAudioPlayer.pause(); activeAudioPlayer.currentTime = 0; } catch (_) {}
+      activeAudioPlayer = null;
+    }
+    document.querySelectorAll('[data-audio-btn], .btn-listen, .btn-conv-listen, .btn-round-speaker, .btn-ar-audio, .mc-btn-audio').forEach(btn => {
+      btn.innerHTML = ICON_IDLE;
+      btn.dataset.playing = 'false';
+      btn.classList.remove('is-playing', 'mc-btn-speaking');
+    });
+
+    const cleanText = (textToSpeak || '').replace(/\(.*?\)/g, '').split('/')[0].trim();
+    if (!cleanText) return;
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.lang = lang;
+
+    try {
+      const voices = window.speechSynthesis.getVoices() || [];
+      const knVoices = voices.filter(v => {
+        const l = (v.lang || '').toLowerCase();
+        const n = (v.name || '').toLowerCase();
+        return l === 'kn-in' || l.startsWith('kn') || n.includes('kannada') || n.includes('ಕನ್ನಡ');
+      });
+      const knFemaleVoice = knVoices.find(v => {
+        const n = (v.name || '').toLowerCase();
+        return n.includes('sapna') || n.includes('ಸಪ್ನಾ') || n.includes('female') ||
+               (!n.includes('gagan') && !n.includes('ಗಗನ್') && !n.includes('male'));
+      }) || knVoices[0] || null;
+      if (knFemaleVoice) {
+        utterance.voice = knFemaleVoice;
+      }
+    } catch (_) {}
+
+    utterance.rate = 0.80;
+
+    utterance.onstart = () => {
+      buttonElement.innerHTML = ICON_STOP;
+      buttonElement.dataset.playing = 'true';
+      buttonElement.classList.add('is-playing', 'mc-btn-speaking');
+    };
+
+    const resetBtn = () => {
+      buttonElement.innerHTML = ICON_IDLE;
+      buttonElement.dataset.playing = 'false';
+      buttonElement.classList.remove('is-playing', 'mc-btn-speaking');
+    };
+
+    utterance.onend = resetBtn;
+    utterance.onerror = resetBtn;
+    utterance.onpause = resetBtn;
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  /**
    * Speaks authentic Kannada words like a native local female speaker:
-   * 1. Primary: Streams pure, authentic local Kannada female pronunciation from /api/tts
-   * 2. Playback rate set to 0.85 for a clear, deliberate, easy-to-learn cadence
-   * 3. Fallback: Native browser speech synthesis strictly bound to Kannada phonetics
+   * 1. Primary: Streams pure authentic local Kannada female pronunciation from /api/tts
+   * 2. Fallback: Native browser speech synthesis strictly bound to Kannada phonetics
+   * 3. Visual: Pure icon-only toggle (🔊 <-> ⏹️), never injects text
    */
   function speakWordPronunciation(kannadaText, translitText, btn) {
+    const ICON_IDLE = '🔊';
+    const ICON_STOP = '⏹️';
+
+    // If button is already playing, tapping stops and resets
+    if (btn && btn.dataset.playing === 'true') {
+      stopAllSpeechAudio();
+      btn.innerHTML = ICON_IDLE;
+      btn.dataset.playing = 'false';
+      btn.classList.remove('mc-btn-speaking', 'is-playing');
+      return;
+    }
+
     stopAllSpeechAudio();
+
+    // Reset all audio buttons across the app
+    document.querySelectorAll('[data-audio-btn], .btn-listen, .btn-conv-listen, .btn-round-speaker, .btn-ar-audio, .mc-btn-audio').forEach(b => {
+      b.innerHTML = ICON_IDLE;
+      b.dataset.playing = 'false';
+      b.classList.remove('mc-btn-speaking', 'is-playing');
+    });
 
     // Clean text: strip English annotations, slashes, or notes
     const cleanKannada = (kannadaText || '').replace(/\(.*?\)/g, '').split('/')[0].trim();
     if (!cleanKannada) return;
 
-    // Visual button feedback
-    let resetBtn = null;
+    // Visual button feedback (Icon-only toggle, strictly NO text)
+    let resetBtn = () => {};
     if (btn) {
-      const originalHtml = btn.innerHTML;
-      btn.classList.add('mc-btn-speaking');
-      btn.innerHTML = '<span>🔊 SPEAKING...</span>';
+      btn.dataset.playing = 'true';
+      btn.classList.add('mc-btn-speaking', 'is-playing');
+      btn.innerHTML = ICON_STOP;
 
       resetBtn = () => {
-        btn.classList.remove('mc-btn-speaking');
-        btn.innerHTML = originalHtml;
+        btn.classList.remove('mc-btn-speaking', 'is-playing');
+        btn.innerHTML = ICON_IDLE;
+        btn.dataset.playing = 'false';
       };
-
-      setTimeout(() => {
-        if (btn.classList.contains('mc-btn-speaking')) {
-          resetBtn();
-        }
-      }, 5000);
     }
 
     // PRIMARY PATH: Authentic Native Local Kannada Female Audio Stream
@@ -504,15 +606,19 @@
 
     audio.onended = () => {
       activeAudioPlayer = null;
-      if (resetBtn) resetBtn();
+      resetBtn();
     };
 
     audio.onerror = () => {
       if (!hasStarted) {
         fallbackToBrowserVoice(cleanKannada, resetBtn);
-      } else if (resetBtn) {
+      } else {
         resetBtn();
       }
+    };
+
+    audio.onpause = () => {
+      resetBtn();
     };
 
     audio.play()
@@ -532,8 +638,10 @@
     speakWordPronunciation(knText, translitText, btn);
   }
 
+  window.playAudioWithIconToggle = playAudioWithIconToggle;
   window.speakWordPronunciation = speakWordPronunciation;
   window.playKannadaAudio = speakWordPronunciation;
+  window.stopAllSpeechAudio = stopAllSpeechAudio;
 
   /**
    * Deterministic pseudo-random placement algorithm:

@@ -1417,8 +1417,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const listenBtn = document.createElement('button');
         listenBtn.type = 'button';
         listenBtn.className = 'btn-conv-listen';
+        listenBtn.setAttribute('data-audio-btn', 'true');
+        listenBtn.setAttribute('data-icon-only', 'true');
         listenBtn.setAttribute('aria-label', `Listen to: ${item.english}`);
-        listenBtn.innerHTML = '🔊';
+        listenBtn.innerHTML = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
         listenBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           playKannadaAudio(item.kannada, listenBtn);
@@ -2410,24 +2412,21 @@ document.addEventListener('DOMContentLoaded', () => {
       activeAudio = null;
     }
 
-    // 3. Reset Button State
+    // 3. Reset Button State (Icon-only toggle: 🔊 idle, ⏹️ playing)
+    const ICON_IDLE = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
     if (currentlyPlayingBtn) {
-      currentlyPlayingBtn.classList.remove('is-playing', 'is-loading');
-      if (currentlyPlayingBtn.dataset.iconOnly === 'true' || 
-          currentlyPlayingBtn.classList.contains('btn-round-speaker') || 
-          currentlyPlayingBtn.classList.contains('btn-ar-audio')) {
-        currentlyPlayingBtn.innerHTML = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
-      } else {
-        currentlyPlayingBtn.innerHTML = `
-          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          </svg>
-          <span>Listen</span>
-        `;
-      }
+      currentlyPlayingBtn.classList.remove('is-playing', 'is-loading', 'mc-btn-speaking');
+      currentlyPlayingBtn.dataset.playing = 'false';
+      currentlyPlayingBtn.innerHTML = ICON_IDLE;
       currentlyPlayingBtn = null;
     }
+
+    // Also reset all audio buttons with data-audio-btn or audio classes
+    document.querySelectorAll('[data-audio-btn], .btn-listen, .btn-conv-listen, .btn-round-speaker, .btn-ar-audio, .mc-btn-audio').forEach(btn => {
+      btn.classList.remove('is-playing', 'is-loading', 'mc-btn-speaking');
+      btn.dataset.playing = 'false';
+      btn.innerHTML = ICON_IDLE;
+    });
 
     // 4. Hide Global Pill
     if (audioPlayerPill) {
@@ -2444,6 +2443,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Speaks the provided Kannada text with visual feedback.
    * Prioritizes native /api/tts audio stream; falls back to browser SpeechSynthesis.
+   * Maintains strict icon-only toggle (🔊 idle / ⏹️ active) without injecting text.
    * 
    * @param {string} text - Authentic Kannada text to speak
    * @param {HTMLElement} btn - The trigger button for visual feedback
@@ -2451,8 +2451,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function playKannadaAudio(text, btn) {
     if (!text) return;
 
+    const ICON_IDLE = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
+    const ICON_STOP = '<span class="speaker-icon" aria-hidden="true">⏹️</span>';
+
     // If the clicked button is already playing, tapping it stops playback
-    if (currentlyPlayingBtn === btn) {
+    if (currentlyPlayingBtn === btn || (btn && btn.dataset.playing === 'true')) {
       stopAllAudio();
       return;
     }
@@ -2463,19 +2466,8 @@ document.addEventListener('DOMContentLoaded', () => {
     currentlyPlayingBtn = btn;
     if (btn) {
       btn.classList.add('is-playing');
-      if (btn.dataset.iconOnly === 'true' || 
-          btn.classList.contains('btn-round-speaker') || 
-          btn.classList.contains('btn-ar-audio')) {
-        btn.innerHTML = '<span class="speaker-icon" aria-hidden="true">⏹️</span>';
-      } else {
-        btn.innerHTML = `
-          <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-            <rect x="6" y="4" width="4" height="16"/>
-            <rect x="14" y="4" width="4" height="16"/>
-          </svg>
-          <span>Stop</span>
-        `;
-      }
+      btn.dataset.playing = 'true';
+      btn.innerHTML = ICON_STOP;
     }
 
     if (audioPlayerPill) {
@@ -2520,6 +2512,9 @@ document.addEventListener('DOMContentLoaded', () => {
           };
           u.onerror = (speechErr) => {
             console.warn('[SpeechSynthesis Error]:', speechErr);
+            if (currentlyPlayingBtn === btn) stopAllAudio();
+          };
+          u.onpause = () => {
             if (currentlyPlayingBtn === btn) stopAllAudio();
           };
           activeUtterance = u;
@@ -3102,14 +3097,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const listenBtn = document.createElement('button');
       listenBtn.type = 'button';
       listenBtn.className = 'btn-listen';
+      listenBtn.setAttribute('data-audio-btn', 'true');
+      listenBtn.setAttribute('data-icon-only', 'true');
       listenBtn.setAttribute('aria-label', `Listen to ${item.name}`);
-      listenBtn.innerHTML = `
-        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-        <span>Listen</span>
-      `;
+      listenBtn.innerHTML = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
       listenBtn.addEventListener('click', () => {
         playKannadaAudio(item.listenText || item.char, listenBtn);
       });
@@ -3183,14 +3174,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const listenBtn = document.createElement('button');
       listenBtn.type = 'button';
       listenBtn.className = 'btn-listen';
+      listenBtn.setAttribute('data-audio-btn', 'true');
+      listenBtn.setAttribute('data-icon-only', 'true');
       listenBtn.setAttribute('aria-label', `Listen to ${word.english}`);
-      listenBtn.innerHTML = `
-        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-        <span>Listen</span>
-      `;
+      listenBtn.innerHTML = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
       listenBtn.addEventListener('click', () => {
         playKannadaAudio(word.listenText || word.kannada, listenBtn);
       });
@@ -3293,14 +3280,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const listenBtn = document.createElement('button');
       listenBtn.type = 'button';
       listenBtn.className = 'btn-listen';
+      listenBtn.setAttribute('data-audio-btn', 'true');
+      listenBtn.setAttribute('data-icon-only', 'true');
       listenBtn.setAttribute('aria-label', `Listen to phrase: ${phrase.english}`);
-      listenBtn.innerHTML = `
-        <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-        <span>Listen</span>
-      `;
+      listenBtn.innerHTML = '<span class="speaker-icon" aria-hidden="true">🔊</span>';
       listenBtn.addEventListener('click', () => {
         playKannadaAudio(phrase.listenText || phrase.kannada, listenBtn);
       });
@@ -3867,12 +3850,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="word-english">${escapeHtml(item.english)}</div>
         <div class="word-actions">
-          <button type="button" class="btn-listen" aria-label="Listen to ${escapeHtml(item.english)}">
-            <svg class="btn-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-            </svg>
-            <span>Listen</span>
+          <button type="button" class="btn-listen" data-audio-btn="true" data-icon-only="true" aria-label="Listen to ${escapeHtml(item.english)}">
+            <span class="speaker-icon" aria-hidden="true">🔊</span>
           </button>
           <button type="button" class="btn-remove-garden" aria-label="Remove ${escapeHtml(item.english)} from garden">
             <span>Remove</span>
@@ -3883,7 +3862,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const listenBtn = card.querySelector('.btn-listen');
       if (listenBtn) {
         listenBtn.addEventListener('click', () => {
-          playPronunciation(item.kannada, item.translit || item.pronunciation, item.english);
+          playKannadaAudio(item.kannada, listenBtn);
         });
       }
 
