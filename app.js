@@ -135,8 +135,28 @@
     // - "⚡ [tries.length] Tries Logged"
     const bloomedEl = document.getElementById('pet-stat-bloomed');
     const triesEl = document.getElementById('pet-stat-tries');
-    if (bloomedEl) bloomedEl.textContent = `🌱 ${bloomedCount} Bloomed`;
-    if (triesEl) triesEl.textContent = `⚡ ${tries.length} Tries Logged`;
+    if (bloomedEl) {
+      bloomedEl.textContent = `🌱 ${bloomedCount} Bloomed`;
+      bloomedEl.style.cursor = 'pointer';
+      bloomedEl.title = 'Open Word Garden';
+      if (!bloomedEl.dataset.hasClickListener) {
+        bloomedEl.dataset.hasClickListener = 'true';
+        bloomedEl.addEventListener('click', () => {
+          if (typeof window.openGardenModal === 'function') window.openGardenModal();
+        });
+      }
+    }
+    if (triesEl) {
+      triesEl.textContent = `⚡ ${tries.length} Tries Logged`;
+      triesEl.style.cursor = 'pointer';
+      triesEl.title = 'View My Progress & Practice Log';
+      if (!triesEl.dataset.hasClickListener) {
+        triesEl.dataset.hasClickListener = 'true';
+        triesEl.addEventListener('click', () => {
+          if (typeof window.switchSection === 'function') window.switchSection('progress');
+        });
+      }
+    }
 
     // 3. Dynamic Progression:
     // - If garden.length < 5: Badge = "MASCOT • STAGE 1", Title = "CHOTU-BOT", Kannada = "ಚೋಟು ಬೋಟ್", Quote = "Namaskara! Snap your first word."
@@ -945,6 +965,9 @@
       if (typeof window.renderMinecraftGarden === 'function') window.renderMinecraftGarden();
       if (typeof window.renderGarden === 'function') window.renderGarden();
       if (typeof window.updateWordPetCompanion === 'function') window.updateWordPetCompanion();
+      if (typeof window.updateInnovateStats === 'function') window.updateInnovateStats();
+      if (typeof window.renderPracticeLog === 'function') window.renderPracticeLog();
+      if (typeof window.renderBadgesShowcase === 'function') window.renderBadgesShowcase();
 
       // Synchronize UI
       this.updateUIState();
@@ -983,6 +1006,9 @@
       if (typeof window.renderMinecraftGarden === 'function') window.renderMinecraftGarden();
       if (typeof window.renderGarden === 'function') window.renderGarden();
       if (typeof window.updateWordPetCompanion === 'function') window.updateWordPetCompanion();
+      if (typeof window.updateInnovateStats === 'function') window.updateInnovateStats();
+      if (typeof window.renderPracticeLog === 'function') window.renderPracticeLog();
+      if (typeof window.renderBadgesShowcase === 'function') window.renderBadgesShowcase();
 
       this.updateUIState();
       this.showLoginView();

@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Valid section identifiers for the project shell (Exactly 4 primary destinations)
   const VALID_SECTIONS = ['photo', 'learn', 'innovate', 'transform'];
   const DEFAULT_SECTION = 'photo';
+  let currentInnovatePanel = 'log';
 
   /**
    * Activates the requested section and updates navigation state.
@@ -42,7 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function switchSection(sectionId, shouldUpdateHash = true) {
     // Handle subpage deep links gracefully
-    if (sectionId === 'tries') {
+    if (sectionId === 'progress' || sectionId === 'log') {
+      switchSection('innovate', shouldUpdateHash);
+      if (typeof switchInnovatePanel === 'function') switchInnovatePanel('log');
+      return;
+    }
+    if (sectionId === 'tries' || sectionId === 'record') {
       switchSection('innovate', shouldUpdateHash);
       if (typeof switchInnovatePanel === 'function') switchInnovatePanel('record');
       return;
@@ -96,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof updateInnovateStats === 'function') updateInnovateStats();
       if (typeof renderBadgesShowcase === 'function') renderBadgesShowcase();
       if (typeof renderPracticeLog === 'function') renderPracticeLog();
+      if (typeof switchInnovatePanel === 'function') switchInnovatePanel(currentInnovatePanel || 'log');
     } else if (targetId === 'learn') {
       if (typeof renderCurrentMode === 'function') renderCurrentMode();
     } else if (targetId === 'transform') {
@@ -178,8 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initial Activation on Page Load
   const initialHash = window.location.hash.replace('#', '').toLowerCase();
-  const initialSection = VALID_SECTIONS.includes(initialHash) ? initialHash : DEFAULT_SECTION;
-  switchSection(initialSection, false);
+  switchSection(initialHash || DEFAULT_SECTION, false);
 
 
   // ==========================================================================
@@ -4022,13 +4028,61 @@ document.addEventListener('DOMContentLoaded', () => {
     const STORAGE_KEY = 'nammooru_attempts_v1';
     const listeners = new Set();
 
+    function getUserEmail() {
+      try {
+        return (localStorage.getItem('nammooru_user_email') || '').trim().toLowerCase();
+      } catch (_) {
+        return '';
+      }
+    }
+
     function readStorage() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('nammooru_tries');
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        if (!Array.isArray(parsed)) return [];
-        return parsed
+        const email = getUserEmail();
+        let items = [];
+
+        // 1. Try user-scoped key first if user is authenticated
+        if (email) {
+          const scopedRaw = localStorage.getItem(`nammooru_attempts_${email}`);
+          if (scopedRaw) {
+            try {
+              const parsedScoped = JSON.parse(scopedRaw);
+              if (Array.isArray(parsedScoped) && parsedScoped.length > 0) {
+                items = parsedScoped;
+              }
+            } catch (_) {}
+          }
+        }
+
+        // 2. Check primary storage key
+        if (items.length === 0) {
+          const rawPrimary = localStorage.getItem(STORAGE_KEY);
+          if (rawPrimary) {
+            try {
+              const parsedPrimary = JSON.parse(rawPrimary);
+              if (Array.isArray(parsedPrimary) && parsedPrimary.length > 0) {
+                items = parsedPrimary;
+              }
+            } catch (_) {}
+          }
+        }
+
+        // 3. Check legacy storage key
+        if (items.length === 0) {
+          const rawLegacy = localStorage.getItem('nammooru_tries');
+          if (rawLegacy) {
+            try {
+              const parsedLegacy = JSON.parse(rawLegacy);
+              if (Array.isArray(parsedLegacy) && parsedLegacy.length > 0) {
+                items = parsedLegacy;
+              }
+            } catch (_) {}
+          }
+        }
+
+        if (!Array.isArray(items)) return [];
+
+        return items
           .filter(item => item && typeof item === 'object')
           .map(item => ({
             id: item.id || ('att_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6)),
@@ -4038,6 +4092,7 @@ document.addEventListener('DOMContentLoaded', () => {
             note: String(item.note || '').trim(),
             connectedItemId: item.connectedItemId || null,
             connectedItemText: item.connectedItemText || null,
+            user_email: item.user_email || email || null,
             timestamp: item.timestamp || new Date().toISOString()
           }));
       } catch (err) {
@@ -4048,8 +4103,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function writeStorage(items) {
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-        localStorage.setItem('nammooru_tries', JSON.stringify(items));
+        const email = getUserEmail();
+        const jsonStr = JSON.stringify(items);
+        localStorage.setItem(STORAGE_KEY, jsonStr);
+        localStorage.setItem('nammooru_tries', jsonStr);
+        if (email) {
+          localStorage.setItem(`nammooru_attempts_${email}`, jsonStr);
+        }
         listeners.forEach(fn => {
           try { fn(items); } catch (e) { console.error('[AttemptStore listener error]', e); }
         });
@@ -4059,7 +4119,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
       } catch (err) {
         console.error('[AttemptStore write error]', err);
-        showGardenToast('Could not save attempt to browser storage.', 'error');
+        if (typeof showGardenToast === 'function') {
+          showGardenToast('Could not save attempt to browser storage.', 'error');
+        }
         return false;
       }
     }
@@ -4075,6 +4137,7 @@ document.addEventListener('DOMContentLoaded', () => {
       add(rawAttempt) {
         const current = readStorage();
         const id = 'att_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+        const email = getUserEmail();
         const attempt = {
           id,
           situation: String(rawAttempt.situation || '').trim(),
@@ -4083,6 +4146,7 @@ document.addEventListener('DOMContentLoaded', () => {
           note: String(rawAttempt.note || '').trim(),
           connectedItemId: rawAttempt.connectedItemId || null,
           connectedItemText: rawAttempt.connectedItemText || null,
+          user_email: email || null,
           timestamp: new Date().toISOString()
         };
         current.unshift(attempt);
@@ -4432,7 +4496,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const attemptDetailBody     = document.getElementById('attempt-detail-body');
 
   // Local state
-  let currentInnovatePanel   = 'record';
+  currentInnovatePanel       = 'log';
   let currentBadgeCategory   = 'all';
   let currentLogOutcomeFilter= 'all';
   let connectedGardenItem    = null; // { id, kannada, english }
@@ -4442,28 +4506,35 @@ document.addEventListener('DOMContentLoaded', () => {
    * Switches the visible Innovate sub-panel (Record, Badges, Log).
    */
   function switchInnovatePanel(panelName) {
-    if (!innovatePanels[panelName]) return;
-    currentInnovatePanel = panelName;
+    const target = panelName || 'log';
+    currentInnovatePanel = target;
 
-    innovateNavBtns.forEach(btn => {
-      const isTarget = btn.dataset.panel === panelName;
+    const navBtns = Array.from(document.querySelectorAll('.innovate-nav-btn'));
+    navBtns.forEach(btn => {
+      const isTarget = btn.dataset.panel === target;
       btn.classList.toggle('active', isTarget);
       btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
     });
 
-    Object.entries(innovatePanels).forEach(([key, panel]) => {
+    const panels = {
+      record: document.getElementById('panel-inno-record'),
+      badges: document.getElementById('panel-inno-badges'),
+      log:    document.getElementById('panel-inno-log'),
+    };
+
+    Object.entries(panels).forEach(([key, panel]) => {
       if (!panel) return;
-      const isTarget = key === panelName;
+      const isTarget = key === target;
       panel.hidden = !isTarget;
       panel.classList.toggle('active', isTarget);
     });
 
-    updateInnovateStats();
+    if (typeof updateInnovateStats === 'function') updateInnovateStats();
 
-    if (panelName === 'badges') {
-      renderBadgesShowcase();
-    } else if (panelName === 'log') {
-      renderPracticeLog();
+    if (target === 'badges') {
+      if (typeof renderBadgesShowcase === 'function') renderBadgesShowcase();
+    } else if (target === 'log') {
+      if (typeof renderPracticeLog === 'function') renderPracticeLog();
     }
   }
 
@@ -4477,6 +4548,46 @@ document.addEventListener('DOMContentLoaded', () => {
     btnEmptyStartAttempt.addEventListener('click', () => {
       switchInnovatePanel('record');
     });
+  }
+
+  // "+ Log a Try" button inside practice log header
+  const btnLogAddNewTry = document.getElementById('btn-log-add-new-try');
+  if (btnLogAddNewTry) {
+    btnLogAddNewTry.addEventListener('click', () => {
+      switchInnovatePanel('record');
+    });
+  }
+
+  // Week metric card navigation triggers
+  const btnWeekTries = document.getElementById('btn-week-tries');
+  if (btnWeekTries) {
+    btnWeekTries.addEventListener('click', () => switchInnovatePanel('log'));
+  }
+  const btnWeekTried = document.getElementById('btn-week-tried');
+  if (btnWeekTried) {
+    btnWeekTried.addEventListener('click', () => switchInnovatePanel('log'));
+  }
+  const btnWeekLearned = document.getElementById('btn-week-learned');
+  if (btnWeekLearned) {
+    btnWeekLearned.addEventListener('click', () => {
+      if (typeof openGardenModal === 'function') openGardenModal();
+    });
+  }
+
+  // Profile stats strip triggers
+  const btnProfileStatAttempts = document.getElementById('btn-profile-stat-attempts');
+  if (btnProfileStatAttempts) {
+    btnProfileStatAttempts.addEventListener('click', () => switchSection('progress'));
+  }
+  const btnProfileStatGarden = document.getElementById('btn-profile-stat-garden');
+  if (btnProfileStatGarden) {
+    btnProfileStatGarden.addEventListener('click', () => {
+      if (typeof openGardenModal === 'function') openGardenModal();
+    });
+  }
+  const btnProfileStatBadges = document.getElementById('btn-profile-stat-badges');
+  if (btnProfileStatBadges) {
+    btnProfileStatBadges.addEventListener('click', () => switchSection('badges'));
   }
 
   // --- Outcome Option Cards Interaction (Radio sync) ---
@@ -4831,6 +4942,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // --- Category Formatter Helper ---
+  function formatCategoryName(category) {
+    if (!category) return 'Everyday Conversation';
+    const map = {
+      everyday: 'Everyday Conversation',
+      food: 'Food & Ordering',
+      transport: 'Directions & Transport',
+      shopping: 'Shopping',
+      price: 'Prices & Payments',
+      negotiation: 'Negotiation',
+      courage: 'Courage & Trying Again'
+    };
+    return map[category] || (category.charAt(0).toUpperCase() + category.slice(1));
+  }
+
   // --- Render Practice Log ---
   function renderPracticeLog() {
     updateInnovateStats();
@@ -4947,7 +5073,7 @@ document.addEventListener('DOMContentLoaded', () => {
             Situation / Spoken Phrase
           </div>
           <div style="font-size:1.063rem; font-weight:600; color:var(--color-text-primary); line-height:1.35;">
-            ${att.situation}
+            ${escapeHtml(att.situation)}
           </div>
         </div>
 
@@ -4975,7 +5101,7 @@ document.addEventListener('DOMContentLoaded', () => {
               Connected Word Garden Item
             </div>
             <div style="font-size:0.875rem; color:var(--color-accent-green); font-weight:600;">
-              🌿 ${att.connectedItemText}
+              🌿 ${escapeHtml(att.connectedItemText)}
             </div>
           </div>
         ` : ''}
@@ -4986,7 +5112,7 @@ document.addEventListener('DOMContentLoaded', () => {
               Personal Reflection / Note
             </div>
             <div style="background:var(--color-bg-canvas); padding:10px 14px; border-radius:10px; font-size:0.875rem; color:var(--color-text-secondary); line-height:1.45; font-style:italic;">
-              “${att.note}”
+              “${escapeHtml(att.note)}”
             </div>
           </div>
         ` : ''}
@@ -5458,6 +5584,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.CommunityStore = CommunityStore;
   window.BADGE_DEFINITIONS = BADGE_DEFINITIONS;
   window.updateInnovateStats = updateInnovateStats;
+  window.switchInnovatePanel = switchInnovatePanel;
+  window.renderPracticeLog = renderPracticeLog;
+  window.renderBadgesShowcase = renderBadgesShowcase;
 
   // ==========================================================================
   // PART 14: Optional Secure Two-Factor Authentication (TOTP / Google Authenticator)

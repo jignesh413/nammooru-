@@ -2001,6 +2001,41 @@ h2.week-title {
   line-height: 1.25;
 }
 
+/* Innovate Panels Display & Transitions */
+.innovate-panel {
+  display: none;
+}
+
+.innovate-panel.active:not([hidden]),
+.innovate-panel:not([hidden]) {
+  display: block;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.innovate-panel[hidden] {
+  display: none !important;
+}
+
+.week-metric-card {
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.week-metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 2px 2px 0px #000;
+}
+
+.profile-stat-item {
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.profile-stat-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 2px 2px 0px #000;
+}
+
 /* Innovate Segmented Navigation Bar */
 .innovate-nav-bar {
   display: grid;
