@@ -641,23 +641,21 @@
 
         <!-- Innovate Sub-Navigation (Segmented Control for Section Switching) -->
         <div class="innovate-nav-bar" role="tablist" aria-label="Innovate practice modes">
-          <button type="button" class="innovate-nav-btn active" id="btn-inno-log" data-panel="log" role="tab" aria-selected="true">
-            <span>📊 My Progress</span>
-            <span class="nav-count-badge" id="attempt-log-counter" hidden>0</span>
-          </button>
-          <button type="button" class="innovate-nav-btn" id="btn-inno-record" data-panel="record" role="tab" aria-selected="false">
+          <button type="button" class="innovate-nav-btn active" id="btn-inno-record" data-panel="record" role="tab" aria-selected="true">
             <span>📝 Log a Try</span>
+          </button>
+          <button type="button" class="innovate-nav-btn" id="btn-inno-log" data-panel="log" role="tab" aria-selected="false">
+            <span>📊 My Progress</span>
           </button>
           <button type="button" class="innovate-nav-btn" id="btn-inno-badges" data-panel="badges" role="tab" aria-selected="false">
             <span>🏅 My Badges</span>
-            <span class="nav-count-badge" id="badge-earned-counter" hidden>0/9</span>
           </button>
         </div>
 
         <!-- =======================================================
              PANEL 1: LOG A TRY — Prominent Action to Record an Attempt
              ======================================================= -->
-        <div class="innovate-panel" id="panel-inno-record" role="tabpanel" aria-labelledby="btn-inno-record" hidden>
+        <div class="innovate-panel active" id="panel-inno-record" role="tabpanel" aria-labelledby="btn-inno-record">
           <div class="innovate-card">
             <div class="innovate-card-header">
               <div class="card-eyebrow">Log a Real-World Try</div>
@@ -855,7 +853,7 @@
         <!-- =======================================================
              PANEL 3: MY PROGRESS & PRACTICE LOG
              ======================================================= -->
-        <div class="innovate-panel active" id="panel-inno-log" role="tabpanel" aria-labelledby="btn-inno-log">
+        <div class="innovate-panel" id="panel-inno-log" role="tabpanel" aria-labelledby="btn-inno-log" hidden>
           
           <!-- SECTION 5: MY PROGRESS — Factual Summaries -->
           <div class="progress-stats-grid" id="innovate-progress-stats">
@@ -1061,7 +1059,7 @@
         <span class="tab-label">Learn</span>
       </button>
 
-      <!-- Destination 3: PROGRESS & INNOVATE -->
+      <!-- Destination 3: INNOVATE -->
       <button 
         type="button" 
         role="tab" 
@@ -1069,14 +1067,12 @@
         aria-selected="false" 
         aria-controls="section-innovate" 
         class="tab-item" 
-        data-target="innovate"
-        title="My Progress & Practice Log">
+        data-target="innovate">
         <svg class="tab-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <line x1="18" y1="20" x2="18" y2="10"/>
-          <line x1="12" y1="20" x2="12" y2="4"/>
-          <line x1="6" y1="20" x2="6" y2="14"/>
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 8v8M8 12h8"/>
         </svg>
-        <span class="tab-label">Progress</span>
+        <span class="tab-label">Innovate</span>
       </button>
 
       <!-- Destination 4: TRANSFORM -->

@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Valid section identifiers for the project shell (Exactly 4 primary destinations)
   const VALID_SECTIONS = ['photo', 'learn', 'innovate', 'transform'];
   const DEFAULT_SECTION = 'photo';
-  let currentInnovatePanel = 'log';
+  let currentInnovatePanel = 'record';
 
   /**
    * Activates the requested section and updates navigation state.
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof updateInnovateStats === 'function') updateInnovateStats();
       if (typeof renderBadgesShowcase === 'function') renderBadgesShowcase();
       if (typeof renderPracticeLog === 'function') renderPracticeLog();
-      if (typeof switchInnovatePanel === 'function') switchInnovatePanel(currentInnovatePanel || 'log');
+      if (typeof switchInnovatePanel === 'function') switchInnovatePanel(currentInnovatePanel || 'record');
     } else if (targetId === 'learn') {
       if (typeof renderCurrentMode === 'function') renderCurrentMode();
     } else if (targetId === 'transform') {
@@ -4496,7 +4496,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const attemptDetailBody     = document.getElementById('attempt-detail-body');
 
   // Local state
-  currentInnovatePanel       = 'log';
+  currentInnovatePanel       = 'record';
   let currentBadgeCategory   = 'all';
   let currentLogOutcomeFilter= 'all';
   let connectedGardenItem    = null; // { id, kannada, english }
@@ -4506,7 +4506,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Switches the visible Innovate sub-panel (Record, Badges, Log).
    */
   function switchInnovatePanel(panelName) {
-    const target = panelName || 'log';
+    const target = panelName || 'record';
     currentInnovatePanel = target;
 
     const navBtns = Array.from(document.querySelectorAll('.innovate-nav-btn'));
